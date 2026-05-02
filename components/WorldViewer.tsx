@@ -1,13 +1,17 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { ArrowLeft, Bug, MousePointer2, RotateCcw, Settings } from "lucide-react";
-import { Suspense, useCallback, useState } from "react";
+import { XR, createXRStore, type XRStore } from "@react-three/xr";
+import { ArrowLeft, Bug, Headset, MousePointer2, RotateCcw, Settings } from "lucide-react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { BackSide } from "three";
 
 import { ObjectInfoPanel } from "@/components/ObjectInfoPanel";
 import { PlayerRig } from "@/components/three/PlayerRig";
 import { SceneRenderer } from "@/components/three/SceneRenderer";
+import { VRHelpHint } from "@/components/three/VRHelpHint";
+import { VRInfoPanel } from "@/components/three/VRInfoPanel";
+import { XRSessionBridge } from "@/components/three/XRSessionBridge";
 import { demoMuralUrl } from "@/lib/demoData";
 import type { SceneObjectModelMap } from "@/lib/objectModels";
 import type { WorldTarget } from "@/lib/sceneNavigation";
@@ -25,10 +29,14 @@ type MuralMode = "scene" | "cached" | "none";
 type SceneImagePresentation = "mural" | "panorama";
 
 export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLabel = "Scene cards" }: WorldViewerProps) {
+  const [xrStore] = useState<XRStore>(() => createXRStore({ emulate: false, offerSession: false }));
   const [sceneIndex, setSceneIndex] = useState(0);
   const [selectedObject, setSelectedObject] = useState<SceneObject | null>(null);
   const [targetedTarget, setTargetedTarget] = useState<WorldTarget | null>(null);
   const [pointerLocked, setPointerLocked] = useState(false);
+  const [xrActive, setXrActive] = useState(false);
+  const [vrSupported, setVrSupported] = useState<boolean | undefined>(undefined);
+  const [xrError, setXrError] = useState<string | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
   const [muralMode, setMuralMode] = useState<MuralMode>("scene");
   const [resetSignal, setResetSignal] = useState(0);
@@ -40,9 +48,43 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
     muralMode === "cached" ? demoMuralUrl : muralMode === "none" ? null : sceneImageUrl;
   const sceneImagePresentation: SceneImagePresentation = "panorama";
   const isLastScene = safeSceneIndex === scenes.length - 1;
-  const instruction = pointerLocked
+  const instruction = xrActive
+    ? "Quest controls active. Left stick moves, right stick snap turns, trigger selects."
+    : pointerLocked
     ? "WASD to move. Aim at glowing objects or portals, then click or press E."
     : "Lock mouse look to walk the panorama. WASD moves between nearby objects.";
+
+  useEffect(() => {
+    let canceled = false;
+
+    if (!navigator.xr) {
+      queueMicrotask(() => {
+        if (!canceled) {
+          setVrSupported(false);
+          setXrError("WebXR is not exposed in this browser/context. Quest Browser needs HTTPS.");
+        }
+      });
+      return;
+    }
+
+    navigator.xr
+      .isSessionSupported("immersive-vr")
+      .then((supported) => {
+        if (!canceled) {
+          setVrSupported(supported);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!canceled) {
+          setVrSupported(false);
+          setXrError(formatXRError(error));
+        }
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, []);
 
   const releasePointerLock = useCallback(() => {
     document.exitPointerLock?.();
@@ -88,6 +130,15 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
     setSelectedObject(object);
   }, [releasePointerLock]);
 
+  const enterVR = useCallback(() => {
+    releasePointerLock();
+    setXrError(null);
+    xrStore.enterVR().catch((error: unknown) => {
+      setXrError(formatXRError(error));
+      setXrActive(false);
+    });
+  }, [releasePointerLock, xrStore]);
+
   const activateTarget = useCallback(
     (target: WorldTarget) => {
       if (target.type === "portal") {
@@ -106,26 +157,32 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
   return (
     <main className="canvas-crosshair relative h-svh w-screen overflow-hidden bg-black text-stone-50">
       <Canvas className="h-full w-full" style={{ width: "100vw", height: "100svh" }} shadows="basic">
-        <Suspense fallback={<WorldCanvasFallback />}>
-          <SceneRenderer
-            scene={scene}
-            sceneImageUrl={effectiveSceneImageUrl}
-            sceneImagePresentation={sceneImagePresentation}
-            objectModels={objectModels[scene.id] ?? {}}
-            targetedTarget={targetedTarget}
-            onSelectObject={selectObject}
-            onPortalClick={nextScene}
+        <XR store={xrStore}>
+          <Suspense fallback={<WorldCanvasFallback />}>
+            <SceneRenderer
+              scene={scene}
+              sceneImageUrl={effectiveSceneImageUrl}
+              sceneImagePresentation={sceneImagePresentation}
+              objectModels={objectModels[scene.id] ?? {}}
+              targetedTarget={targetedTarget}
+              onSelectObject={selectObject}
+              onPortalClick={nextScene}
+            />
+          </Suspense>
+          <PlayerRig
+            layoutType={scene.layoutType}
+            sceneId={scene.id}
+            resetSignal={resetSignal}
+            xrActive={xrActive}
+            pointerLockSelector="#world-pointer-lock"
+            onPointerLockChange={setPointerLocked}
+            onTargetChange={setTargetedTarget}
+            onActivateTarget={activateTarget}
           />
-        </Suspense>
-        <PlayerRig
-          layoutType={scene.layoutType}
-          sceneId={scene.id}
-          resetSignal={resetSignal}
-          pointerLockSelector="#world-pointer-lock"
-          onPointerLockChange={setPointerLocked}
-          onTargetChange={setTargetedTarget}
-          onActivateTarget={activateTarget}
-        />
+          <XRSessionBridge onSessionChange={setXrActive} />
+          <VRHelpHint visible={xrActive && selectedObject === null} />
+          <VRInfoPanel object={selectedObject} visible={xrActive} />
+        </XR>
       </Canvas>
 
       <div className="pointer-events-none fixed left-4 top-4 z-20 w-[min(560px,calc(100vw-2rem))]">
@@ -152,14 +209,27 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
       ) : null}
 
       <div className="fixed right-4 top-4 z-30 flex flex-wrap justify-end gap-2">
-        <button
-          id="world-pointer-lock"
-          type="button"
-          className="inline-flex items-center gap-2 border border-white/14 bg-black/50 px-4 py-2 text-sm text-stone-100 backdrop-blur transition hover:border-cyan-200/60"
-        >
-          <MousePointer2 size={16} />
-          {pointerLocked ? "Mouse locked" : "Lock mouse"}
-        </button>
+        {!xrActive ? (
+          <button
+            id="world-pointer-lock"
+            type="button"
+            className="inline-flex items-center gap-2 border border-white/14 bg-black/50 px-4 py-2 text-sm text-stone-100 backdrop-blur transition hover:border-cyan-200/60"
+          >
+            <MousePointer2 size={16} />
+            {pointerLocked ? "Mouse locked" : "Lock mouse"}
+          </button>
+        ) : null}
+        {vrSupported !== false ? (
+          <button
+            type="button"
+            onClick={enterVR}
+            disabled={xrActive}
+            className="inline-flex items-center gap-2 border border-white/14 bg-black/50 px-4 py-2 text-sm text-stone-100 backdrop-blur transition hover:border-cyan-200/60 disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            <Headset size={16} />
+            {xrActive ? "In VR" : "Enter VR"}
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={exitToCards}
@@ -197,6 +267,10 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
                 <p className="mt-2 text-stone-300">
                   {scene.layoutType} / {scene.mood} / {scene.objects.length} objects
                 </p>
+                <p className="mt-1 text-xs text-stone-400">
+                  WebXR: {xrActive ? "immersive-vr active" : vrSupported === undefined ? "checking immersive-vr support" : vrSupported ? "immersive-vr available" : "immersive-vr unavailable"}
+                </p>
+                {xrError ? <p className="mt-1 text-xs text-rose-200">{xrError}</p> : null}
               </div>
               <button
                 type="button"
@@ -287,9 +361,17 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
         ) : null}
       </div>
 
-      <ObjectInfoPanel object={selectedObject} onClose={() => setSelectedObject(null)} />
+      {!xrActive ? <ObjectInfoPanel object={selectedObject} onClose={() => setSelectedObject(null)} /> : null}
     </main>
   );
+}
+
+function formatXRError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Unable to start immersive VR.";
 }
 
 function WorldCanvasFallback() {
