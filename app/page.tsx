@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { ErrorState } from "@/components/ErrorState";
@@ -24,6 +25,7 @@ type AppMode = "upload" | "loading" | "cards" | "world" | "error";
 let nextProgressLogId = 0;
 
 export default function Home() {
+  const router = useRouter();
   const [mode, setMode] = useState<AppMode>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [scenes, setScenes] = useState<ScenePlan[]>(demoScenes);
@@ -75,11 +77,8 @@ export default function Home() {
     await generateWorldFromStream(formData, { openWorldOnComplete: false });
   }
 
-  async function useDemoWorld() {
-    const formData = new FormData();
-    formData.append("mode", "demo");
-
-    await generateWorldFromStream(formData, { openWorldOnComplete: true });
+  function useDemoWorld() {
+    router.push("/scripts/the-headmasters-last-feast");
   }
 
   async function generateWorldFromStream(
