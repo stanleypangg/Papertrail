@@ -1,0 +1,17 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - paragraph [ref=e4]: PageWorld headset join
+      - heading "Enter the desktop code" [level=1] [ref=e5]
+      - paragraph [ref=e6]: Use the short code shown on the generated scene screen. The local dev server and ngrok tunnel must stay running.
+      - generic [ref=e7]:
+        - textbox "ABCDE" [ref=e8]
+        - button "Join" [ref=e9] [cursor=pointer]:
+          - text: Join
+          - img [ref=e10]
+      - link "Home" [ref=e12] [cursor=pointer]:
+        - /url: /
+        - img [ref=e13]
+        - text: Home
+  - button "Open Next.js Dev Tools" [ref=e21] [cursor=pointer]:
+    - img [ref=e22]

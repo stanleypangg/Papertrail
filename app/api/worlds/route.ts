@@ -11,7 +11,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       id: world.id,
-      path: `/world/${world.id}`
+      joinCode: world.joinCode,
+      path: `/world/${world.joinCode}`
     });
   } catch (error) {
     if (error instanceof ZodError) {

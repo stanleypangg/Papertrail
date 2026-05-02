@@ -95,7 +95,8 @@ async function generateWorld(request: Request, emit: Emit) {
     objectModels: objectModelResult.models,
     source,
     warnings,
-    sharePath: `/world/${world.id}`
+    sharePath: `/world/${world.joinCode}`,
+    joinCode: world.joinCode
   });
 }
 

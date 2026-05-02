@@ -31,6 +31,7 @@ export default function Home() {
   const [source, setSource] = useState("demo");
   const [warnings, setWarnings] = useState<string[]>([]);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [joinCode, setJoinCode] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgressState>(() => createInitialProgress());
   const [error, setError] = useState("");
   const generationAbortRef = useRef<AbortController | null>(null);
@@ -145,6 +146,7 @@ export default function Home() {
       setSource(event.source);
       setWarnings([...event.warnings, ...(shareResult.warning ? [shareResult.warning] : [])]);
       setShareUrl(shareResult.url);
+      setJoinCode(event.joinCode);
       setMode(openWorldOnComplete ? "world" : "cards");
     }
   }
@@ -156,6 +158,7 @@ export default function Home() {
     setSceneImages(demoSceneImages());
     setObjectModels({});
     setShareUrl(null);
+    setJoinCode(null);
     setWarnings([]);
     setError("");
     setLoadingProgress(createInitialProgress());
@@ -174,6 +177,7 @@ export default function Home() {
         source={source}
         warnings={warnings}
         shareUrl={shareUrl}
+        joinCode={joinCode}
         onEnterWorld={() => setMode("world")}
         onReset={reset}
       />

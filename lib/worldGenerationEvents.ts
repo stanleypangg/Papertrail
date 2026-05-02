@@ -56,6 +56,7 @@ export type GenerationCompleteEvent = {
   source: string;
   warnings: string[];
   sharePath: string | null;
+  joinCode: string | null;
 };
 
 export type GenerationErrorEvent = {

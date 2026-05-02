@@ -2,6 +2,7 @@
 
 import { FileUp, Sparkles } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRef } from "react";
 
 type UploadPanelProps = {
@@ -39,6 +40,12 @@ export function UploadPanel({ file, onFileChange, onGenerate, onUseDemo, busy }:
           <p className="mx-auto mt-4 max-w-[31rem] text-sm leading-6 text-[#4f463f] sm:text-base">
             3 scenes max. Source-grounded objects. WASD and mouse look.
           </p>
+          <Link
+            href="/join"
+            className="mt-5 inline-flex min-h-10 items-center justify-center border border-[#171715]/18 bg-[#fff8ed]/42 px-4 text-sm font-semibold text-[#171715] transition hover:bg-[#fff8ed]/75 focus:outline-none focus:ring-2 focus:ring-[#171715]/35"
+          >
+            Join with headset code
+          </Link>
 
           <div className="mx-auto mt-8 flex w-full max-w-[43rem] flex-col gap-3 border-t border-[#171715]/18 pt-4 sm:flex-row sm:items-center sm:justify-center">
             <button

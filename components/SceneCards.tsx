@@ -1,8 +1,7 @@
 "use client";
 
-import { Check, Copy, DoorOpen, ImageIcon } from "lucide-react";
+import { Check, Copy, DoorOpen, Gamepad2, ImageIcon } from "lucide-react";
 import { useState } from "react";
-import QRCode from "react-qr-code";
 
 import type { ScenePlan } from "@/lib/sceneSchema";
 
@@ -14,12 +13,14 @@ type SceneCardsProps = {
   source: string;
   warnings: string[];
   shareUrl?: string | null;
+  joinCode?: string | null;
   onEnterWorld: () => void;
   onReset: () => void;
 };
 
-export function SceneCards({ scenes, images, source, warnings, shareUrl, onEnterWorld, onReset }: SceneCardsProps) {
+export function SceneCards({ scenes, images, source, warnings, shareUrl, joinCode, onEnterWorld, onReset }: SceneCardsProps) {
   const [copied, setCopied] = useState(false);
+  const shareOrigin = getShareOrigin(shareUrl);
 
   async function copyShareUrl() {
     if (!shareUrl) {
@@ -67,12 +68,19 @@ export function SceneCards({ scenes, images, source, warnings, shareUrl, onEnter
         {shareUrl ? (
           <div className="mt-4 flex flex-col gap-4 border border-cyan-200/18 bg-cyan-200/[0.055] p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 flex-1 items-center gap-4">
-              <div className="shrink-0 bg-white p-2">
-                <QRCode value={shareUrl} size={112} bgColor="#ffffff" fgColor="#080a0f" />
+              <div className="flex min-h-28 min-w-36 shrink-0 flex-col items-center justify-center border border-cyan-100/24 bg-[#071018] px-4">
+                <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-cyan-100/75">
+                  <Gamepad2 size={14} />
+                  Code
+                </p>
+                <p className="mt-2 font-mono text-4xl font-bold tracking-[0.16em] text-cyan-100">{joinCode ?? "-----"}</p>
               </div>
               <div className="min-w-0">
-                <p className="text-xs uppercase tracking-[0.18em] text-cyan-100/80">VR headset link</p>
-                <p className="mt-2 break-all text-sm leading-6 text-stone-200">{shareUrl}</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-cyan-100/80">Quest handoff</p>
+                <p className="mt-2 text-sm leading-6 text-stone-200">
+                  On the Quest, open {shareOrigin ? <span className="break-all font-semibold text-cyan-100">{shareOrigin}</span> : "this app"} and tap Join with code.
+                </p>
+                <p className="mt-1 break-all text-xs leading-5 text-stone-400">Direct link: {shareUrl}</p>
               </div>
             </div>
             <button
@@ -127,6 +135,18 @@ export function SceneCards({ scenes, images, source, warnings, shareUrl, onEnter
       </div>
     </section>
   );
+}
+
+function getShareOrigin(shareUrl?: string | null): string | null {
+  if (!shareUrl) {
+    return null;
+  }
+
+  try {
+    return new URL(shareUrl).origin;
+  } catch {
+    return null;
+  }
 }
 
 function humanizeLayout(layoutType: ScenePlan["layoutType"]): string {

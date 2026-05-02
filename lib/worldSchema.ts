@@ -15,6 +15,7 @@ export const createWorldPayloadSchema = z.object({
 
 export const storedWorldSchema = createWorldPayloadSchema.extend({
   id: z.string().min(1),
+  joinCode: z.string().min(1),
   title: z.string().min(1),
   createdAt: z.string().min(1)
 });
