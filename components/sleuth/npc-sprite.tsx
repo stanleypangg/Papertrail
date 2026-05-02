@@ -1,7 +1,8 @@
 "use client";
 
-import { Html, useTexture } from "@react-three/drei";
-import { useState } from "react";
+import { Html, useTexture, useGLTF } from "@react-three/drei";
+import { Suspense, useState } from "react";
+import type { ThreeEvent } from "@react-three/fiber";
 
 import type { ScriptCharacter } from "@/lib/sleuth/scripts.types";
 
@@ -12,7 +13,6 @@ interface NpcSpriteProps {
 }
 
 export function NpcSprite({ npc, active, onSelect }: NpcSpriteProps) {
-  const texture = useTexture(npc.portrait);
   const [hovered, setHovered] = useState(false);
   const highlighted = hovered || active;
 
@@ -23,27 +23,13 @@ export function NpcSprite({ npc, active, onSelect }: NpcSpriteProps) {
         <meshBasicMaterial
           color="#a8331a"
           transparent
-          opacity={highlighted ? 0.34 : 0.14}
+          opacity={highlighted ? 0.34 : 0.0}
         />
       </mesh>
 
-      <sprite
-        scale={[0.72, 0.96, 1]}
-        onClick={(event) => {
-          event.stopPropagation();
-          onSelect(npc.id);
-        }}
-        onPointerOver={(event) => {
-          event.stopPropagation();
-          setHovered(true);
-        }}
-        onPointerOut={(event) => {
-          event.stopPropagation();
-          setHovered(false);
-        }}
-      >
-        <spriteMaterial map={texture} transparent />
-      </sprite>
+      <Suspense fallback={<FallbackSprite npc={npc} onSelect={onSelect} setHovered={setHovered} />}>
+        <NpcModel npc={npc} onSelect={onSelect} setHovered={setHovered} />
+      </Suspense>
 
       <Html
         position={[0, 0.82, 0]}
@@ -82,3 +68,58 @@ export function NpcSprite({ npc, active, onSelect }: NpcSpriteProps) {
     </group>
   );
 }
+
+interface NpcComponentProps {
+  npc: ScriptCharacter;
+  onSelect: (npcId: string) => void;
+  setHovered: (hovered: boolean) => void;
+}
+
+function NpcModel({ npc, onSelect, setHovered }: NpcComponentProps) {
+  const { scene } = useGLTF(`/models/sleuth/${npc.id}.glb`);
+  
+  return (
+    <primitive 
+      object={scene} 
+      scale={0.5} 
+      position={[0, -0.5, 0]} 
+      onClick={(event: ThreeEvent<MouseEvent>) => {
+        event.stopPropagation();
+        onSelect(npc.id);
+      }}
+      onPointerOver={(event: ThreeEvent<PointerEvent>) => {
+        event.stopPropagation();
+        setHovered(true);
+      }}
+      onPointerOut={(event: ThreeEvent<PointerEvent>) => {
+        event.stopPropagation();
+        setHovered(false);
+      }}
+    />
+  );
+}
+
+function FallbackSprite({ npc, onSelect, setHovered }: NpcComponentProps) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const texture = useTexture(npc.portrait as string) as any;
+  return (
+    <sprite
+      scale={[0.72, 0.96, 1]}
+      onClick={(event) => {
+        event.stopPropagation();
+        onSelect(npc.id);
+      }}
+      onPointerOver={(event) => {
+        event.stopPropagation();
+        setHovered(true);
+      }}
+      onPointerOut={(event) => {
+        event.stopPropagation();
+        setHovered(false);
+      }}
+    >
+      <spriteMaterial map={texture} transparent />
+    </sprite>
+  );
+}
+
