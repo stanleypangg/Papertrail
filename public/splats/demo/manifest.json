@@ -76,14 +76,27 @@
     "worldId": "8d00c3fb-ad8f-4c75-bd3c-8d21f0a67cdb"
   },
   "great-hall-sorting": {
-    "cachedAt": "2026-05-02T21:24:26.401Z",
-    "colliderPath": "/splats/demo/pageworld-great-hall-sorting-v20260502212426-11b2f0bf-collider.glb",
-    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/a127136c-6f1a-40ad-9a8a-93966bfd2e8a/80538b5f.glb",
-    "latestVersion": "v20260502212426-11b2f0bf",
-    "path": "/splats/demo/pageworld-great-hall-sorting-v20260502212426-11b2f0bf.spz",
-    "prompt": "Create a grand walkable first-person magical castle dining hall for a ceremonial school sorting scene. The space should be a large stone interior with a clear central aisle, long wooden banquet tables on both sides, benches, brass plates, goblets, candles, towering stone arches, tall leaded windows, hanging fabric banners with no readable symbols, a small wooden stool and pedestal at the far end, and an enchanted ceiling that feels like a starry night sky. Floating candles should create warm golden pools of light with soft shadows on the stone floor. Use strong architectural depth, visible walls, ceiling, floor, and a clear navigable route from entrance to front. No readable text, no logos, no characters, no modern objects, no abstract title-card composition.",
-    "sourceUrl": "https://cdn.marble.worldlabs.ai/a127136c-6f1a-40ad-9a8a-93966bfd2e8a/ede92c3b-2492-460a-91ff-590a087fe08a_sand_500k.spz",
+    "cachedAt": "2026-05-02T23:23:48.462Z",
+    "colliderPath": "/splats/demo/pageworld-great-hall-sorting-v20260502232348-a7883173-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/e3aa3552-8bff-41a9-8a92-e722f23e48d9/42c2b46d.glb",
+    "latestVersion": "v20260502232348-a7883173",
+    "path": "/splats/demo/pageworld-great-hall-sorting-v20260502232348-a7883173.spz",
+    "prompt": "Create a grand walkable first-person magical castle dining hall for the Hogwarts Sorting Ceremony. The space should be a vast stone interior with a clear central aisle, long wooden banquet tables on both sides, benches, brass plates, goblets, candles, towering stone arches, tall leaded windows, hanging house-colored fabric banners with no readable symbols, and an enchanted ceiling that appears as a deep starry night sky. At the far end, include a small wooden stool with an old patched pointed hat resting on it beneath a focused pool of candlelight, plus a raised staff table and carved stone backdrop. Floating candles should hover overhead and create warm golden pools of light with soft shadows on the stone floor. Use strong architectural depth, visible walls, ceiling, floor, and a clear navigable route from entrance to front. No readable text, no logos, no characters, no modern objects, no abstract title-card composition, no flat backdrop.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/e3aa3552-8bff-41a9-8a92-e722f23e48d9/9c103589-f0ac-4946-8344-c3deb894eff1_ceramic_500k.spz",
     "versions": [
+      {
+        "bytes": 7762167,
+        "cachedAt": "2026-05-02T23:23:48.462Z",
+        "colliderBytes": 4580012,
+        "colliderPath": "/splats/demo/pageworld-great-hall-sorting-v20260502232348-a7883173-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/e3aa3552-8bff-41a9-8a92-e722f23e48d9/42c2b46d.glb",
+        "operationId": "a7883173-4895-45a8-9b97-a4c685e1f344",
+        "path": "/splats/demo/pageworld-great-hall-sorting-v20260502232348-a7883173.spz",
+        "prompt": "Create a grand walkable first-person magical castle dining hall for the Hogwarts Sorting Ceremony. The space should be a vast stone interior with a clear central aisle, long wooden banquet tables on both sides, benches, brass plates, goblets, candles, towering stone arches, tall leaded windows, hanging house-colored fabric banners with no readable symbols, and an enchanted ceiling that appears as a deep starry night sky. At the far end, include a small wooden stool with an old patched pointed hat resting on it beneath a focused pool of candlelight, plus a raised staff table and carved stone backdrop. Floating candles should hover overhead and create warm golden pools of light with soft shadows on the stone floor. Use strong architectural depth, visible walls, ceiling, floor, and a clear navigable route from entrance to front. No readable text, no logos, no characters, no modern objects, no abstract title-card composition, no flat backdrop.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/e3aa3552-8bff-41a9-8a92-e722f23e48d9/9c103589-f0ac-4946-8344-c3deb894eff1_ceramic_500k.spz",
+        "version": "v20260502232348-a7883173",
+        "worldId": "e3aa3552-8bff-41a9-8a92-e722f23e48d9"
+      },
       {
         "bytes": 5833553,
         "cachedAt": "2026-05-02T21:24:26.401Z",
@@ -98,7 +111,7 @@
         "worldId": "a127136c-6f1a-40ad-9a8a-93966bfd2e8a"
       }
     ],
-    "worldId": "a127136c-6f1a-40ad-9a8a-93966bfd2e8a"
+    "worldId": "e3aa3552-8bff-41a9-8a92-e722f23e48d9"
   },
   "hogwarts-express-platform": {
     "cachedAt": "2026-05-02T23:06:35.164Z",
@@ -152,14 +165,27 @@
     "worldId": "cef10e0e-e465-4a83-9bb2-b099b9c175ca"
   },
   "black-lake-arrival": {
-    "cachedAt": "2026-05-02T22:12:34.953Z",
-    "colliderPath": "/splats/demo/pageworld-black-lake-arrival-v20260502221234-07ac6027-collider.glb",
-    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/eeb6c050-2460-42f8-92c9-bc422811cfc5/cae30c72.glb",
-    "latestVersion": "v20260502221234-07ac6027",
-    "path": "/splats/demo/pageworld-black-lake-arrival-v20260502221234-07ac6027.spz",
+    "cachedAt": "2026-05-02T23:16:18.487Z",
+    "colliderPath": "/splats/demo/pageworld-black-lake-arrival-v20260502231618-2cb693cc-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/3c215a8f-3f7e-46a9-90f3-edc694b07903/dbae6fa4.glb",
+    "latestVersion": "v20260502231618-2cb693cc",
+    "path": "/splats/demo/pageworld-black-lake-arrival-v20260502231618-2cb693cc.spz",
     "prompt": "Create an impressive walkable first-person magical castle arrival scene on the edge of the Black Lake at night, inspired by the first-years' boat approach to Hogwarts. The player should stand on a wet stone lakeshore or boathouse landing with a clear walkable path from foreground boats toward the castle. Include small old wooden boats pulled up to the shore, black reflective water, reeds, slick stones, rope posts, warm lanterns, drifting lake mist, moonlight, and a towering medieval castle with many lit windows rising on cliffs in the background. The castle should feel vast and vertical, with towers, turrets, bridges, steep roofs, and warm window grids reflected in the water. Use strong foreground/midground/background depth for a Gaussian splat walkthrough, realistic wet stone, dark water, wood, brass lanterns, and cold fog. No readable text, no characters, no modern objects, no logos, no flat backdrop, no fisheye distortion.",
-    "sourceUrl": "https://cdn.marble.worldlabs.ai/eeb6c050-2460-42f8-92c9-bc422811cfc5/0d68536c-533e-49a5-88c4-91abe513141b_sand_500k.spz",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/3c215a8f-3f7e-46a9-90f3-edc694b07903/b18b2c60-ed13-4195-bf76-880f15a7a316_ceramic_500k.spz",
     "versions": [
+      {
+        "bytes": 8038074,
+        "cachedAt": "2026-05-02T23:16:18.487Z",
+        "colliderBytes": 5778124,
+        "colliderPath": "/splats/demo/pageworld-black-lake-arrival-v20260502231618-2cb693cc-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/3c215a8f-3f7e-46a9-90f3-edc694b07903/dbae6fa4.glb",
+        "operationId": "2cb693cc-eb02-422f-8208-db2267346015",
+        "path": "/splats/demo/pageworld-black-lake-arrival-v20260502231618-2cb693cc.spz",
+        "prompt": "Create an impressive walkable first-person magical castle arrival scene on the edge of the Black Lake at night, inspired by the first-years' boat approach to Hogwarts. The player should stand on a wet stone lakeshore or boathouse landing with a clear walkable path from foreground boats toward the castle. Include small old wooden boats pulled up to the shore, black reflective water, reeds, slick stones, rope posts, warm lanterns, drifting lake mist, moonlight, and a towering medieval castle with many lit windows rising on cliffs in the background. The castle should feel vast and vertical, with towers, turrets, bridges, steep roofs, and warm window grids reflected in the water. Use strong foreground/midground/background depth for a Gaussian splat walkthrough, realistic wet stone, dark water, wood, brass lanterns, and cold fog. No readable text, no characters, no modern objects, no logos, no flat backdrop, no fisheye distortion.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/3c215a8f-3f7e-46a9-90f3-edc694b07903/b18b2c60-ed13-4195-bf76-880f15a7a316_ceramic_500k.spz",
+        "version": "v20260502231618-2cb693cc",
+        "worldId": "3c215a8f-3f7e-46a9-90f3-edc694b07903"
+      },
       {
         "bytes": 6170563,
         "cachedAt": "2026-05-02T22:12:34.953Z",
@@ -174,17 +200,30 @@
         "worldId": "eeb6c050-2460-42f8-92c9-bc422811cfc5"
       }
     ],
-    "worldId": "eeb6c050-2460-42f8-92c9-bc422811cfc5"
+    "worldId": "3c215a8f-3f7e-46a9-90f3-edc694b07903"
   },
   "grand-staircase-portraits": {
-    "cachedAt": "2026-05-02T22:15:53.133Z",
-    "colliderPath": "/splats/demo/pageworld-grand-staircase-portraits-v20260502221553-9bbb305b-collider.glb",
-    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/9353d011-a3b8-4529-9b68-3bf2e5f5fae3/8a52d8ba.glb",
-    "latestVersion": "v20260502221553-9bbb305b",
-    "path": "/splats/demo/pageworld-grand-staircase-portraits-v20260502221553-9bbb305b.spz",
-    "prompt": "Create a dramatic walkable first-person magical castle stairwell inspired by the Grand Staircase at Hogwarts. The player should stand on a broad stone landing with a clear safe walking area, surrounded by multiple intersecting stone staircases at different heights, carved railings, arched openings, portrait-covered walls, torch brackets, candle sconces, hanging shadows, and deep vertical space above and below. Make the stairs feel as if they could move: angled spans, offset landings, unusual connections, and impossible but physically grounded castle geometry. Include many framed portraits with no readable text and no recognizable faces, warm torchlight against cool gray stone, dust motes, worn steps, and strong parallax from foreground railing to distant upper landings. No characters, no readable signs, no modern objects, no logos, no flat backdrop, no fisheye distortion.",
-    "sourceUrl": "https://cdn.marble.worldlabs.ai/9353d011-a3b8-4529-9b68-3bf2e5f5fae3/e871eb46-9ea7-4cfd-83b1-06b5d6603bee_sand_500k.spz",
+    "cachedAt": "2026-05-02T23:32:30.039Z",
+    "colliderPath": "/splats/demo/pageworld-grand-staircase-portraits-v20260502233230-4049cacd-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/7efbdca0-5aab-4f1c-8003-1d9a176b3b43/125b1518.glb",
+    "latestVersion": "v20260502233230-4049cacd",
+    "path": "/splats/demo/pageworld-grand-staircase-portraits-v20260502233230-4049cacd.spz",
+    "prompt": "Create an impressive walkable first-person Hogwarts Grand Staircase scene: a towering vertical stone stairwell inside an ancient magical castle, with the player standing on a broad safe landing that overlooks many levels. Build a clear navigable landing and short walkable stair segment in the foreground, then surround it with multiple massive stone staircases crossing at different angles, offset landings, carved balustrades, arched doorways, suspended shadows, and deep open space rising several stories above and below. The stairs should feel like they can shift and rearrange: one staircase angled away from its landing, another connecting to an unexpected arch, and distant stairs disappearing into torchlit haze, but all geometry should remain physically grounded and readable. Cover the tall stone walls with dense framed portraits in varied gold and dark wood frames, but no readable text and no recognizable faces. Add warm torch brackets, candle sconces, dust motes, worn stone steps, chipped railings, gothic arches, and cool blue-gray ambient light in the upper shadows. Prioritize strong parallax and depth from foreground railing to midground crossing stairs to distant upper landings. No characters, no readable signs, no modern objects, no logos, no flat backdrop, no fisheye distortion.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/7efbdca0-5aab-4f1c-8003-1d9a176b3b43/9c127301-38a5-4f6c-bf57-2fcd7b60f022_ceramic_500k.spz",
     "versions": [
+      {
+        "bytes": 7743098,
+        "cachedAt": "2026-05-02T23:32:30.039Z",
+        "colliderBytes": 2802812,
+        "colliderPath": "/splats/demo/pageworld-grand-staircase-portraits-v20260502233230-4049cacd-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/7efbdca0-5aab-4f1c-8003-1d9a176b3b43/125b1518.glb",
+        "operationId": "4049cacd-9299-4d31-89f1-9790f1d1f431",
+        "path": "/splats/demo/pageworld-grand-staircase-portraits-v20260502233230-4049cacd.spz",
+        "prompt": "Create an impressive walkable first-person Hogwarts Grand Staircase scene: a towering vertical stone stairwell inside an ancient magical castle, with the player standing on a broad safe landing that overlooks many levels. Build a clear navigable landing and short walkable stair segment in the foreground, then surround it with multiple massive stone staircases crossing at different angles, offset landings, carved balustrades, arched doorways, suspended shadows, and deep open space rising several stories above and below. The stairs should feel like they can shift and rearrange: one staircase angled away from its landing, another connecting to an unexpected arch, and distant stairs disappearing into torchlit haze, but all geometry should remain physically grounded and readable. Cover the tall stone walls with dense framed portraits in varied gold and dark wood frames, but no readable text and no recognizable faces. Add warm torch brackets, candle sconces, dust motes, worn stone steps, chipped railings, gothic arches, and cool blue-gray ambient light in the upper shadows. Prioritize strong parallax and depth from foreground railing to midground crossing stairs to distant upper landings. No characters, no readable signs, no modern objects, no logos, no flat backdrop, no fisheye distortion.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/7efbdca0-5aab-4f1c-8003-1d9a176b3b43/9c127301-38a5-4f6c-bf57-2fcd7b60f022_ceramic_500k.spz",
+        "version": "v20260502233230-4049cacd",
+        "worldId": "7efbdca0-5aab-4f1c-8003-1d9a176b3b43"
+      },
       {
         "bytes": 5812286,
         "cachedAt": "2026-05-02T22:15:53.133Z",
@@ -199,6 +238,6 @@
         "worldId": "9353d011-a3b8-4529-9b68-3bf2e5f5fae3"
       }
     ],
-    "worldId": "9353d011-a3b8-4529-9b68-3bf2e5f5fae3"
+    "worldId": "7efbdca0-5aab-4f1c-8003-1d9a176b3b43"
   }
 }
