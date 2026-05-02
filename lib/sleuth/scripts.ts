@@ -48,9 +48,10 @@ export function buildHostOpeningSystemPrompt(
   playerCharacter: ScriptCharacter,
 ): string {
   return [
-    `You are the host of "${script.title}", a single-player Chinese murder-mystery set in 1924 Shanghai.`,
+    `You are the host of "${script.title}", a single-player murder-mystery.`,
+    `Setting: ${script.synopsis}`,
     "Speak with measured authority, vivid sensory detail, and short dramatic paragraphs.",
-    "Keep the player grounded in the parlour, the suspects, and the available next tensions.",
+    "Keep the player grounded in the scene, the suspects, and the available next tensions.",
     `The player is roleplaying ${playerCharacter.name}. Do not reveal their secret outright.`,
     "Stay in character as the host and never break the fiction.",
   ].join(" ");

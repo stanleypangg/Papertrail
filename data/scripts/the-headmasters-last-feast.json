@@ -1,0 +1,120 @@
+{
+  "id": "the-headmasters-last-feast",
+  "title": "The Headmaster's Last Feast",
+  "synopsis": "Hogwarts, midnight. Headmaster Dumbledore has collapsed at the head table during a private feast, and the Great Hall doors have sealed themselves with ancient ward magic. Every guest at the table had a reason to want the old wizard silenced before dawn.",
+  "worldPrompt": {
+    "type": "text",
+    "text_prompt": "The Hogwarts Great Hall at midnight, enchanted ceiling showing a thunderstorm, thousands of floating candles, four long house tables, the head table on a raised platform, stone walls with suits of armor, stained glass windows, gothic arches, warm golden candlelight, scattered goblets and plates.",
+    "disable_recaption": false
+  },
+  "cast": [
+    {
+      "id": "harry-potter",
+      "name": "Harry Potter",
+      "playerSelectable": true,
+      "publicBrief": "The Boy Who Lived, Dumbledore's protégé, seated closest to the Headmaster when he fell.",
+      "privateBrief": "Dumbledore recently told you about the Horcruxes and the prophecy binding you to Voldemort. In that same conversation he admitted — almost casually — that your death might be necessary to destroy the final piece of the Dark Lord's soul. You overheard him tell Snape: 'The boy must die at the proper time.' You came tonight to demand the truth, but now he cannot answer.",
+      "secret": "You stole three memories from Dumbledore's Pensieve last week to learn whether he truly planned your sacrifice, and you haven't returned them.",
+      "isMurderer": false,
+      "scenePosition": [-2.4, 1.4, -1.6],
+      "portrait": "/portraits/sleuth/harry-potter.png"
+    },
+    {
+      "id": "severus-snape",
+      "name": "Professor Snape",
+      "playerSelectable": true,
+      "publicBrief": "The Potions Master, seen lingering near the head table goblets before the feast began.",
+      "privateBrief": "Dumbledore made you swear an Unbreakable Vow to protect Draco Malfoy and, if the moment came, to be the one who strikes Dumbledore down — so that Draco's soul would remain intact. You carry a vial of modified Draught of Living Death at all times as part of that arrangement. Tonight you noticed someone had already tampered with the Headmaster's goblet before you could act.",
+      "secret": "You switched Dumbledore's mead with your Draught of Living Death earlier in the evening — it was meant to fake his death and buy time, not kill him. Someone replaced your potion with real poison.",
+      "isMurderer": false,
+      "scenePosition": [2.1, 1.5, -1.3],
+      "portrait": "/portraits/sleuth/severus-snape.png"
+    },
+    {
+      "id": "draco-malfoy",
+      "name": "Draco Malfoy",
+      "playerSelectable": true,
+      "publicBrief": "The Malfoy heir, pale and restless all evening, caught whispering near the staff corridor.",
+      "privateBrief": "The Dark Lord gave you one task this year: kill Dumbledore. The cursed necklace failed. The poisoned mead was intercepted. Tonight you repaired the Vanishing Cabinet and let a Death Eater into the castle through the Room of Requirement. They were supposed to corner Dumbledore after the feast — but someone poisoned his goblet before your plan could execute.",
+      "secret": "You smuggled a Death Eater into Hogwarts tonight through the Vanishing Cabinet you repaired in the Room of Requirement. They are still hiding in the castle.",
+      "isMurderer": true,
+      "scenePosition": [0.3, 1.45, -3.2],
+      "portrait": "/portraits/sleuth/draco-malfoy.png"
+    },
+    {
+      "id": "hermione-granger",
+      "name": "Hermione Granger",
+      "playerSelectable": true,
+      "publicBrief": "The brightest witch of her age, found examining the head table moments before the collapse.",
+      "privateBrief": "You discovered that Dumbledore has been manipulating Harry for years — raising him as a weapon, withholding the prophecy, engineering every danger Harry has faced so he would be hardened for a final sacrifice. You confronted Dumbledore privately last week and he didn't deny it. He asked you to trust him. You are not sure you can.",
+      "secret": "You brewed Polyjuice Potion, impersonated a house-elf, and searched Dumbledore's office for evidence of his manipulation. You found and copied a letter to Snape that confirms Harry is meant to die.",
+      "isMurderer": false,
+      "scenePosition": [-0.7, 1.35, -0.4],
+      "portrait": "/portraits/sleuth/hermione-granger.png"
+    },
+    {
+      "id": "luna-lovegood",
+      "name": "Luna Lovegood",
+      "playerSelectable": true,
+      "publicBrief": "The dreamy Ravenclaw who speaks in riddles and sees things others prefer to ignore.",
+      "privateBrief": "Your enchanted Spectrespecs showed you something terrifying during the feast — a dark cloaked figure moving through the corridors below the Great Hall, carrying something that pulsed with dark magic. You didn't tell anyone because last time you reported what you saw, nobody believed you. But you sketched the figure in your journal before the doors sealed.",
+      "secret": "You found a torn page about the Deathly Hallows in the Room of Requirement and kept it hidden because the symbol matched your mother's research — the research that killed her.",
+      "isMurderer": false,
+      "scenePosition": [3.0, 1.3, -2.5],
+      "portrait": "/portraits/sleuth/luna-lovegood.png"
+    }
+  ],
+  "clues": [
+    {
+      "id": "poisoned-goblet",
+      "location": "Dumbledore's golden goblet, still resting on the head table beside the overturned plate.",
+      "reveals": [
+        "A dark oily residue coats the inside of the goblet — not Snape's clear sleeping draught, but concentrated essence of belladonna mixed with acromantula venom.",
+        "The poison is Dark Arts grade, not something brewed at Hogwarts. It came from outside the castle."
+      ]
+    },
+    {
+      "id": "vanishing-cabinet",
+      "location": "A tall wardrobe humming faintly in the Room of Requirement on the seventh floor.",
+      "requires": ["draco-malfoy"],
+      "reveals": [
+        "The Vanishing Cabinet has been recently repaired and used — fresh scuff marks on the floor, and a lingering scent of Borgin and Burkes.",
+        "A dark cloak with a silver serpent clasp is draped inside, still warm."
+      ]
+    },
+    {
+      "id": "house-elf-witness",
+      "location": "Dobby, trembling behind the kitchen passage door off the Great Hall.",
+      "reveals": [
+        "A house-elf saw someone in a dark cloak slip a vial of black liquid into Dumbledore's goblet before the feast began.",
+        "The cloak had a silver serpent clasp — the same kind worn by known Death Eaters."
+      ]
+    },
+    {
+      "id": "coded-parchment",
+      "location": "A scrap of parchment wedged beneath the Slytherin table bench near Draco's seat.",
+      "requires": ["hermione-granger"],
+      "reveals": [
+        "Written in runic cipher that Hermione can decode: 'The old man drinks at midnight. The Cabinet is ready. Do not fail the Dark Lord again.'",
+        "The handwriting does not match Draco's — it was sent to him, not written by him."
+      ]
+    }
+  ],
+  "endings": {
+    "correct_accusation": {
+      "title": "Justice in the Great Hall",
+      "narration": "The floating candles flicker as the truth settles heavier than stone. The Vanishing Cabinet, the coded parchment, and the house-elf's testimony lock together: Draco Malfoy let the poison into Hogwarts, even if the hand that poured it belonged to a Death Eater he smuggled through. The enchanted ceiling clears to reveal cold stars, and the ancient wards finally release the doors — but nothing in this hall will ever feel safe again.",
+      "score": 100
+    },
+    "wrong_accusation": {
+      "title": "The Wrong Wand",
+      "narration": "Your accusation echoes off the stone walls, but the evidence bends away from it like light through a faulty prism. Too many threads remain untied, and the real architect of tonight's horror slips deeper into shadow while an innocent takes the first blow. By morning the castle is quieter, colder, and no closer to the truth Dumbledore took with him.",
+      "score": 0
+    },
+    "secret_defended_bonus": {
+      "title": "One Secret Kept",
+      "narration": "Whatever else the night destroyed, one private truth stayed hidden behind Occlumency and silence. In a castle built on secrets, that small victory is its own kind of magic.",
+      "score": 25
+    }
+  }
+}
