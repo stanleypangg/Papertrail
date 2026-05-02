@@ -11,3 +11,22 @@ pnpm-debug.log*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.worktrees/
+.autopilot/
+
+# Sleuth runtime
+sleuth.db
+sleuth.db-journal
+sleuth.db-wal
+sleuth.db-shm
+
+# Sleuth Marble cache (large binary splat files); the demo-day safety-net is committed below.
+public/splats/sleuth/*.splat
+
+# Playwright artifacts
+/playwright-report/
+/test-results/
+/playwright/.cache/
+
+# Vitest
+.vitest-cache/
