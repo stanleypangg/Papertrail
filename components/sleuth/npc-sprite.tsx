@@ -82,7 +82,7 @@ function NpcModel({ npc, onSelect, setHovered }: NpcComponentProps) {
     <primitive 
       object={scene} 
       scale={0.5} 
-      position={[0, -0.5, 0]} 
+      position={[0, -1.4, 0]} 
       onClick={(event: ThreeEvent<MouseEvent>) => {
         event.stopPropagation();
         onSelect(npc.id);

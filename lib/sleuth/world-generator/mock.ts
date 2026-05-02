@@ -6,7 +6,7 @@ import type {
 } from "./types";
 
 export const DEFAULT_FALLBACK_SPLAT_URL =
-  "/splats/sleuth/the-empress-last-tea-cached.splat";
+  "/splats/demo/pageworld-great-hall-sorting-v20260502212426-11b2f0bf.spz";
 
 export class MockProvider implements WorldGenerator {
   private readonly scriptIdToSplat: Map<string, string>;
