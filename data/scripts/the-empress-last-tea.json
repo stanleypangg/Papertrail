@@ -1,0 +1,124 @@
+{
+  "id": "the-empress-last-tea",
+  "title": "The Empress's Last Tea",
+  "synopsis": "Shanghai, 1924. The dowager hostess of a fading estate has collapsed at her own tea table, and every guest in the lacquered parlour had reason to want her silenced before midnight.",
+  "worldPrompt": {
+    "type": "text",
+    "text_prompt": "A 1920s Shanghai mansion tea parlour at dusk, lacquered screens, carved rosewood chairs, oil lamps, silk wall hangings, marble floor, a long tea table, storm light beyond frosted windows.",
+    "disable_recaption": false
+  },
+  "cast": [
+    {
+      "id": "mei-lin",
+      "name": "Mei-Lin · 美琳",
+      "playerSelectable": true,
+      "publicBrief": "The empress's adopted daughter, polished in Paris and newly summoned home.",
+      "privateBrief": "You returned from Paris expecting to negotiate your inheritance, only to learn the dowager had changed her will again. You know she financed your education with silver taken from the household dowry chest, and if that truth comes out the family will paint you as a thief rather than an heir. You loved her once, but tonight you must decide whether sentiment is worth ruin.",
+      "secret": "You forged one letter from your late father to pressure the dowager into naming you sole heir.",
+      "isMurderer": false,
+      "scenePosition": [-2.4, 1.4, -1.6],
+      "portrait": "/portraits/sleuth/mei-lin.png"
+    },
+    {
+      "id": "madam-wu",
+      "name": "Madam Wu · 吴夫人",
+      "playerSelectable": true,
+      "publicBrief": "The dowager's oldest confidante, famous for never spilling tea or secrets.",
+      "privateBrief": "You managed the estate books for twenty years and know every bribe, affair, and hidden debt tied to this parlour. The dowager promised to destroy the ledger implicating your son in opium shipments, then refused when she realized it gave her leverage over you. Tonight she intended to announce the ledger's contents in front of everyone. If that happened, your son's neck and your own standing would be finished by morning.",
+      "secret": "You replaced the dowager's nerve tonic with arsenic powder dissolved in chrysanthemum syrup just before the final pour.",
+      "isMurderer": true,
+      "scenePosition": [2.1, 1.5, -1.3],
+      "portrait": "/portraits/sleuth/madam-wu.png"
+    },
+    {
+      "id": "inspector-ren",
+      "name": "Inspector Ren · 任探长",
+      "playerSelectable": true,
+      "publicBrief": "A municipal detective invited as a family friend, though no one believes he came only for tea.",
+      "privateBrief": "You came unofficially because the estate has been laundering payments for a smuggling ring you've been tracing for months. The dowager claimed she would surrender names after tea, but she insisted on public theatrics rather than a private handoff. You need the truth without exposing that you used this social call as a covert investigation.",
+      "secret": "You took a bribe last spring from the same shipping syndicate now tied to the estate and have hidden the receipt inside your boot lining.",
+      "isMurderer": false,
+      "scenePosition": [0.3, 1.45, -3.2],
+      "portrait": "/portraits/sleuth/inspector-ren.png"
+    },
+    {
+      "id": "li-shao",
+      "name": "Li-Shao · 李韶",
+      "playerSelectable": true,
+      "publicBrief": "The dowager's nephew, a poet with expensive cuffs and no visible income.",
+      "privateBrief": "You expected the dowager to settle your gambling debts one last time in exchange for a quiet marriage alliance. Instead she threatened to expose the forged shipping seals you sold to smugglers. If that truth reaches the foreign concessions, your creditors will not wait for a court. You must keep the room focused on old grudges, not your desperate accounts.",
+      "secret": "You stole the jade seal from the family altar and used it to authenticate illegal warehouse permits.",
+      "isMurderer": false,
+      "scenePosition": [-0.7, 1.35, -0.4],
+      "portrait": "/portraits/sleuth/li-shao.png"
+    },
+    {
+      "id": "jin-qiao",
+      "name": "Jin-Qiao · 金巧",
+      "playerSelectable": true,
+      "publicBrief": "The head maid who knows every draft in the house and every quarrel behind its doors.",
+      "privateBrief": "You have kept this household upright through famine, warlord raids, and the dowager's vanity. You also saw the dowager burn the original marriage contract proving your mother was owed land here. Tonight you hid a copy of that contract in the coal scuttle. If the family learns you still have it, they will call you a blackmailer and worse.",
+      "secret": "You saw Madam Wu sweeten the dowager's cup alone, but you kept silent because Wu promised to free your brother from her son's opium debt.",
+      "isMurderer": false,
+      "scenePosition": [3.0, 1.3, -2.5],
+      "portrait": "/portraits/sleuth/jin-qiao.png"
+    }
+  ],
+  "clues": [
+    {
+      "id": "cracked-cup-rim",
+      "location": "The dowager's porcelain tea cup, resting beside the overturned final saucer.",
+      "reveals": [
+        "A bitter metallic residue clings to the sugar glaze at the rim.",
+        "Only the final cup was dosed; the shared teapot itself was clean."
+      ]
+    },
+    {
+      "id": "account-ledger-page",
+      "location": "Inside the hidden drawer of the rosewood sideboard behind the host chair.",
+      "requires": [
+        "inspector-ren"
+      ],
+      "reveals": [
+        "The estate ledger links Madam Wu's son to recent opium shipments.",
+        "The dowager annotated the page with the words: 'Read aloud tonight.'"
+      ]
+    },
+    {
+      "id": "burned-marriage-copy",
+      "location": "A coal scuttle near the brazier, wrapped in damp ash cloth.",
+      "reveals": [
+        "Jin-Qiao hid a surviving copy of a marriage settlement the family denied existed.",
+        "The dowager had recently tried to burn the copy but failed to destroy the seal."
+      ]
+    },
+    {
+      "id": "syrup-vial",
+      "location": "In Madam Wu's embroidered sleeve pocket, disguised as a perfume vial.",
+      "requires": [
+        "jin-qiao"
+      ],
+      "reveals": [
+        "The vial smells of chrysanthemum syrup with a sharp mineral edge.",
+        "Its residue matches the metallic bitterness in the dowager's cup."
+      ]
+    }
+  ],
+  "endings": {
+    "correct_accusation": {
+      "title": "Verdict Rendered",
+      "narration": "The parlour goes still as the truth settles heavier than incense. Madam Wu's calm fractures at last; the ledger, the syrup vial, and Jin-Qiao's silence lock together into one fatal pattern. Outside, rain needles the courtyard tiles while the family realizes the empire they feared losing had already begun collapsing from within.",
+      "score": 100
+    },
+    "wrong_accusation": {
+      "title": "The Wrong Shadow",
+      "narration": "Your accusation lands, but the room does not believe in it for long. Too many details remain crooked, and the true poison slips back into the folds of silk and courtesy while the wrong suspect takes the first blow. By dawn the house is quieter, poorer, and no closer to justice.",
+      "score": 0
+    },
+    "secret_defended_bonus": {
+      "title": "One Secret Kept",
+      "narration": "Whatever else the night destroyed, one private wound stayed hidden. In a house built on performance, that small silence is its own kind of victory.",
+      "score": 25
+    }
+  }
+}
