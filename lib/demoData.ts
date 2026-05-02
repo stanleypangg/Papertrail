@@ -64,7 +64,7 @@ export const demoScenes: ScenePlan[] = [
       walkableWorld: {
         provider: "world-labs",
         prompt:
-          "Create a richly detailed walkable first-person 3D world for a magical British wizarding marketplace. The player should stand on a narrow cobblestone street with a clear navigable path running forward through the scene, tall crooked shopfronts leaning inward on both sides, stacked chimneys, warm golden window light, hanging lanterns, barrels, crates, owl cages, wand boxes in display windows, broom handles, potion bottles, cloth awnings, uneven brick walls, and a visible brick archway behind the player as the entry threshold. Use strong foreground, midground, and background depth so the scene works as a Gaussian splat walkthrough. Make the environment whimsical but physically grounded, with realistic stone, wood, brass, glass, paper, and feather materials. No readable text, no logos, no characters, no modern objects, no flat backdrop, no fisheye distortion.",
+          "Create a richly detailed walkable first-person 3D world for Diagon Alley, the hidden British wizarding marketplace Harry first discovers behind the Leaky Cauldron. The player should stand just beyond the brick-wall entrance on a narrow cobblestone street with a clear navigable path forward. Include tall crooked shopfronts leaning inward on both sides, stacked chimneys, warm golden window light, hanging lanterns, barrels, crates, owl cages, wand boxes in a narrow wand-shop display, cauldrons, apothecary bottles, broom handles, parchment bundles, cloth awnings, uneven brick walls, and a white marble wizarding bank facade visible far down the street as a distant landmark. Use strong foreground, midground, and background depth so the scene works as a Gaussian splat walkthrough, with realistic stone, wood, brass, glass, paper, feathers, wet cobblestones, and warm window reflections. Whimsical but physically grounded, crowded with magical objects but with enough open floor to walk. No readable text, no logos, no characters, no modern objects, no flat backdrop, no fisheye distortion.",
         splatUrl: null,
         status: "planned"
       }
@@ -118,8 +118,8 @@ export const demoScenes: ScenePlan[] = [
       }
     ],
     transitionToNext: {
-      label: "Enter the Great Hall",
-      description: "The train whistle becomes the hush of the school hall before the Sorting."
+      label: "Cross the Black Lake",
+      description: "The train steam fades into cold lake mist as Hogwarts appears above the water."
     },
     integrations: {
       narration: {
@@ -131,7 +131,74 @@ export const demoScenes: ScenePlan[] = [
       walkableWorld: {
         provider: "world-labs",
         prompt:
-          "Create a detailed walkable first-person hidden railway platform for a magical school departure. The player should stand on a long stone platform with brick pillars forming a corridor, a scarlet steam locomotive along one side, open carriage doors, brass handles, luggage carts, stacked school trunks, bird cages, warm hanging lamps, benches, iron railings, polished train wheels, drifting steam layers, and a vanishing point down the platform. Design it for spatial exploration with enough ground clearance to walk, clear left/right landmarks, and dense but readable props. Lighting should be warm amber lamps cutting through cool white steam. No readable platform signs, no logos, no real-world brand marks, no crowds or characters, no flat wall backdrop.",
+          "Create a detailed walkable first-person hidden railway platform for Platform Nine and Three-Quarters, the secret magical departure platform at King's Cross. The player should stand on a long stone platform with brick pillars forming a corridor, a scarlet steam locomotive along one side, open carriage doors with brass handles, polished train wheels, iron railings, luggage carts, stacked school trunks, bird cages, benches, hanging lamps, and thick drifting steam. Include a brick barrier threshold behind the player, warm carriage light spilling from the train, amber platform lamps cutting through cool white steam, and a strong vanishing point down the platform. Make it spatially explorable with enough ground clearance to walk and clear left/right landmarks. No readable platform signs, no logos, no real-world brand marks, no crowds or characters, no modern objects, no flat wall backdrop, no fisheye distortion.",
+        splatUrl: null,
+        status: "planned"
+      }
+    }
+  },
+  {
+    id: "black-lake-arrival",
+    title: "Black Lake Arrival",
+    summary: "The first years cross the dark lake by boat and see Hogwarts Castle rise above the cliffs for the first time.",
+    layoutType: "open_clearing",
+    dressing:
+      "a cold moonlit lakeshore with small wooden boats, black water, reeds, lantern reflections, wet stones, a boathouse path, and Hogwarts Castle towering above distant cliffs",
+    mood: "wonder",
+    stylePrompt:
+      "moonlit magical lake arrival, small wooden boats, dark reflective water, castle on cliffs, lanterns, mist, first-person walkable cinematic fantasy shoreline",
+    narration:
+      "The lake is black glass beneath the boats. Ahead, towers and windows climb out of the cliffside, and Hogwarts becomes larger than rumor.",
+    sourceAnchors: [
+      {
+        quote: "Demo beat: the first years approach Hogwarts by boat across the lake.",
+        meaning: "This scene gives the demo a cinematic reveal of the castle before moving inside."
+      }
+    ],
+    objects: [
+      {
+        id: "first-year-boat",
+        label: "First-Year Boat",
+        visualType: "artifact",
+        description: "A small wooden boat rests against the stones, damp from the lake crossing.",
+        quote: "Demo beat: first years cross the lake in small boats.",
+        explanation: "The boat makes the castle arrival feel like a rite of passage.",
+        slot: "left"
+      },
+      {
+        id: "lake-lantern",
+        label: "Lake Lantern",
+        visualType: "lamp",
+        description: "A lantern glows near the waterline, reflected in ripples across the black lake.",
+        quote: "Demo beat: lantern light guides the students from water to castle.",
+        explanation: "The lantern gives the dark reveal a readable warm focal point.",
+        slot: "center"
+      },
+      {
+        id: "castle-path",
+        label: "Castle Path",
+        visualType: "door",
+        description: "A wet stone path climbs from the boats toward the castle entrance.",
+        quote: "Demo beat: arrival turns into entry.",
+        explanation: "The path connects the exterior reveal to the Great Hall sequence.",
+        slot: "right"
+      }
+    ],
+    transitionToNext: {
+      label: "Enter the Great Hall",
+      description: "The lake mist gives way to candlelight, stone arches, and the Sorting."
+    },
+    integrations: {
+      narration: {
+        provider: "elevenlabs",
+        script:
+          "The boats slide across the Black Lake, quiet except for water against wood. Then the castle appears above the cliffs, bright with windows, impossible and waiting.",
+        audioUrl: null
+      },
+      walkableWorld: {
+        provider: "world-labs",
+        prompt:
+          "Create an impressive walkable first-person magical castle arrival scene on the edge of the Black Lake at night, inspired by the first-years' boat approach to Hogwarts. The player should stand on a wet stone lakeshore or boathouse landing with a clear walkable path from foreground boats toward the castle. Include small old wooden boats pulled up to the shore, black reflective water, reeds, slick stones, rope posts, warm lanterns, drifting lake mist, moonlight, and a towering medieval castle with many lit windows rising on cliffs in the background. The castle should feel vast and vertical, with towers, turrets, bridges, steep roofs, and warm window grids reflected in the water. Use strong foreground/midground/background depth for a Gaussian splat walkthrough, realistic wet stone, dark water, wood, brass lanterns, and cold fog. No readable text, no characters, no modern objects, no logos, no flat backdrop, no fisheye distortion.",
         splatUrl: null,
         status: "planned"
       }
@@ -185,8 +252,8 @@ export const demoScenes: ScenePlan[] = [
       }
     ],
     transitionToNext: {
-      label: "Into the Forbidden Forest",
-      description: "The candlelight thins into moonlight between dark trees."
+      label: "Climb the Grand Staircase",
+      description: "The Sorting candles stretch into moving stairs, portraits, and living castle corridors."
     },
     integrations: {
       narration: {
@@ -198,7 +265,74 @@ export const demoScenes: ScenePlan[] = [
       walkableWorld: {
         provider: "world-labs",
         prompt:
-          "Create a grand walkable first-person magical castle dining hall for a ceremonial school sorting scene. The space should be a large stone interior with a clear central aisle, long wooden banquet tables on both sides, benches, brass plates, goblets, candles, towering stone arches, tall leaded windows, hanging fabric banners with no readable symbols, a small wooden stool and pedestal at the far end, and an enchanted ceiling that feels like a starry night sky. Floating candles should create warm golden pools of light with soft shadows on the stone floor. Use strong architectural depth, visible walls, ceiling, floor, and a clear navigable route from entrance to front. No readable text, no logos, no characters, no modern objects, no abstract title-card composition.",
+          "Create a grand walkable first-person magical castle dining hall for the Hogwarts Sorting Ceremony. The space should be a vast stone interior with a clear central aisle, long wooden banquet tables on both sides, benches, brass plates, goblets, candles, towering stone arches, tall leaded windows, hanging house-colored fabric banners with no readable symbols, and an enchanted ceiling that appears as a deep starry night sky. At the far end, include a small wooden stool with an old patched pointed hat resting on it beneath a focused pool of candlelight, plus a raised staff table and carved stone backdrop. Floating candles should hover overhead and create warm golden pools of light with soft shadows on the stone floor. Use strong architectural depth, visible walls, ceiling, floor, and a clear navigable route from entrance to front. No readable text, no logos, no characters, no modern objects, no abstract title-card composition, no flat backdrop.",
+        splatUrl: null,
+        status: "planned"
+      }
+    }
+  },
+  {
+    id: "grand-staircase-portraits",
+    title: "The Grand Staircase",
+    summary: "The castle reveals itself as a living maze of moving stairs, tall portraits, torchlit landings, and impossible vertical space.",
+    layoutType: "corridor_path",
+    dressing:
+      "a towering castle stairwell with moving stone staircases, portrait-covered walls, torch brackets, carved railings, arched landings, and deep vertical shadows",
+    mood: "mysterious",
+    stylePrompt:
+      "magical castle grand staircase, moving stairs, portrait walls, torchlight, tall stone shafts, arched landings, walkable first-person interior fantasy architecture",
+    narration:
+      "Inside the castle, even the hallways have opinions. Stairs climb, turn, and threaten to become something else while painted eyes follow from every wall.",
+    sourceAnchors: [
+      {
+        quote: "Demo beat: Hogwarts is not just a building; it moves, watches, and rearranges itself.",
+        meaning: "This scene showcases the castle as an explorable magical system between the ceremonial hall and the dangerous forest."
+      }
+    ],
+    objects: [
+      {
+        id: "moving-stair",
+        label: "Moving Stair",
+        visualType: "artifact",
+        description: "A broad stone staircase angles away from the landing as if it has just shifted position.",
+        quote: "Demo beat: staircases change inside Hogwarts.",
+        explanation: "The angled stair makes the environment feel alive without needing animated characters.",
+        slot: "center"
+      },
+      {
+        id: "portrait-wall",
+        label: "Portrait Wall",
+        visualType: "portrait",
+        description: "A dense wall of framed portraits climbs several stories into shadow.",
+        quote: "Demo beat: portraits in Hogwarts behave like residents.",
+        explanation: "The portrait wall gives the scene lore density and visual scale.",
+        slot: "wall"
+      },
+      {
+        id: "torch-landing",
+        label: "Torchlit Landing",
+        visualType: "lamp",
+        description: "A torch bracket burns beside a stone landing that overlooks the stairwell.",
+        quote: "Demo beat: old castle light guides students through confusing corridors.",
+        explanation: "The torch creates a navigable waypoint and strong warm contrast.",
+        slot: "right"
+      }
+    ],
+    transitionToNext: {
+      label: "Into the Forbidden Forest",
+      description: "Stone stairs and portrait whispers fade into roots, fog, and moonlit trees."
+    },
+    integrations: {
+      narration: {
+        provider: "elevenlabs",
+        script:
+          "The Grand Staircase rises through the castle like a tower of choices. Portraits crowd the walls, torches burn in the stone, and every landing seems to lead somewhere different.",
+        audioUrl: null
+      },
+      walkableWorld: {
+        provider: "world-labs",
+        prompt:
+          "Create a dramatic walkable first-person magical castle stairwell inspired by the Grand Staircase at Hogwarts. The player should stand on a broad stone landing with a clear safe walking area, surrounded by multiple intersecting stone staircases at different heights, carved railings, arched openings, portrait-covered walls, torch brackets, candle sconces, hanging shadows, and deep vertical space above and below. Make the stairs feel as if they could move: angled spans, offset landings, unusual connections, and impossible but physically grounded castle geometry. Include many framed portraits with no readable text and no recognizable faces, warm torchlight against cool gray stone, dust motes, worn steps, and strong parallax from foreground railing to distant upper landings. No characters, no readable signs, no modern objects, no logos, no flat backdrop, no fisheye distortion.",
         splatUrl: null,
         status: "planned"
       }
@@ -265,7 +399,7 @@ export const demoScenes: ScenePlan[] = [
       walkableWorld: {
         provider: "world-labs",
         prompt:
-          "Create a tense walkable first-person moonlit magical forest clearing outside a distant castle. The player should stand on a narrow dirt path that opens into a small clearing with navigable ground, twisted tree trunks, exposed roots crossing the path, mossy stones, broken branches, low blue-gray fog, silver moonlight shafts, wet leaves, a half-buried lantern near the trail, and a faint castle glow visible far behind the trees. Build strong foreground roots, midground clearing details, and background tree silhouettes for deep spatial parallax in a Gaussian splat. The mood should be dangerous but beautiful, with cool moonlight and small warm lantern contrast. No characters, no creatures, no readable text, no logos, no flat painted backdrop, no fisheye distortion.",
+          "Create a tense walkable first-person moonlit Forbidden Forest clearing on the edge of the Hogwarts grounds. The player should stand on a narrow dirt path that opens into a small navigable clearing with twisted ancient tree trunks, exposed roots crossing the path, mossy stones, broken branches, wet leaves, brambles, low blue-gray fog, silver moonlight shafts, and deep black tree silhouettes. Include a half-buried lantern near the trail, a faint warm castle glow far behind the trees, and subtle magical traces such as pale silver light on leaves and a small protective glow in the clearing. Build strong foreground roots, midground clearing details, and background tree density for deep spatial parallax in a Gaussian splat. Dangerous but beautiful, cool moonlight with small warm lantern contrast. No characters, no creatures, no readable text, no logos, no modern objects, no flat painted backdrop, no fisheye distortion.",
         splatUrl: null,
         status: "planned"
       }
