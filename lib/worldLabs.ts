@@ -22,46 +22,59 @@ type OperationResponse = {
   result?: unknown;
 };
 
+type CachedSplatVersion = {
+  bytes: number;
+  cachedAt: string;
+  colliderBytes?: number;
+  colliderPath?: string;
+  colliderSourceUrl?: string;
+  operationId?: string;
+  path: string;
+  prompt?: string;
+  sourceUrl: string;
+  version: string;
+  worldId?: string;
+};
+
 type CachedSplatManifest = Record<string, {
   cachedAt: string;
+  colliderPath?: string;
+  colliderSourceUrl?: string;
   latestVersion: string;
   path: string;
   prompt?: string;
   sourceUrl: string;
-  versions: Array<{
-    bytes: number;
-    cachedAt: string;
-    operationId?: string;
-    path: string;
-    prompt?: string;
-    sourceUrl: string;
-    version: string;
-  }>;
+  versions: CachedSplatVersion[];
+  worldId?: string;
 }>;
+
+type WorldLabsAssetUrls = {
+  colliderUrl: string | null;
+  splatUrl: string | null;
+  splatUrls: string[];
+  worldId: string | null;
+  worldUrl: string | null;
+};
 
 export type WorldLabsScene = {
   id: string;
   title: string;
   prompt: string;
   cachedPath: string | null;
+  colliderPath: string | null;
   latestVersion: string | null;
-  versions: Array<{
-    bytes: number;
-    cachedAt: string;
-    operationId?: string;
-    path: string;
-    prompt?: string;
-    sourceUrl: string;
-    version: string;
-  }>;
+  versions: CachedSplatVersion[];
+  worldId: string | null;
 };
 
 export type WorldLabsOperationStatus = {
+  assets: WorldLabsAssetUrls;
   done: boolean;
   error: string | null;
   metadata: unknown;
   operationId: string;
   raw: unknown;
+  colliderUrls: string[];
   splatUrls: string[];
   worldId: string | null;
 };
@@ -74,8 +87,10 @@ export async function listWorldLabsDemoScenes(): Promise<WorldLabsScene[]> {
     title: scene.title,
     prompt: scene.integrations?.walkableWorld?.prompt ?? scene.stylePrompt,
     cachedPath: manifest[scene.id]?.path ?? null,
+    colliderPath: manifest[scene.id]?.colliderPath ?? null,
     latestVersion: manifest[scene.id]?.latestVersion ?? null,
-    versions: manifest[scene.id]?.versions ?? []
+    versions: manifest[scene.id]?.versions ?? [],
+    worldId: manifest[scene.id]?.worldId ?? null
   }));
 }
 
@@ -138,23 +153,40 @@ export async function getWorldLabsOperation(operationId: string): Promise<WorldL
   }
 
   const body = await response.json() as OperationResponse;
-  const result = body.response ?? body.result ?? null;
+  const snapshot = body.response ?? body.result ?? null;
+  const metadataWorldId = readWorldId(body.metadata);
+  const snapshotWorldId = readWorldId(snapshot);
+  const worldId = snapshotWorldId || metadataWorldId;
+  const latestWorld = body.done === true && worldId ? await tryGetWorldLabsWorld(worldId) : null;
+  const assets = normalizeWorldLabsAssets(latestWorld ?? snapshot, worldId);
 
   return {
+    assets,
     done: body.done === true,
     error: readOperationError(body.error),
     metadata: body.metadata ?? null,
     operationId,
     raw: body,
-    splatUrls: extractSplatUrls(result),
-    worldId: readWorldId(result)
+    colliderUrls: assets.colliderUrl ? [assets.colliderUrl] : [],
+    splatUrls: assets.splatUrls,
+    worldId: assets.worldId
   };
 }
 
 export async function cacheWorldLabsSplat(
   sceneId: string,
   splatUrl: string,
-  options: { operationId?: string; prompt?: string } = {}
+  options: { colliderUrl?: string; operationId?: string; prompt?: string; worldId?: string } = {}
+) {
+  return cacheWorldLabsAssets(sceneId, {
+    ...options,
+    splatUrl
+  });
+}
+
+export async function cacheWorldLabsAssets(
+  sceneId: string,
+  options: { colliderUrl?: string; operationId?: string; prompt?: string; splatUrl?: string; worldId?: string } = {}
 ) {
   const scene = getWorldLabsDemoScene(sceneId);
 
@@ -162,54 +194,220 @@ export async function cacheWorldLabsSplat(
     throw new Error("Unknown demo scene.");
   }
 
-  if (!isHttpUrl(splatUrl)) {
-    throw new Error("Splat URL must be an http(s) URL.");
+  const resolved = await resolveWorldLabsAssets(options);
+  const splatUrl = options.splatUrl ?? resolved.splatUrl;
+  const colliderUrl = options.colliderUrl ?? resolved.colliderUrl;
+  const worldId = options.worldId ?? resolved.worldId ?? undefined;
+
+  if (!splatUrl) {
+    throw new Error("No World Labs splat URL found. Poll the operation again after it completes.");
   }
 
-  const response = await fetch(splatUrl, { cache: "no-store" });
-
-  if (!response.ok) {
-    throw new Error(`Could not download splat (${response.status}).`);
-  }
-
-  const bytes = Buffer.from(await response.arrayBuffer());
-  const extension = extensionFromUrl(splatUrl) ?? ".splat";
+  const splat = await downloadRemoteAsset(splatUrl, "splat");
+  const extension = extensionFromUrl(splatUrl) ?? ".spz";
   const cachedAt = new Date().toISOString();
   const version = createSplatVersion(cachedAt, options.operationId);
   const fileName = `pageworld-${scene.id}-${version}${extension}`;
   const filePath = path.join(DEMO_SPLAT_DIR, fileName);
   const publicPath = `/splats/demo/${fileName}`;
   const manifest = await readCachedSplatManifest();
+  const collider = colliderUrl ? await downloadWorldLabsCollider(scene.id, version, colliderUrl) : null;
 
   await mkdir(DEMO_SPLAT_DIR, { recursive: true });
-  await writeFile(filePath, bytes);
+  await writeFile(filePath, splat.bytes);
 
-  const versionEntry = {
-    bytes: bytes.byteLength,
+  const versionEntry: CachedSplatVersion = {
+    bytes: splat.bytes.byteLength,
     cachedAt,
+    colliderBytes: collider?.bytes,
+    colliderPath: collider?.path,
+    colliderSourceUrl: collider?.sourceUrl,
     operationId: options.operationId,
     path: publicPath,
     prompt: options.prompt,
     sourceUrl: splatUrl,
-    version
+    version,
+    worldId
   };
   const previousVersions = manifest[scene.id]?.versions ?? [];
 
   manifest[scene.id] = {
     cachedAt,
+    colliderPath: collider?.path ?? manifest[scene.id]?.colliderPath,
+    colliderSourceUrl: collider?.sourceUrl ?? manifest[scene.id]?.colliderSourceUrl,
     latestVersion: version,
     path: publicPath,
     prompt: options.prompt,
     sourceUrl: splatUrl,
-    versions: [versionEntry, ...previousVersions]
+    versions: [versionEntry, ...previousVersions],
+    worldId
   };
 
-  await writeFile(DEMO_SPLAT_MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
+  await writeCachedSplatManifest(manifest);
 
   return {
-    bytes: bytes.byteLength,
+    bytes: splat.bytes.byteLength,
+    colliderPath: collider?.path ?? null,
     path: publicPath,
-    version
+    version,
+    worldId
+  };
+}
+
+export async function cacheWorldLabsCollider(
+  sceneId: string,
+  options: { colliderUrl?: string; operationId?: string; worldId?: string } = {}
+) {
+  const scene = getWorldLabsDemoScene(sceneId);
+
+  if (!scene) {
+    throw new Error("Unknown demo scene.");
+  }
+
+  const manifest = await readCachedSplatManifest();
+  const sceneManifest = manifest[scene.id];
+
+  if (!sceneManifest) {
+    throw new Error("Cache a splat before caching its collider mesh.");
+  }
+
+  const resolved = await resolveWorldLabsAssets({
+    operationId: options.operationId,
+    worldId: options.worldId ?? sceneManifest.worldId
+  });
+  const colliderUrl = options.colliderUrl ?? resolved.colliderUrl;
+
+  if (!colliderUrl) {
+    throw new Error("No collider mesh URL found for this scene.");
+  }
+
+  const collider = await downloadWorldLabsCollider(scene.id, sceneManifest.latestVersion, colliderUrl);
+  const [latestVersion, ...otherVersions] = sceneManifest.versions;
+  const nextLatestVersion = latestVersion ? {
+    ...latestVersion,
+    colliderBytes: collider.bytes,
+    colliderPath: collider.path,
+    colliderSourceUrl: collider.sourceUrl
+  } : latestVersion;
+
+  manifest[scene.id] = {
+    ...sceneManifest,
+    colliderPath: collider.path,
+    colliderSourceUrl: collider.sourceUrl,
+    versions: nextLatestVersion ? [nextLatestVersion, ...otherVersions] : sceneManifest.versions,
+    worldId: options.worldId ?? resolved.worldId ?? sceneManifest.worldId
+  };
+
+  await writeCachedSplatManifest(manifest);
+
+  return collider;
+}
+
+async function resolveWorldLabsAssets(options: { operationId?: string; worldId?: string }) {
+  if (options.worldId) {
+    const world = await tryGetWorldLabsWorld(options.worldId);
+    if (world) {
+      return normalizeWorldLabsAssets(world, options.worldId);
+    }
+  }
+
+  if (options.operationId) {
+    const operation = await getWorldLabsOperation(options.operationId);
+    return operation.assets;
+  }
+
+  return normalizeWorldLabsAssets(null, null);
+}
+
+async function tryGetWorldLabsWorld(worldId: string) {
+  const apiKey = getWorldLabsApiKey();
+  const response = await fetch(`${WORLD_LABS_API_URL}/worlds/${encodeURIComponent(worldId)}`, {
+    headers: worldLabsHeaders(apiKey),
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json();
+}
+
+function normalizeWorldLabsAssets(value: unknown, fallbackWorldId: string | null): WorldLabsAssetUrls {
+  const world = unwrapWorld(value);
+  const worldRecord = isRecord(world) ? world : {};
+  const assets = isRecord(worldRecord.assets) ? worldRecord.assets : {};
+  const splats = isRecord(assets.splats) ? assets.splats : {};
+  const mesh = isRecord(assets.mesh) ? assets.mesh : {};
+  const canonicalSplatUrls = readSpzUrls(splats.spz_urls);
+  const fallbackSplatUrls = canonicalSplatUrls.length > 0 ? canonicalSplatUrls : extractSplatUrls(world);
+  const canonicalColliderUrl = stringValue(mesh.collider_mesh_url);
+  const fallbackColliderUrls = canonicalColliderUrl ? [canonicalColliderUrl] : extractColliderUrls(world);
+  const worldId = readWorldId(world) || fallbackWorldId;
+
+  return {
+    colliderUrl: fallbackColliderUrls[0] ?? null,
+    splatUrl: fallbackSplatUrls[0] ?? null,
+    splatUrls: fallbackSplatUrls,
+    worldId,
+    worldUrl: stringValue(worldRecord.world_marble_url) || null
+  };
+}
+
+function unwrapWorld(value: unknown): unknown {
+  if (!isRecord(value)) {
+    return value;
+  }
+
+  return isRecord(value.world) ? value.world : value;
+}
+
+function readSpzUrls(value: unknown): string[] {
+  if (!isRecord(value)) {
+    return [];
+  }
+
+  const preferredKeys = ["500k", "100k", "full_res"];
+  const urls = preferredKeys
+    .map((key) => stringValue(value[key]))
+    .filter(isHttpUrl);
+  const remainingUrls = Object.entries(value)
+    .filter(([key]) => !preferredKeys.includes(key))
+    .map(([, candidate]) => stringValue(candidate))
+    .filter(isHttpUrl);
+
+  return [...urls, ...remainingUrls];
+}
+
+async function downloadWorldLabsCollider(sceneId: string, version: string, colliderUrl: string) {
+  const collider = await downloadRemoteAsset(colliderUrl, "collider");
+  const fileName = `pageworld-${sceneId}-${version}-collider.glb`;
+  const filePath = path.join(DEMO_SPLAT_DIR, fileName);
+  const publicPath = `/splats/demo/${fileName}`;
+
+  await mkdir(DEMO_SPLAT_DIR, { recursive: true });
+  await writeFile(filePath, collider.bytes);
+
+  return {
+    bytes: collider.bytes.byteLength,
+    path: publicPath,
+    sourceUrl: colliderUrl
+  };
+}
+
+async function downloadRemoteAsset(url: string, label: string) {
+  if (!isHttpUrl(url)) {
+    throw new Error(`${label} URL must be an http(s) URL.`);
+  }
+
+  const response = await fetch(url, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error(`Could not download ${label} (${response.status}).`);
+  }
+
+  return {
+    bytes: Buffer.from(await response.arrayBuffer())
   };
 }
 
@@ -241,10 +439,40 @@ async function readCachedSplatManifest(): Promise<CachedSplatManifest> {
   }
 }
 
+async function writeCachedSplatManifest(manifest: CachedSplatManifest) {
+  await mkdir(DEMO_SPLAT_DIR, { recursive: true });
+  await writeFile(DEMO_SPLAT_MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
 function extractSplatUrls(value: unknown): string[] {
   const urls = new Set<string>();
   collectSplatUrls(value, urls);
   return Array.from(urls);
+}
+
+function extractColliderUrls(value: unknown): string[] {
+  const urls = new Set<string>();
+  collectColliderUrls(value, urls);
+  return Array.from(urls);
+}
+
+function collectColliderUrls(value: unknown, urls: Set<string>) {
+  if (!value || typeof value !== "object") {
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectColliderUrls(item, urls));
+    return;
+  }
+
+  for (const [key, candidate] of Object.entries(value)) {
+    if (typeof candidate === "string" && isHttpUrl(candidate) && looksLikeColliderKeyOrUrl(key, candidate)) {
+      urls.add(candidate);
+    } else if (candidate && typeof candidate === "object") {
+      collectColliderUrls(candidate, urls);
+    }
+  }
 }
 
 function collectSplatUrls(value: unknown, urls: Set<string>) {
@@ -257,9 +485,7 @@ function collectSplatUrls(value: unknown, urls: Set<string>) {
     return;
   }
 
-  const record = value as Record<string, unknown>;
-
-  for (const [key, candidate] of Object.entries(record)) {
+  for (const [key, candidate] of Object.entries(value)) {
     if (typeof candidate === "string" && isHttpUrl(candidate) && looksLikeSplatKeyOrUrl(key, candidate)) {
       urls.add(candidate);
     } else if (candidate && typeof candidate === "object") {
@@ -275,17 +501,28 @@ function looksLikeSplatKeyOrUrl(key: string, url: string): boolean {
   return normalizedKey.includes("splat")
     || normalizedKey.includes("spz")
     || normalizedUrl.endsWith(".splat")
-    || normalizedUrl.endsWith(".spz")
-    || normalizedUrl.includes("splat");
+    || normalizedUrl.endsWith(".spz");
+}
+
+function looksLikeColliderKeyOrUrl(key: string, url: string): boolean {
+  const normalizedKey = key.toLowerCase();
+  const normalizedUrl = url.toLowerCase().split("?")[0];
+
+  return (normalizedKey.includes("collider") || normalizedKey.includes("mesh"))
+    && normalizedUrl.endsWith(".glb");
 }
 
 function readWorldId(value: unknown): string | null {
-  if (!value || typeof value !== "object") {
+  if (!isRecord(value)) {
     return null;
   }
 
-  const record = value as Record<string, unknown>;
-  return stringValue(record.world_id) || stringValue(record.id) || null;
+  const progress = isRecord(value.progress) ? value.progress : {};
+
+  return stringValue(value.world_id)
+    || stringValue(value.id)
+    || stringValue(progress.world_id)
+    || null;
 }
 
 function readOperationError(value: unknown): string | null {
@@ -297,9 +534,8 @@ function readOperationError(value: unknown): string | null {
     return value;
   }
 
-  if (typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    return stringValue(record.message) || stringValue(record.detail) || JSON.stringify(value);
+  if (isRecord(value)) {
+    return stringValue(value.message) || stringValue(value.detail) || JSON.stringify(value);
   }
 
   return String(value);
@@ -337,6 +573,10 @@ function isHttpUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function stringValue(value: unknown): string {

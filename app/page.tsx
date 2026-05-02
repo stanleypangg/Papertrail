@@ -8,7 +8,7 @@ import { LoadingState, type LoadingProgressState } from "@/components/LoadingSta
 import { SceneCards } from "@/components/SceneCards";
 import { UploadPanel } from "@/components/UploadPanel";
 import { demoMuralUrl, demoScenes } from "@/lib/demoData";
-import { DEMO_SPLAT_MANIFEST_URL, emptySceneSplatMap, sceneSplatsFromManifest, type DemoSplatManifest, type SceneSplatMap } from "@/lib/demoSplats";
+import { DEMO_SPLAT_MANIFEST_URL, emptySceneColliderMap, emptySceneSplatMap, sceneCollidersFromManifest, sceneSplatsFromManifest, type DemoSplatManifest, type SceneColliderMap, type SceneSplatMap } from "@/lib/demoSplats";
 import type { SceneObjectModelMap } from "@/lib/objectModels";
 import { sceneImageKey, visibleSceneImages, type SceneImageMap } from "@/lib/sceneImages";
 import type { ScenePlan } from "@/lib/sceneSchema";
@@ -28,6 +28,7 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [scenes, setScenes] = useState<ScenePlan[]>(demoScenes);
   const [sceneImages, setSceneImages] = useState<SceneImageMap>(() => demoSceneImages());
+  const [sceneColliders, setSceneColliders] = useState<SceneColliderMap>(() => emptySceneColliderMap(demoScenes));
   const [sceneSplats, setSceneSplats] = useState<SceneSplatMap>(() => emptySceneSplatMap(demoScenes));
   const [objectModels, setObjectModels] = useState<SceneObjectModelMap>({});
   const [source, setSource] = useState("demo");
@@ -46,11 +47,13 @@ export default function Home() {
       .then((response) => response.ok ? response.json() as Promise<DemoSplatManifest> : null)
       .then((manifest) => {
         if (!canceled) {
+          setSceneColliders(sceneCollidersFromManifest(scenes, manifest));
           setSceneSplats(sceneSplatsFromManifest(scenes, manifest));
         }
       })
       .catch(() => {
         if (!canceled) {
+          setSceneColliders(emptySceneColliderMap(scenes));
           setSceneSplats(emptySceneSplatMap(scenes));
         }
       });
@@ -90,6 +93,7 @@ export default function Home() {
 
     setMode("loading");
     setSceneImages({});
+    setSceneColliders(emptySceneColliderMap(scenes));
     setSceneSplats(emptySceneSplatMap(scenes));
     setObjectModels({});
     setShareUrl(null);
@@ -166,6 +170,7 @@ export default function Home() {
       const shareResult = createShareUrl(event.sharePath);
       setScenes(event.scenes);
       setSceneImages(event.sceneImages);
+      setSceneColliders(sceneCollidersFromManifest(event.scenes, null));
       setSceneSplats(sceneSplatsFromManifest(event.scenes, null));
       setObjectModels(event.objectModels);
       setSource(event.source);
@@ -181,6 +186,7 @@ export default function Home() {
     generationAbortRef.current = null;
     setFile(null);
     setSceneImages(demoSceneImages());
+    setSceneColliders(emptySceneColliderMap(demoScenes));
     setSceneSplats(emptySceneSplatMap(demoScenes));
     setObjectModels({});
     setShareUrl(null);
@@ -215,6 +221,7 @@ export default function Home() {
       <WorldViewer
         scenes={scenes}
         sceneImages={visibleImages}
+        sceneColliders={sceneColliders}
         sceneSplats={sceneSplats}
         objectModels={objectModels}
         onExit={() => setMode("cards")}

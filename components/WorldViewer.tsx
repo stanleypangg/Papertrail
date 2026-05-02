@@ -1,12 +1,20 @@
 "use client";
 
 import { SparkRenderer, SplatMesh } from "@sparkjsdev/spark";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { ArrowLeft, MousePointer2, RotateCcw, Settings } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  BoxHelper,
   Clock,
   Color,
+  DoubleSide,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  Object3D,
   PerspectiveCamera,
+  Raycaster,
   Scene,
   Vector3,
   WebGLRenderer
@@ -18,6 +26,7 @@ import type { ScenePlan } from "@/lib/sceneSchema";
 type WorldViewerProps = {
   scenes: ScenePlan[];
   sceneImages: Record<string, string | null>;
+  sceneColliders?: Record<string, string | null>;
   sceneSplats?: Record<string, string | null>;
   objectModels: SceneObjectModelMap;
   onExit: () => void;
@@ -36,17 +45,48 @@ const DEFAULT_SPLAT_TRANSFORM: SplatTransform = {
   scale: 1
 };
 
-const PLAYER_HEIGHT = 1.65;
+const DEFAULT_COLLIDER_TRANSFORM: SplatTransform = {
+  position: [0, 0, 0],
+  rotation: [180, 0, 0],
+  scale: 1
+};
+
+const PLAYER_HEIGHT = 1;
 const START_Z = 2.5;
 const WALK_SPEED = 1.2;
+const SPRINT_MULTIPLIER = 2.4;
+const COLLISION_RADIUS = 0.36;
+const COLLISION_HEIGHTS = [0.24, 0.74];
+const COLLISION_SIDE_OFFSETS = [-0.24, 0, 0.24];
+const GRAVITY = -9.8;
+const GROUND_PROBE_HEIGHT = 3;
+const GROUND_PROBE_DEPTH = 8;
+const GROUND_SNAP_DISTANCE = 0.22;
+const MAX_STEP_HEIGHT = 0.22;
 const LOOK_SENSITIVITY = 0.0022;
 const tempForward = new Vector3();
 const tempRight = new Vector3();
 const tempMove = new Vector3();
+const tempAxisMove = new Vector3();
+const tempMoveDirection = new Vector3();
+const tempMovePerp = new Vector3();
+const tempRayOrigin = new Vector3();
 const tempSize = new Vector3();
+const tempNormal = new Vector3();
+const movementRaycaster = new Raycaster();
+const groundRaycaster = new Raycaster();
+const COLLIDER_DEBUG_MATERIAL = new MeshBasicMaterial({
+  color: 0x34d399,
+  depthTest: false,
+  depthWrite: false,
+  side: DoubleSide,
+  transparent: true,
+  opacity: 0.62
+});
 
 export function WorldViewer({
   scenes,
+  sceneColliders = {},
   sceneSplats = {},
   onExit,
   exitLabel = "Scene cards"
@@ -55,12 +95,18 @@ export function WorldViewer({
   const rendererRef = useRef<WebGLRenderer | null>(null);
   const sparkRendererRef = useRef<SparkRenderer | null>(null);
   const cameraRef = useRef<PerspectiveCamera | null>(null);
+  const colliderBoundsRef = useRef<BoxHelper | null>(null);
+  const colliderRef = useRef<Group | null>(null);
+  const colliderObjectsRef = useRef<Object3D[]>([]);
+  const colliderVisibleRef = useRef(false);
   const sceneRef = useRef<Scene | null>(null);
   const splatRef = useRef<SplatMesh | null>(null);
   const keysRef = useRef(new Set<string>());
+  const verticalVelocityRef = useRef(0);
   const yawRef = useRef(0);
   const pitchRef = useRef(0);
   const [selectedSceneIndex, setSelectedSceneIndex] = useState<number | null>(null);
+  const [colliderVisible, setColliderVisible] = useState(false);
   const [pointerLocked, setPointerLocked] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
   const [loadResult, setLoadResult] = useState<{ url: string; message: string } | null>(null);
@@ -69,6 +115,7 @@ export function WorldViewer({
   const safeSceneIndex = Math.max(0, Math.min(sceneIndex, scenes.length - 1));
   const scene = scenes[safeSceneIndex] ?? scenes[0];
   const sceneId = scene?.id;
+  const colliderUrl = scene ? sceneColliders[scene.id] ?? null : null;
   const splatUrl = scene ? sceneSplats[scene.id] ?? null : null;
   const transform = scene ? transforms[scene.id] ?? DEFAULT_SPLAT_TRANSFORM : DEFAULT_SPLAT_TRANSFORM;
   const loadStatus = !splatUrl
@@ -84,6 +131,7 @@ export function WorldViewer({
     }
 
     keysRef.current.clear();
+    verticalVelocityRef.current = 0;
     camera.rotation.set(0, 0, 0);
     camera.position.set(0, PLAYER_HEIGHT, START_Z);
     const look = cameraLookAtOrigin(camera);
@@ -131,7 +179,8 @@ export function WorldViewer({
 
     function animate() {
       const delta = Math.min(clock.getDelta(), 0.05);
-      updateMovement(camera, keysRef.current, yawRef.current, delta);
+      updateMovement(camera, keysRef.current, yawRef.current, delta, colliderObjectsRef.current);
+      verticalVelocityRef.current = updateVerticalPhysics(camera, delta, colliderObjectsRef.current, verticalVelocityRef.current);
       camera.rotation.set(pitchRef.current, yawRef.current, 0, "YXZ");
       sparkRenderer.render(threeScene, camera);
     }
@@ -153,6 +202,15 @@ export function WorldViewer({
       renderer.setAnimationLoop(null);
       splatRef.current?.dispose();
       splatRef.current = null;
+      if (colliderBoundsRef.current) {
+        threeScene.remove(colliderBoundsRef.current);
+      }
+      colliderBoundsRef.current = null;
+      if (colliderRef.current) {
+        threeScene.remove(colliderRef.current);
+      }
+      colliderRef.current = null;
+      colliderObjectsRef.current = [];
       sparkRenderer.dispose();
       renderer.dispose();
       renderer.domElement.remove();
@@ -239,6 +297,7 @@ export function WorldViewer({
         const initialTransform = DEFAULT_SPLAT_TRANSFORM;
         applySplatTransform(mesh, initialTransform);
         if (cameraRef.current) {
+          verticalVelocityRef.current = 0;
           cameraRef.current.position.set(0, PLAYER_HEIGHT, START_Z);
           const look = cameraLookAtOrigin(cameraRef.current);
           yawRef.current = look.yaw;
@@ -259,6 +318,7 @@ export function WorldViewer({
     });
 
     splat.frustumCulled = false;
+    splat.visible = true;
     threeScene.add(splat);
     splatRef.current = splat;
 
@@ -284,8 +344,102 @@ export function WorldViewer({
   useEffect(() => {
     if (splatRef.current) {
       applySplatTransform(splatRef.current, transform);
+      splatRef.current.visible = true;
     }
   }, [transform]);
+
+  useEffect(() => {
+    colliderVisibleRef.current = colliderVisible;
+    if (colliderRef.current) {
+      applySplatTransform(colliderRef.current, DEFAULT_COLLIDER_TRANSFORM);
+      colliderRef.current.updateMatrixWorld(true);
+      colliderRef.current.visible = colliderVisible;
+    }
+    if (colliderBoundsRef.current) {
+      colliderBoundsRef.current.update();
+      colliderBoundsRef.current.visible = colliderVisible;
+    }
+  }, [colliderVisible]);
+
+  useEffect(() => {
+    const threeScene = sceneRef.current;
+    if (!threeScene) {
+      return;
+    }
+
+    if (colliderRef.current) {
+      threeScene.remove(colliderRef.current);
+      colliderRef.current = null;
+      colliderObjectsRef.current = [];
+    }
+    if (colliderBoundsRef.current) {
+      threeScene.remove(colliderBoundsRef.current);
+      colliderBoundsRef.current.geometry.dispose();
+      colliderBoundsRef.current = null;
+    }
+
+    if (!colliderUrl) {
+      return;
+    }
+
+    let active = true;
+    const loader = new GLTFLoader();
+
+    loader.load(
+      colliderUrl,
+      (gltf) => {
+        if (!active) {
+          return;
+        }
+
+        const collider = gltf.scene;
+        applySplatTransform(collider, DEFAULT_COLLIDER_TRANSFORM);
+        collider.visible = false;
+        const meshes: Object3D[] = [];
+        collider.traverse((object) => {
+          if (object instanceof Mesh) {
+            object.frustumCulled = false;
+            object.material = COLLIDER_DEBUG_MATERIAL;
+            object.renderOrder = 999;
+            meshes.push(object);
+          }
+        });
+        threeScene.add(collider);
+        collider.visible = colliderVisibleRef.current;
+        collider.updateMatrixWorld(true);
+
+        const bounds = new BoxHelper(collider, 0x34d399);
+        bounds.visible = colliderVisibleRef.current;
+        bounds.renderOrder = 1000;
+        threeScene.add(bounds);
+        bounds.update();
+
+        colliderRef.current = collider;
+        colliderBoundsRef.current = bounds;
+        colliderObjectsRef.current = meshes;
+      },
+      undefined,
+      () => {
+        if (active) {
+          colliderObjectsRef.current = [];
+        }
+      }
+    );
+
+    return () => {
+      active = false;
+      if (colliderBoundsRef.current) {
+        threeScene.remove(colliderBoundsRef.current);
+        colliderBoundsRef.current.geometry.dispose();
+        colliderBoundsRef.current = null;
+      }
+      if (colliderRef.current) {
+        threeScene.remove(colliderRef.current);
+        colliderRef.current = null;
+        colliderObjectsRef.current = [];
+      }
+    };
+  }, [colliderUrl]);
 
   const lockPointer = useCallback(() => {
     rendererRef.current?.domElement.requestPointerLock();
@@ -317,6 +471,7 @@ export function WorldViewer({
 
     applySplatTransform(splatRef.current, DEFAULT_SPLAT_TRANSFORM);
     if (cameraRef.current) {
+      verticalVelocityRef.current = 0;
       cameraRef.current.position.set(0, PLAYER_HEIGHT, START_Z);
       const look = cameraLookAtOrigin(cameraRef.current);
       yawRef.current = look.yaw;
@@ -433,10 +588,11 @@ export function WorldViewer({
             <div className="mt-4">
               <p className="text-xs uppercase tracking-[0.18em] text-stone-400">Splat file</p>
               <p className="mt-2 break-all text-xs leading-5 text-stone-400">{splatUrl ?? "No cached splat for this scene"}</p>
+              <p className="mt-2 break-all text-xs leading-5 text-stone-500">{colliderUrl ? `Collider: ${colliderUrl}` : "No cached collider for this scene"}</p>
             </div>
 
             <div className="mt-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-stone-400">Transform</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-stone-400">Splat transform</p>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <NumberControl label="Scale" value={transform.scale} step={0.1} min={0.01} onChange={(value) => updateTransform({ scale: value })} />
                 <NumberControl label="X rot" value={transform.rotation[0]} step={15} onChange={(value) => updateTransform({ rotation: [value, transform.rotation[1], transform.rotation[2]] })} />
@@ -452,6 +608,18 @@ export function WorldViewer({
                 >
                   Reset
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setColliderVisible((current) => !current)}
+                  disabled={!colliderUrl}
+                  className={`min-h-10 border px-3 text-xs transition ${
+                    colliderVisible
+                      ? "border-emerald-200 bg-emerald-200 text-slate-950"
+                      : "border-white/14 text-stone-200 hover:border-cyan-200/60 disabled:cursor-not-allowed disabled:opacity-40"
+                  }`}
+                >
+                  Collider
+                </button>
               </div>
             </div>
           </div>
@@ -461,7 +629,7 @@ export function WorldViewer({
   );
 }
 
-function applySplatTransform(splat: SplatMesh, transform: SplatTransform) {
+function applySplatTransform(splat: Object3D, transform: SplatTransform) {
   splat.position.set(...transform.position);
   splat.rotation.set(
     degreesToRadians(transform.rotation[0]),
@@ -482,7 +650,7 @@ function cameraLookAtOrigin(camera: PerspectiveCamera) {
   };
 }
 
-function updateMovement(camera: PerspectiveCamera, keys: Set<string>, yaw: number, delta: number) {
+function updateMovement(camera: PerspectiveCamera, keys: Set<string>, yaw: number, delta: number, colliders: Object3D[]) {
   tempForward.set(-Math.sin(yaw), 0, -Math.cos(yaw)).normalize();
   tempRight.set(Math.cos(yaw), 0, -Math.sin(yaw)).normalize();
   tempMove.set(0, 0, 0);
@@ -496,8 +664,119 @@ function updateMovement(camera: PerspectiveCamera, keys: Set<string>, yaw: numbe
     return;
   }
 
-  tempMove.normalize().multiplyScalar(WALK_SPEED * delta);
-  camera.position.add(tempMove);
+  const speedMultiplier = keys.has("ShiftLeft") || keys.has("ShiftRight") ? SPRINT_MULTIPLIER : 1;
+  tempMove.normalize().multiplyScalar(WALK_SPEED * speedMultiplier * delta);
+
+  tempAxisMove.set(tempMove.x, 0, 0);
+  if (!collidesWithScene(camera, tempAxisMove, colliders)) {
+    camera.position.add(tempAxisMove);
+  }
+
+  tempAxisMove.set(0, 0, tempMove.z);
+  if (!collidesWithScene(camera, tempAxisMove, colliders)) {
+    camera.position.add(tempAxisMove);
+  }
+}
+
+function collidesWithScene(camera: PerspectiveCamera, move: Vector3, colliders: Object3D[]) {
+  if (colliders.length === 0 || move.lengthSq() === 0) {
+    return false;
+  }
+
+  tempMoveDirection.copy(move).normalize();
+  tempMovePerp.set(-tempMoveDirection.z, 0, tempMoveDirection.x);
+
+  const currentFeetY = camera.position.y - PLAYER_HEIGHT;
+  const distance = move.length() + COLLISION_RADIUS + 0.04;
+
+  for (const height of COLLISION_HEIGHTS) {
+    for (const sideOffset of COLLISION_SIDE_OFFSETS) {
+      tempRayOrigin
+        .copy(camera.position)
+        .addScaledVector(tempMovePerp, sideOffset)
+        .setY(currentFeetY + height);
+
+      movementRaycaster.set(tempRayOrigin, tempMoveDirection);
+      movementRaycaster.far = distance;
+
+      if (rayHitsBlockingSurface(colliders)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function rayHitsBlockingSurface(colliders: Object3D[]) {
+  const hits = movementRaycaster.intersectObjects(colliders, true);
+
+  for (const hit of hits) {
+    if (!hit.face) {
+      return true;
+    }
+
+    tempNormal.copy(hit.face.normal).transformDirection(hit.object.matrixWorld);
+    if (Math.abs(tempNormal.y) <= 0.65) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function updateVerticalPhysics(camera: PerspectiveCamera, delta: number, colliders: Object3D[], verticalVelocity: number) {
+  if (colliders.length === 0) {
+    camera.position.y = PLAYER_HEIGHT;
+    return 0;
+  }
+
+  const ground = findGroundY(camera, colliders);
+  if (ground === null) {
+    return 0;
+  }
+
+  let nextVelocity = verticalVelocity + GRAVITY * delta;
+  camera.position.y += nextVelocity * delta;
+
+  const floorY = ground + PLAYER_HEIGHT;
+  if (nextVelocity <= 0 && camera.position.y <= floorY + GROUND_SNAP_DISTANCE) {
+    camera.position.y = floorY;
+    nextVelocity = 0;
+  }
+
+  return nextVelocity;
+}
+
+function findGroundY(camera: PerspectiveCamera, colliders: Object3D[]) {
+  groundRaycaster.set(
+    tempRayOriginFrom(camera.position, 0, GROUND_PROBE_HEIGHT, 0),
+    tempNormal.set(0, -1, 0)
+  );
+  groundRaycaster.far = GROUND_PROBE_DEPTH;
+
+  const hits = groundRaycaster.intersectObjects(colliders, true);
+  for (const hit of hits) {
+    if (!hit.face) {
+      continue;
+    }
+
+    const currentFeetY = camera.position.y - PLAYER_HEIGHT;
+    if (hit.point.y > currentFeetY + MAX_STEP_HEIGHT) {
+      continue;
+    }
+
+    tempNormal.copy(hit.face.normal).transformDirection(hit.object.matrixWorld);
+    if (tempNormal.y > 0.45) {
+      return hit.point.y;
+    }
+  }
+
+  return null;
+}
+
+function tempRayOriginFrom(position: Vector3, x: number, y: number, z: number) {
+  return tempRayOrigin.set(position.x + x, position.y + y, position.z + z);
 }
 
 function firstSplatSceneIndex(scenes: ScenePlan[], sceneSplats: Record<string, string | null>) {

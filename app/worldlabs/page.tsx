@@ -8,38 +8,57 @@ type WorldLabsScene = {
   title: string;
   prompt: string;
   cachedPath: string | null;
+  colliderPath: string | null;
   latestVersion: string | null;
   versions: CachedSplatVersion[];
+  worldId: string | null;
 };
 
 type OperationState = {
   cachedPath?: string | null;
+  colliderPath?: string | null;
   cacheNote?: string;
   error?: string;
+  colliderUrls?: string[];
   operationId?: string;
   polling?: boolean;
   raw?: unknown;
   splatUrls?: string[];
   status: "idle" | "starting" | "running" | "done" | "cached" | "error";
   version?: string;
+  worldId?: string | null;
 };
 
 type CachedSplatVersion = {
   bytes: number;
   cachedAt: string;
+  colliderBytes?: number;
+  colliderPath?: string;
+  colliderSourceUrl?: string;
   operationId?: string;
   path: string;
   prompt?: string;
   sourceUrl: string;
   version: string;
+  worldId?: string;
+};
+
+type WorldLabsAssets = {
+  colliderUrl: string | null;
+  splatUrl: string | null;
+  splatUrls: string[];
+  worldId: string | null;
+  worldUrl: string | null;
 };
 
 type OperationResponse = {
+  assets: WorldLabsAssets;
   done: boolean;
   error: string | null;
   metadata: unknown;
   operationId: string;
   raw: unknown;
+  colliderUrls: string[];
   splatUrls: string[];
   worldId: string | null;
 };
@@ -89,13 +108,17 @@ export default function WorldLabsPage() {
       setOperations((current) => Object.fromEntries(nextScenes.map((scene) => {
         const existing = current[scene.id];
         const cachedPath = existing?.cachedPath ?? scene.cachedPath;
+        const colliderPath = existing?.colliderPath ?? scene.colliderPath;
+        const worldId = existing?.worldId ?? scene.worldId;
 
         return [
           scene.id,
           {
             ...existing,
             cachedPath,
+            colliderPath,
             version: existing?.version ?? scene.latestVersion ?? undefined,
+            worldId,
             status: existing?.status && existing.status !== "idle"
               ? existing.status
               : cachedPath ? "cached" : "idle"
@@ -116,8 +139,9 @@ export default function WorldLabsPage() {
         [sceneId]: {
           ...current[sceneId],
           cacheNote: undefined,
+          colliderUrls: [],
           error: undefined,
-        operationId: undefined,
+          operationId: undefined,
         polling: false,
         raw: undefined,
         splatUrls: [],
@@ -142,6 +166,7 @@ export default function WorldLabsPage() {
         [sceneId]: {
           ...current[sceneId],
           operationId: body.operationId,
+          colliderUrls: [],
           raw: body.raw,
           splatUrls: [],
           status: "running"
@@ -189,15 +214,21 @@ export default function WorldLabsPage() {
         [sceneId]: {
           ...current[sceneId],
           operationId,
+          colliderUrls: body.colliderUrls,
           polling: false,
           raw: body.raw,
           splatUrls: body.splatUrls,
-          status: body.done ? "done" : "running"
+          status: body.done ? "done" : "running",
+          worldId: body.worldId
         }
       }));
 
-      if (body.done && body.splatUrls[0]) {
-        await cacheSplat(sceneId, body.splatUrls[0], operationId, { automatic: true });
+      if (body.done && (body.assets.splatUrl || body.splatUrls[0] || body.worldId)) {
+        await cacheSplat(sceneId, body.assets.splatUrl ?? body.splatUrls[0], operationId, {
+          automatic: true,
+          colliderUrl: body.assets.colliderUrl ?? body.colliderUrls[0],
+          worldId: body.worldId ?? undefined
+        });
       }
 
       if (!body.done) {
@@ -218,9 +249,9 @@ export default function WorldLabsPage() {
 
   async function cacheSplat(
     sceneId: string,
-    splatUrl: string,
+    splatUrl?: string | null,
     operationId = operations[sceneId]?.operationId,
-    options: { automatic?: boolean } = {}
+    options: { automatic?: boolean; colliderUrl?: string | null; worldId?: string } = {}
   ) {
     const prompt = prompts[sceneId];
 
@@ -238,9 +269,16 @@ export default function WorldLabsPage() {
       const response = await fetch("/api/worldlabs/cache", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ operationId, prompt, sceneId, splatUrl })
+        body: JSON.stringify({
+          colliderUrl: options.colliderUrl ?? operations[sceneId]?.colliderUrls?.[0],
+          operationId,
+          prompt,
+          sceneId,
+          splatUrl,
+          worldId: options.worldId ?? operations[sceneId]?.worldId ?? undefined
+        })
       });
-      const body = (await response.json()) as { path?: string; version?: string; bytes?: number; error?: string };
+      const body = (await response.json()) as { colliderPath?: string | null; path?: string; version?: string; bytes?: number; error?: string; worldId?: string | null };
 
       if (!response.ok || !body.path) {
         throw new Error(body.error ?? "Could not cache splat.");
@@ -252,8 +290,10 @@ export default function WorldLabsPage() {
           ...current[sceneId],
           cacheNote: options.automatic ? "Saved automatically to public/splats/demo." : "Saved to public/splats/demo.",
           cachedPath: body.path,
+          colliderPath: body.colliderPath ?? current[sceneId]?.colliderPath,
           status: "cached",
-          version: body.version
+          version: body.version,
+          worldId: body.worldId ?? current[sceneId]?.worldId
         }
       }));
       await loadScenes();
@@ -263,6 +303,58 @@ export default function WorldLabsPage() {
         [sceneId]: {
           ...current[sceneId],
           error: error instanceof Error ? error.message : "Could not cache splat.",
+          status: "error"
+        }
+      }));
+    }
+  }
+
+  async function cacheCollider(sceneId: string) {
+    const operationId = operations[sceneId]?.operationId
+      ?? scenes.find((scene) => scene.id === sceneId)?.versions.find((version) => version.operationId)?.operationId;
+    const worldId = operations[sceneId]?.worldId
+      ?? scenes.find((scene) => scene.id === sceneId)?.worldId
+      ?? scenes.find((scene) => scene.id === sceneId)?.versions.find((version) => version.worldId)?.worldId;
+    const colliderUrl = operations[sceneId]?.colliderUrls?.[0];
+
+    setOperations((current) => ({
+      ...current,
+      [sceneId]: {
+        ...current[sceneId],
+        cacheNote: "Fetching collider mesh from World Labs.",
+        error: undefined,
+        status: "running"
+      }
+    }));
+
+    try {
+      const response = await fetch("/api/worldlabs/cache", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ colliderOnly: true, colliderUrl, operationId, sceneId, worldId })
+      });
+      const body = (await response.json()) as { path?: string; bytes?: number; error?: string };
+
+      if (!response.ok || !body.path) {
+        throw new Error(body.error ?? "Could not cache collider mesh.");
+      }
+
+      setOperations((current) => ({
+        ...current,
+        [sceneId]: {
+          ...current[sceneId],
+          cacheNote: "Saved collider mesh to public/splats/demo.",
+          colliderPath: body.path,
+          status: "cached"
+        }
+      }));
+      await loadScenes();
+    } catch (error) {
+      setOperations((current) => ({
+        ...current,
+        [sceneId]: {
+          ...current[sceneId],
+          error: error instanceof Error ? error.message : "Could not cache collider mesh.",
           status: "error"
         }
       }));
@@ -340,6 +432,7 @@ export default function WorldLabsPage() {
             {scenes.map((scene, index) => {
               const state = operations[scene.id] ?? { status: "idle" };
               const prompt = prompts[scene.id] ?? scene.prompt;
+              const colliderUrl = state.colliderUrls?.[0];
               const splatUrl = state.splatUrls?.[0];
               const busy = state.status === "starting" || state.status === "running";
 
@@ -369,8 +462,16 @@ export default function WorldLabsPage() {
                       <dd className="mt-1 break-all text-stone-300">{state.operationId ?? "Not started"}</dd>
                     </div>
                     <div>
+                      <dt className="text-xs uppercase tracking-[0.18em] text-stone-500">World ID</dt>
+                      <dd className="mt-1 break-all text-stone-300">{state.worldId ?? scene.worldId ?? "Unknown"}</dd>
+                    </div>
+                    <div>
                       <dt className="text-xs uppercase tracking-[0.18em] text-stone-500">Cached splat</dt>
                       <dd className="mt-1 break-all text-stone-300">{state.cachedPath ?? scene.cachedPath ?? "Not cached"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs uppercase tracking-[0.18em] text-stone-500">Cached collider</dt>
+                      <dd className="mt-1 break-all text-stone-300">{state.colliderPath ?? scene.colliderPath ?? "Not cached"}</dd>
                     </div>
                     <div>
                       <dt className="text-xs uppercase tracking-[0.18em] text-stone-500">Latest version</dt>
@@ -379,6 +480,10 @@ export default function WorldLabsPage() {
                     <div>
                       <dt className="text-xs uppercase tracking-[0.18em] text-stone-500">Returned splat URL</dt>
                       <dd className="mt-1 break-all text-stone-300">{splatUrl ?? "Waiting for completed operation"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs uppercase tracking-[0.18em] text-stone-500">Returned collider URL</dt>
+                      <dd className="mt-1 break-all text-stone-300">{colliderUrl ?? "Waiting for completed operation"}</dd>
                     </div>
                   </dl>
 
@@ -426,12 +531,22 @@ export default function WorldLabsPage() {
 
                     <button
                       type="button"
-                      onClick={() => splatUrl && cacheSplat(scene.id, splatUrl)}
-                      disabled={!splatUrl || busy}
+                      onClick={() => cacheSplat(scene.id, splatUrl)}
+                      disabled={busy || (!splatUrl && !state.operationId && !(state.worldId ?? scene.worldId))}
                       className="inline-flex min-h-10 items-center gap-2 border border-white/14 px-4 text-sm text-stone-200 transition hover:border-cyan-200/60 disabled:cursor-not-allowed disabled:opacity-45"
                     >
                       <Save size={16} />
                       Cache
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => cacheCollider(scene.id)}
+                      disabled={busy || (!(state.operationId ?? scene.versions.find((version) => version.operationId)?.operationId) && !(state.worldId ?? scene.worldId) && !colliderUrl) || !(state.cachedPath ?? scene.cachedPath)}
+                      className="inline-flex min-h-10 items-center gap-2 border border-white/14 px-4 text-sm text-stone-200 transition hover:border-cyan-200/60 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      <Save size={16} />
+                      Cache collider
                     </button>
 
                     {(state.cachedPath ?? scene.cachedPath) ? (
@@ -466,6 +581,7 @@ export default function WorldLabsPage() {
                             <div className="min-w-0">
                               <p className="font-semibold text-stone-100">{version.version}</p>
                               <p className="mt-1 break-all text-stone-400">{version.path}</p>
+                              {version.colliderPath ? <p className="mt-1 break-all text-emerald-200/80">Collider: {version.colliderPath}</p> : null}
                             </div>
                             <a
                               href={version.path}

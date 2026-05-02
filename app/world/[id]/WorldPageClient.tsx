@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { LoadingState } from "@/components/LoadingState";
-import { DEMO_SPLAT_MANIFEST_URL, emptySceneSplatMap, sceneSplatsFromManifest, type DemoSplatManifest, type SceneSplatMap } from "@/lib/demoSplats";
+import { DEMO_SPLAT_MANIFEST_URL, emptySceneColliderMap, emptySceneSplatMap, sceneCollidersFromManifest, sceneSplatsFromManifest, type DemoSplatManifest, type SceneColliderMap, type SceneSplatMap } from "@/lib/demoSplats";
 import type { StoredWorld } from "@/lib/worldSchema";
 
 const WorldViewer = dynamic(() => import("@/components/WorldViewer").then((module) => module.WorldViewer), {
@@ -24,6 +24,7 @@ type WorldResponse = {
 
 export function WorldPageClient({ worldId }: WorldPageClientProps) {
   const [world, setWorld] = useState<StoredWorld | null>(null);
+  const [sceneColliders, setSceneColliders] = useState<SceneColliderMap>({});
   const [sceneSplats, setSceneSplats] = useState<SceneSplatMap>({});
   const [error, setError] = useState("");
 
@@ -68,11 +69,13 @@ export function WorldPageClient({ worldId }: WorldPageClientProps) {
       .then((response) => response.ok ? response.json() as Promise<DemoSplatManifest> : null)
       .then((manifest) => {
         if (active) {
+          setSceneColliders(sceneCollidersFromManifest(world.scenes, manifest));
           setSceneSplats(sceneSplatsFromManifest(world.scenes, manifest));
         }
       })
       .catch(() => {
         if (active) {
+          setSceneColliders(emptySceneColliderMap(world.scenes));
           setSceneSplats(emptySceneSplatMap(world.scenes));
         }
       });
@@ -108,6 +111,7 @@ export function WorldPageClient({ worldId }: WorldPageClientProps) {
     <WorldViewer
       scenes={world.scenes}
       sceneImages={world.sceneImages}
+      sceneColliders={sceneColliders}
       sceneSplats={sceneSplats}
       objectModels={world.objectModels}
       onExit={() => {
