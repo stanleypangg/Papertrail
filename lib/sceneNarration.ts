@@ -1,3 +1,6 @@
+import { mkdir, readFile, writeFile } from "fs/promises";
+import path from "path";
+
 import type { ScenePlan } from "./sceneSchema";
 
 export type CaptionCue = {
@@ -32,12 +35,24 @@ type FetchLike = typeof fetch;
 
 const ELEVENLABS_MODEL_ID = "eleven_multilingual_v2";
 const ELEVENLABS_ENDPOINT = "https://api.elevenlabs.io/v1/text-to-speech";
+const NARRATION_DIR = path.join(process.cwd(), "public", "narration", "demo");
+
+type CachedNarration = SceneNarrationResult & {
+  audioPath: string;
+  cachedAt: string;
+};
 
 export function selectSceneNarrationScript(scene: ScenePlan): string {
   return scene.integrations?.narration?.script?.trim() || scene.narration.trim();
 }
 
-export async function generateSceneNarration(scene: ScenePlan, fetchImpl: FetchLike = fetch): Promise<SceneNarrationResult> {
+export async function generateSceneNarration(
+  scene: ScenePlan,
+  options: FetchLike | { force?: boolean; fetchImpl?: FetchLike } = {}
+): Promise<SceneNarrationResult> {
+  const fetchImpl = typeof options === "function" ? options : options.fetchImpl ?? fetch;
+  const force = typeof options === "function" ? false : options.force === true;
+  const shouldCacheAudio = typeof options !== "function";
   const script = selectSceneNarrationScript(scene);
   const voiceId = process.env.ELEVENLABS_VOICE_ID?.trim() || null;
   const modelId = process.env.ELEVENLABS_MODEL_ID?.trim() || ELEVENLABS_MODEL_ID;
@@ -47,6 +62,14 @@ export async function generateSceneNarration(scene: ScenePlan, fetchImpl: FetchL
     script,
     voiceId
   };
+  const cached = force || typeof options === "function" ? null : await readCachedNarration(scene.id);
+
+  if (cached && cached.script === script && cached.modelId === modelId && cached.voiceId === voiceId) {
+    return {
+      ...cached,
+      audioUrl: cached.audioPath
+    };
+  }
 
   if (!process.env.ELEVENLABS_API_KEY?.trim() || !voiceId) {
     return {
@@ -97,7 +120,12 @@ export async function generateSceneNarration(scene: ScenePlan, fetchImpl: FetchL
 
     return {
       ...baseResult,
-      audioUrl: `data:audio/mpeg;base64,${audioBase64}`,
+      audioUrl: shouldCacheAudio
+        ? await cacheNarrationAudio(scene.id, audioBase64, {
+          ...baseResult,
+          captions
+        })
+        : `data:audio/mpeg;base64,${audioBase64}`,
       captions
     };
   } catch (error) {
@@ -108,6 +136,62 @@ export async function generateSceneNarration(scene: ScenePlan, fetchImpl: FetchL
       warning: error instanceof Error ? error.message : "ElevenLabs narration failed."
     };
   }
+}
+
+async function readCachedNarration(sceneId: string): Promise<CachedNarration | null> {
+  try {
+    const file = await readFile(path.join(NARRATION_DIR, `${safeFilePart(sceneId)}.json`), "utf8");
+    const parsed = JSON.parse(file) as Partial<CachedNarration>;
+
+    if (
+      typeof parsed.audioPath === "string"
+      && typeof parsed.cachedAt === "string"
+      && Array.isArray(parsed.captions)
+      && typeof parsed.modelId === "string"
+      && typeof parsed.sceneId === "string"
+      && typeof parsed.script === "string"
+    ) {
+      return {
+        audioPath: parsed.audioPath,
+        audioUrl: parsed.audioPath,
+        cachedAt: parsed.cachedAt,
+        captions: parsed.captions,
+        modelId: parsed.modelId,
+        sceneId: parsed.sceneId,
+        script: parsed.script,
+        voiceId: typeof parsed.voiceId === "string" ? parsed.voiceId : null,
+        warning: typeof parsed.warning === "string" ? parsed.warning : undefined
+      };
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+async function cacheNarrationAudio(
+  sceneId: string,
+  audioBase64: string,
+  metadata: Omit<SceneNarrationResult, "audioUrl">
+) {
+  const safeSceneId = safeFilePart(sceneId);
+  const audioFileName = `${safeSceneId}.mp3`;
+  const audioPath = `/narration/demo/${audioFileName}`;
+  const cachedAt = new Date().toISOString();
+
+  await mkdir(NARRATION_DIR, { recursive: true });
+  await writeFile(path.join(NARRATION_DIR, audioFileName), Buffer.from(audioBase64, "base64"));
+  await writeFile(
+    path.join(NARRATION_DIR, `${safeSceneId}.json`),
+    `${JSON.stringify({ ...metadata, audioPath, audioUrl: audioPath, cachedAt }, null, 2)}\n`
+  );
+
+  return audioPath;
+}
+
+function safeFilePart(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") || "scene";
 }
 
 export function captionCuesFromAlignment(alignment: ElevenLabsAlignment | null, fallbackScript: string): CaptionCue[] {

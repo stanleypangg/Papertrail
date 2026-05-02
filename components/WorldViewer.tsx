@@ -2,7 +2,7 @@
 
 import { SparkRenderer, SplatMesh } from "@sparkjsdev/spark";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { ArrowLeft, Glasses, Loader2, MousePointer2, Pause, Play, RotateCcw, Settings, Volume2 } from "lucide-react";
+import { ArrowLeft, Glasses, Loader2, MousePointer2, Pause, Play, RefreshCcw, RotateCcw, Settings, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box3,
@@ -93,13 +93,13 @@ const DEFAULT_COLLIDER_TRANSFORM: SplatTransform = {
 
 const PLAYER_HEIGHT = 1;
 const START_Z = 2.5;
-const COLLISION_RADIUS = 0.28;
-const COLLISION_HEIGHTS = [0.24, 0.74];
-const COLLISION_SIDE_OFFSETS = [-0.18, 0, 0.18];
+const COLLISION_RADIUS = 0.22;
+const COLLISION_HEIGHTS = [0.36, 0.78];
+const COLLISION_SIDE_OFFSETS = [0];
 const GRAVITY = -9.8;
 const GROUND_PROBE_HEIGHT = 3;
 const GROUND_PROBE_DEPTH = 8;
-const GROUND_CHECK_INTERVAL = 0.08;
+const GROUND_CHECK_INTERVAL = 0.14;
 const GROUND_SNAP_DISTANCE = 0.22;
 const MAX_STEP_HEIGHT = 0.22;
 const LOOK_SENSITIVITY = 0.0022;
@@ -906,60 +906,77 @@ export function WorldViewer({
     }));
   }, [resetCamera, scene]);
 
+  const loadNarration = useCallback(async (force = false) => {
+    if (!scene) {
+      return null;
+    }
+
+    const cached = force ? undefined : narrationCache[scene.id];
+
+    if (cached?.status === "ready") {
+      return cached.response;
+    }
+
+    if (cached?.status === "error" && !force) {
+      return null;
+    }
+
+    setNarrationLoadingSceneId(scene.id);
+    try {
+      const apiResponse = await fetch("/api/generate-scene-narration", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force, scene })
+      });
+      const body = (await apiResponse.json()) as Partial<SceneNarrationResponse> & { error?: string };
+
+      if (!apiResponse.ok) {
+        throw new Error(body.error ?? "Narration request failed.");
+      }
+
+      const nextResponse: SceneNarrationResponse = {
+        audioUrl: typeof body.audioUrl === "string" ? body.audioUrl : null,
+        captions: Array.isArray(body.captions) ? body.captions : [],
+        modelId: typeof body.modelId === "string" ? body.modelId : "",
+        sceneId: typeof body.sceneId === "string" ? body.sceneId : scene.id,
+        script: typeof body.script === "string" ? body.script : scene.narration,
+        voiceId: typeof body.voiceId === "string" ? body.voiceId : null,
+        warning: typeof body.warning === "string" ? body.warning : undefined
+      };
+
+      setNarrationCache((current) => ({
+        ...current,
+        [scene.id]: { status: "ready", response: nextResponse }
+      }));
+      return nextResponse;
+    } catch (error) {
+      setNarrationCache((current) => ({
+        ...current,
+        [scene.id]: {
+          status: "error",
+          message: error instanceof Error ? error.message : "Narration request failed."
+        }
+      }));
+      setNarrationPlaying(false);
+      return null;
+    } finally {
+      setNarrationLoadingSceneId(null);
+    }
+  }, [narrationCache, scene]);
+
+  const regenerateNarration = useCallback(async () => {
+    pauseNarration();
+    await loadNarration(true);
+  }, [loadNarration, pauseNarration]);
+
   const toggleNarration = useCallback(async () => {
     if (!scene) {
       return;
     }
 
-    const cached = narrationCache[scene.id];
-    if (cached?.status === "error") {
-      return;
-    }
-
-    let response = cached?.status === "ready" ? cached.response : null;
-
+    const response = await loadNarration(false);
     if (!response) {
-      setNarrationLoadingSceneId(scene.id);
-      try {
-        const apiResponse = await fetch("/api/generate-scene-narration", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ scene })
-        });
-        const body = (await apiResponse.json()) as Partial<SceneNarrationResponse> & { error?: string };
-
-        if (!apiResponse.ok) {
-          throw new Error(body.error ?? "Narration request failed.");
-        }
-
-        const nextResponse: SceneNarrationResponse = {
-          audioUrl: typeof body.audioUrl === "string" ? body.audioUrl : null,
-          captions: Array.isArray(body.captions) ? body.captions : [],
-          modelId: typeof body.modelId === "string" ? body.modelId : "",
-          sceneId: typeof body.sceneId === "string" ? body.sceneId : scene.id,
-          script: typeof body.script === "string" ? body.script : scene.narration,
-          voiceId: typeof body.voiceId === "string" ? body.voiceId : null,
-          warning: typeof body.warning === "string" ? body.warning : undefined
-        };
-        response = nextResponse;
-
-        setNarrationCache((current) => ({
-          ...current,
-          [scene.id]: { status: "ready", response: nextResponse }
-        }));
-      } catch (error) {
-        setNarrationCache((current) => ({
-          ...current,
-          [scene.id]: {
-            status: "error",
-            message: error instanceof Error ? error.message : "Narration request failed."
-          }
-        }));
-        setNarrationPlaying(false);
-        return;
-      } finally {
-        setNarrationLoadingSceneId(null);
-      }
+      return;
     }
 
     if (!response.audioUrl) {
@@ -1003,7 +1020,7 @@ export function WorldViewer({
       }));
       setNarrationPlaying(false);
     }
-  }, [narrationCache, narrationPlaying, scene]);
+  }, [loadNarration, narrationPlaying, scene]);
 
   return (
     <main className="relative h-svh w-screen overflow-hidden bg-black text-stone-50">
@@ -1045,6 +1062,16 @@ export function WorldViewer({
               className="pointer-events-auto inline-flex size-10 shrink-0 items-center justify-center border border-cyan-200/35 bg-cyan-200 text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:border-white/12 disabled:bg-white/10 disabled:text-stone-500"
             >
               {narrationLoading ? <Loader2 size={18} className="animate-spin" /> : narrationPlaying ? <Pause size={18} /> : <Play size={18} />}
+            </button>
+            <button
+              type="button"
+              onClick={regenerateNarration}
+              disabled={!scene || narrationLoading}
+              aria-label="Regenerate scene narration"
+              title="Generate fresh narration"
+              className="pointer-events-auto inline-flex size-10 shrink-0 items-center justify-center border border-white/14 bg-black/35 text-stone-100 transition hover:border-cyan-200/60 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <RefreshCcw size={16} className={narrationLoading ? "animate-spin" : ""} />
             </button>
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-cyan-100/80">
@@ -1397,7 +1424,7 @@ function collidesWithScene(position: Vector3, move: Vector3, colliders: Collider
   tempCollisionBox.makeEmpty();
   tempCollisionBox.expandByPoint(position);
   tempCollisionBox.expandByPoint(tempNextPosition);
-  tempCollisionBox.expandByScalar(COLLISION_RADIUS + 0.24);
+  tempCollisionBox.expandByScalar(COLLISION_RADIUS + 0.12);
   tempCollisionBox.min.y = position.y + COLLISION_HEIGHTS[0] - 0.12;
   tempCollisionBox.max.y = position.y + COLLISION_HEIGHTS[COLLISION_HEIGHTS.length - 1] + 0.12;
 
