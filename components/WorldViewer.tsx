@@ -103,6 +103,8 @@ const GROUND_CHECK_INTERVAL = 0.08;
 const GROUND_SNAP_DISTANCE = 0.22;
 const MAX_STEP_HEIGHT = 0.22;
 const LOOK_SENSITIVITY = 0.0022;
+const TRANSITION_REVEAL_DELAY = 140;
+const TRANSITION_SWAP_DELAY = 160;
 const tempAxisMove = new Vector3();
 const tempCollisionBox = new Box3();
 const tempGroundBox = new Box3();
@@ -143,6 +145,7 @@ export function WorldViewer({
   const sceneRef = useRef<Scene | null>(null);
   const splatRef = useRef<SplatMesh | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const transitionTimeoutsRef = useRef<number[]>([]);
   const xrSessionRef = useRef<XRSession | null>(null);
   const controlProvidersRef = useRef<SplatControlProvider[]>([]);
   const keysRef = useRef(new Set<string>());
@@ -166,6 +169,7 @@ export function WorldViewer({
   const [activeCaptionIndex, setActiveCaptionIndex] = useState(0);
   const [selectedSplats, setSelectedSplats] = useState<Record<string, string>>({});
   const [splatManifest, setSplatManifest] = useState<DemoSplatManifest | null>(null);
+  const [transitionCovered, setTransitionCovered] = useState(false);
   const [transforms, setTransforms] = useState<Record<string, SplatTransform>>({});
   const sceneIndex = selectedSceneIndex ?? firstSplatSceneIndex(scenes, sceneSplats);
   const safeSceneIndex = Math.max(0, Math.min(sceneIndex, scenes.length - 1));
@@ -198,6 +202,43 @@ export function WorldViewer({
   useEffect(() => {
     controlProvidersRef.current = resolvedControlProviders;
   }, [resolvedControlProviders]);
+
+  const clearTransitionTimeouts = useCallback(() => {
+    for (const timeout of transitionTimeoutsRef.current) {
+      window.clearTimeout(timeout);
+    }
+    transitionTimeoutsRef.current = [];
+  }, []);
+
+  const queueTransitionTimeout = useCallback((callback: () => void, delay: number) => {
+    const timeout = window.setTimeout(() => {
+      transitionTimeoutsRef.current = transitionTimeoutsRef.current.filter((candidate) => candidate !== timeout);
+      callback();
+    }, delay);
+    transitionTimeoutsRef.current.push(timeout);
+  }, []);
+
+  const pauseNarration = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    setNarrationPlaying(false);
+    setActiveCaptionIndex(0);
+  }, []);
+
+  const beginSplatTransition = useCallback((callback: () => void) => {
+    clearTransitionTimeouts();
+    pauseNarration();
+    document.exitPointerLock?.();
+    setTransitionCovered(true);
+    queueTransitionTimeout(callback, TRANSITION_SWAP_DELAY);
+  }, [clearTransitionTimeouts, pauseNarration, queueTransitionTimeout]);
+
+  useEffect(() => () => {
+    clearTransitionTimeouts();
+  }, [clearTransitionTimeouts]);
 
   useEffect(() => {
     let canceled = false;
@@ -523,9 +564,11 @@ export function WorldViewer({
     resetCamera();
 
     if (!splatUrl) {
+      setTransitionCovered(false);
       return;
     }
 
+    setTransitionCovered(true);
     let active = true;
     const splat = new SplatMesh({
       url: splatUrl,
@@ -550,6 +593,11 @@ export function WorldViewer({
           url: splatUrl,
           message: `Loaded ${splatUrl} (${size.x.toFixed(1)} x ${size.y.toFixed(1)} x ${size.z.toFixed(1)}), camera aimed at 0, 0, 0`
         });
+        queueTransitionTimeout(() => {
+          if (active) {
+            setTransitionCovered(false);
+          }
+        }, TRANSITION_REVEAL_DELAY);
       }
     });
 
@@ -564,6 +612,7 @@ export function WorldViewer({
           url: splatUrl,
           message: error instanceof Error ? error.message : "Could not load splat."
         });
+        setTransitionCovered(false);
       }
     });
 
@@ -575,7 +624,7 @@ export function WorldViewer({
         splatRef.current = null;
       }
     };
-  }, [resetCamera, sceneId, splatUrl]);
+  }, [queueTransitionTimeout, resetCamera, sceneId, splatUrl]);
 
   useEffect(() => {
     if (splatRef.current) {
@@ -696,6 +745,26 @@ export function WorldViewer({
     setNarrationPlaying(false);
     setActiveCaptionIndex(0);
   }, [sceneId]);
+
+  useEffect(() => {
+    pauseNarration();
+  }, [pauseNarration, splatUrl]);
+
+  useEffect(() => {
+    const adjacentUrls = adjacentSplatUrls({
+      currentPath: splatUrl,
+      currentSceneIndex: safeSceneIndex,
+      manifest: splatManifest,
+      sceneColliders,
+      scenes,
+      sceneSplats,
+      splatOptions
+    });
+
+    for (const url of adjacentUrls) {
+      fetch(url, { cache: "force-cache" }).catch(() => undefined);
+    }
+  }, [safeSceneIndex, sceneColliders, sceneSplats, scenes, splatManifest, splatOptions, splatUrl]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -882,8 +951,22 @@ export function WorldViewer({
 
   return (
     <main className="relative h-svh w-screen overflow-hidden bg-black text-stone-50">
-      <div ref={mountRef} className="absolute inset-0" />
+      <div
+        ref={mountRef}
+        className={`absolute inset-0 transition duration-300 ease-out ${transitionCovered ? "scale-110 blur-md brightness-125" : "scale-100 blur-0 brightness-100"}`}
+      />
       <audio ref={audioRef} preload="metadata" />
+
+      <div
+        className={`pageworld-zoom-transition pointer-events-none fixed inset-0 z-40 bg-black transition-opacity duration-300 ${
+          transitionCovered ? "pageworld-zoom-transition-active opacity-100" : "opacity-0"
+        }`}
+      >
+        <span className="pageworld-zoom-ring" />
+        <span className="pageworld-zoom-streak pageworld-zoom-streak-a" />
+        <span className="pageworld-zoom-streak pageworld-zoom-streak-b" />
+        <span className="pageworld-zoom-streak pageworld-zoom-streak-c" />
+      </div>
 
       <div className="pointer-events-none fixed left-4 top-4 z-20 w-[min(560px,calc(100vw-2rem))]">
         <div className="border border-white/12 bg-[#070b10]/75 p-4 backdrop-blur">
@@ -1016,8 +1099,8 @@ export function WorldViewer({
                 <select
                   value={safeSceneIndex}
                   onChange={(event) => {
-                    document.exitPointerLock?.();
-                    setSelectedSceneIndex(Number(event.target.value));
+                    const nextIndex = Number(event.target.value);
+                    beginSplatTransition(() => setSelectedSceneIndex(nextIndex));
                   }}
                   className="mt-1 min-h-9 w-full border border-white/14 bg-black/35 px-3 text-sm text-stone-100 outline-none transition focus:border-cyan-200/70"
                 >
@@ -1044,11 +1127,14 @@ export function WorldViewer({
                       return;
                     }
 
-                    document.exitPointerLock?.();
-                    setSelectedSplats((current) => ({
-                      ...current,
-                      [scene.id]: event.target.value
-                    }));
+                    const nextPath = event.target.value;
+                    const sceneIdForSelection = scene.id;
+                    beginSplatTransition(() => {
+                      setSelectedSplats((current) => ({
+                        ...current,
+                        [sceneIdForSelection]: nextPath
+                      }));
+                    });
                   }}
                   disabled={!scene || splatOptions.length === 0}
                   className="mt-1 min-h-9 w-full border border-white/14 bg-black/35 px-3 text-sm text-stone-100 outline-none transition focus:border-cyan-200/70 disabled:cursor-not-allowed disabled:opacity-45"
@@ -1176,6 +1262,54 @@ function splatOptionsForScene(
   }
 
   return options;
+}
+
+function adjacentSplatUrls({
+  currentPath,
+  currentSceneIndex,
+  manifest,
+  sceneColliders,
+  scenes,
+  sceneSplats,
+  splatOptions
+}: {
+  currentPath: string | null;
+  currentSceneIndex: number;
+  manifest: DemoSplatManifest | null;
+  sceneColliders: Record<string, string | null>;
+  scenes: ScenePlan[];
+  sceneSplats: Record<string, string | null>;
+  splatOptions: SelectableSplat[];
+}) {
+  const urls = new Set<string>();
+  const currentSplatIndex = splatOptions.findIndex((option) => option.path === currentPath);
+
+  for (const index of [currentSplatIndex - 1, currentSplatIndex + 1]) {
+    const option = splatOptions[index];
+    if (option?.path) {
+      urls.add(option.path);
+    }
+  }
+
+  for (const sceneIndex of [currentSceneIndex - 1, currentSceneIndex + 1]) {
+    const scene = scenes[sceneIndex];
+    if (!scene) {
+      continue;
+    }
+
+    const [option] = splatOptionsForScene(
+      scene,
+      sceneSplats[scene.id] ?? null,
+      sceneColliders[scene.id] ?? null,
+      manifest
+    );
+    if (option?.path) {
+      urls.add(option.path);
+    }
+  }
+
+  urls.delete(currentPath ?? "");
+  return Array.from(urls);
 }
 
 function constrainRigHorizontalMovement(rig: Group, previousPosition: Vector3, colliders: ColliderEntry[]) {

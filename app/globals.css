@@ -48,3 +48,116 @@ button {
   box-shadow: 0 0 16px rgba(125, 246, 255, 0.48);
 }
 
+.pageworld-zoom-transition {
+  overflow: hidden;
+}
+
+.pageworld-zoom-transition::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 18%, rgba(170, 243, 255, 0.26) 30%, transparent 44%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 0 3%, transparent 18%),
+    rgba(0, 0, 0, 0.78);
+  filter: blur(10px);
+  transform: scale(0.35);
+}
+
+.pageworld-zoom-transition-active::before {
+  animation: pageworld-zoom-cover 520ms cubic-bezier(0.17, 0.84, 0.36, 1) both;
+}
+
+.pageworld-zoom-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 30vmin;
+  height: 30vmin;
+  border: 1px solid rgba(180, 247, 255, 0.5);
+  border-radius: 999px;
+  opacity: 0;
+  box-shadow:
+    0 0 42px rgba(99, 231, 255, 0.26),
+    inset 0 0 42px rgba(255, 255, 255, 0.18);
+  transform: translate(-50%, -50%) scale(0.25);
+}
+
+.pageworld-zoom-transition-active .pageworld-zoom-ring {
+  animation: pageworld-zoom-ring 540ms ease-out both;
+}
+
+.pageworld-zoom-streak {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120vmax;
+  height: 9vmin;
+  opacity: 0;
+  background:
+    linear-gradient(90deg, transparent 0 18%, rgba(255, 255, 255, 0.2) 44%, rgba(150, 240, 255, 0.28) 50%, rgba(255, 255, 255, 0.18) 56%, transparent 82%);
+  filter: blur(14px);
+  transform: translate(-50%, -50%) rotate(var(--zoom-rotate, 0deg)) scaleX(0.08);
+  transform-origin: center;
+}
+
+.pageworld-zoom-transition-active .pageworld-zoom-streak {
+  animation: pageworld-zoom-streak 560ms cubic-bezier(0.14, 0.78, 0.22, 1) both;
+}
+
+.pageworld-zoom-streak-a {
+  --zoom-rotate: 0deg;
+}
+
+.pageworld-zoom-streak-b {
+  --zoom-rotate: 62deg;
+  animation-delay: 55ms;
+}
+
+.pageworld-zoom-streak-c {
+  --zoom-rotate: -62deg;
+  animation-delay: 105ms;
+}
+
+@keyframes pageworld-zoom-cover {
+  0% {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.78;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes pageworld-zoom-ring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.25);
+  }
+  32% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(4.2);
+  }
+}
+
+@keyframes pageworld-zoom-streak {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--zoom-rotate, 0deg)) scaleX(0.08);
+  }
+  34% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--zoom-rotate, 0deg)) scaleX(1.35);
+  }
+}
