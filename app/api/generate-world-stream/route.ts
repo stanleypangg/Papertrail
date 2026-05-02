@@ -1,5 +1,5 @@
 import { demoMuralUrl, demoScenes } from "@/lib/demoData";
-import { generateSceneConceptImage } from "@/lib/imageGeneration";
+import { generateSceneMuralImage } from "@/lib/imageGeneration";
 import { generateObjectModelsWithMeshy } from "@/lib/meshy";
 import { parsePdfBuffer } from "@/lib/pdf";
 import { sceneImageKey, visibleSceneImages, type SceneImageMap } from "@/lib/sceneImages";
@@ -204,7 +204,7 @@ async function generateImages(scenes: ScenePlan[], emit: Emit): Promise<{ images
       const imageKey = sceneImageKey(scene);
 
       try {
-        const imageUrl = await generateSceneConceptImage(scene.stylePrompt, { mode: "scene-mural" });
+        const imageUrl = await generateSceneMuralImage(scene);
         const warning = imageUrl ? undefined : "OPENAI_API_KEY missing or no image returned; skipped scene mural.";
         images[imageKey] = imageUrl;
 

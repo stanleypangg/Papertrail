@@ -2,13 +2,10 @@
 
 import { PerspectiveCamera, PointerLockControls } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useXR, useXRInputSourceState, XROrigin } from "@react-three/xr";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
   Group,
-  MathUtils,
   Object3D,
-  Quaternion,
   Raycaster,
   Vector2,
   Vector3,
@@ -22,8 +19,6 @@ import {
   PLAYER_HEIGHT,
   resolvePlayerPosition,
   targetKey,
-  XR_MOVE_SPEED,
-  XR_SNAP_TURN_DEGREES,
   type Vec3,
   type WorldTarget
 } from "@/lib/sceneNavigation";
@@ -46,8 +41,6 @@ type TargetedObject = Object3D & {
 };
 
 const CENTER = new Vector2(0, 0);
-const XR_TURN_DEADZONE = 0.75;
-const XR_THUMBSTICK = "xr-standard-thumbstick";
 
 export function PlayerRig({
   layoutType,
@@ -58,18 +51,13 @@ export function PlayerRig({
   onTargetChange,
   onActivateTarget
 }: PlayerRigProps) {
-  const { camera, gl, scene } = useThree();
-  const xrActive = useXR((state) => state.mode !== null);
-  const leftController = useXRInputSourceState("controller", "left");
-  const rightController = useXRInputSourceState("controller", "right");
+  const { camera, gl, scene, set } = useThree();
   const navigation = layoutNavigation[layoutType];
   const originRef = useRef<Group | null>(null);
   const cameraRef = useRef<ThreePerspectiveCamera | null>(null);
   const keys = useRef(new Set<string>());
-  const desired = useRef(new Vector3());
   const raycaster = useMemo(() => new Raycaster(), []);
   const lastTargetKey = useRef<string | null>(null);
-  const canSnapTurn = useRef(true);
 
   const clearTarget = useCallback(() => {
     if (lastTargetKey.current === null) {
@@ -109,8 +97,9 @@ export function PlayerRig({
     if (playerCamera) {
       playerCamera.position.set(0, PLAYER_HEIGHT, 0);
       playerCamera.rotation.set(0, 0, 0);
+      set({ camera: playerCamera });
     }
-  }, [clearTarget, navigation.spawn, resetSignal, sceneId]);
+  }, [clearTarget, navigation.spawn, resetSignal, sceneId, set]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -137,21 +126,6 @@ export function PlayerRig({
   }, [onActivateTarget]);
 
   useFrame((_, delta) => {
-    if (xrActive) {
-      updateXRMovement(
-        originRef.current,
-        camera,
-        leftController,
-        rightController,
-        desired.current,
-        canSnapTurn,
-        delta,
-        navigation
-      );
-      clearTarget();
-      return;
-    }
-
     updateDesktopMovement(originRef.current, camera, keys.current, delta, navigation);
 
     if (document.pointerLockElement !== gl.domElement) {
@@ -164,11 +138,11 @@ export function PlayerRig({
   });
 
   return (
-    <XROrigin ref={originRef}>
+    <group ref={originRef}>
       <PerspectiveCamera ref={cameraRef} makeDefault position={[0, PLAYER_HEIGHT, 0]} fov={68} />
+      <pointLight position={[0, PLAYER_HEIGHT, 0]} intensity={2.4} color="#dff8ff" distance={9} decay={1.45} />
       <PointerLockControls
         selector={pointerLockSelector}
-        enabled={!xrActive}
         onLock={() => onPointerLockChange(true)}
         onUnlock={() => {
           keys.current.clear();
@@ -177,69 +151,8 @@ export function PlayerRig({
         }}
         makeDefault
       />
-    </XROrigin>
+    </group>
   );
-}
-
-function updateXRMovement(
-  origin: Group | null,
-  camera: Camera,
-  leftController: ReturnType<typeof useXRInputSourceState<"controller">>,
-  rightController: ReturnType<typeof useXRInputSourceState<"controller">>,
-  velocity: Vector3,
-  canSnapTurn: MutableRefObject<boolean>,
-  delta: number,
-  navigation: (typeof layoutNavigation)[LayoutType]
-) {
-  if (!origin) {
-    return;
-  }
-
-  const movementController = leftController ?? rightController;
-  const movementStick = movementController?.gamepad[XR_THUMBSTICK];
-
-  if (movementStick) {
-    const xAxis = applyDeadzone(movementStick.xAxis ?? 0, 0.12);
-    const yAxis = applyDeadzone(movementStick.yAxis ?? 0, 0.12);
-
-    if (xAxis !== 0 || yAxis !== 0) {
-      velocity.set(xAxis * XR_MOVE_SPEED, 0, yAxis * XR_MOVE_SPEED);
-      camera.getWorldQuaternion(getQuaternion("camera"));
-      velocity.applyQuaternion(getQuaternion("camera"));
-      velocity.y = 0;
-
-      if (velocity.lengthSq() > XR_MOVE_SPEED * XR_MOVE_SPEED) {
-        velocity.setLength(XR_MOVE_SPEED);
-      }
-
-      const current: Vec3 = [origin.position.x, origin.position.y, origin.position.z];
-      const requested: Vec3 = [
-        current[0] + velocity.x * delta,
-        current[1],
-        current[2] + velocity.z * delta
-      ];
-      const resolved = resolvePlayerPosition(current, requested, navigation);
-      origin.position.set(...resolved);
-    }
-  }
-
-  if (!leftController || !rightController) {
-    canSnapTurn.current = true;
-    return;
-  }
-
-  const turnAxis = rightController.gamepad[XR_THUMBSTICK]?.xAxis ?? 0;
-  if (Math.abs(turnAxis) < XR_TURN_DEADZONE) {
-    canSnapTurn.current = true;
-    return;
-  }
-
-  if (!canSnapTurn.current) {
-    return;
-  }
-
-  canSnapTurn.current = false;
-  origin.rotation.y += (turnAxis > 0 ? -1 : 1) * MathUtils.degToRad(XR_SNAP_TURN_DEGREES);
 }
 
 function updateDesktopMovement(
@@ -284,20 +197,8 @@ const vectorCache = {
   move: new Vector3()
 };
 
-const quaternionCache = {
-  camera: new Quaternion()
-};
-
 function getVector(key: keyof typeof vectorCache) {
   return vectorCache[key];
-}
-
-function getQuaternion(key: keyof typeof quaternionCache) {
-  return quaternionCache[key];
-}
-
-function applyDeadzone(value: number, deadzone: number): number {
-  return Math.abs(value) > deadzone ? value : 0;
 }
 
 function findWorldTarget(raycaster: Raycaster, scene: Object3D): WorldTarget | null {

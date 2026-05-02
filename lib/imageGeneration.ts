@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 
+import type { ScenePlan } from "./sceneSchema";
+
 const imageModels = ["gpt-image-2", "gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini", "dall-e-3", "dall-e-2"] as const;
 type SupportedImageModel = (typeof imageModels)[number];
 
@@ -64,6 +66,10 @@ export async function generateSceneConceptImage(
   throw lastError instanceof Error ? lastError : new Error("Image generation failed.");
 }
 
+export async function generateSceneMuralImage(scene: ScenePlan): Promise<string | null> {
+  return generateSceneConceptImage(buildSceneMuralSourcePrompt(scene), { mode: "scene-mural" });
+}
+
 async function remoteImageUrlToDataUrl(url: string): Promise<string | null> {
   const response = await fetch(url);
 
@@ -125,17 +131,36 @@ function buildImagePrompt(prompt: string, mode: ImageGenerationMode): string {
   if (mode === "scene-mural") {
     return [
       prompt,
-      "Create one wide scene mural for a physical wall or window inside a real 3D story space.",
-      "Make it atmospheric concept art that matches the scene's architecture, landscape, color palette, and lighting.",
+      "Create one wide image of a concrete physical location that a person could stand inside.",
+      "The image must read as a real scene with visible floor or ground plane, foreground/midground/background depth, spatial boundaries, lighting sources, and navigable architecture or landscape.",
+      "Make the location match the scene's architecture, landscape, color palette, mood, objects, and lighting.",
       "Compose it as a framed image surface, not as a surrounding panorama or skybox.",
+      "Avoid abstract symbolism, floating collage elements, infographics, diagrams, title-card compositions, character posters, text-as-art, and pure mood boards.",
       "No fisheye distortion, 360-degree projection, pole stretching, text, captions, UI, controls, frames, logos, borders, or split panels."
     ].join(" ");
   }
 
   return [
     prompt,
-    "Create wide first-person concept art for an explorable immersive story space with coherent architecture or landscape.",
+    "Create wide first-person concept art for an explorable physical story location with coherent architecture or landscape, visible floor or ground, depth, and a clear place identity.",
+    "Avoid abstract symbolism, infographics, diagrams, title-card compositions, and pure mood boards.",
     "No text, captions, UI, controls, frames, logos, split panels, or borders."
+  ].join(" ");
+}
+
+function buildSceneMuralSourcePrompt(scene: ScenePlan): string {
+  const objects = scene.objects
+    .map((object) => `${object.label}: ${object.description}`)
+    .join("; ");
+
+  return [
+    `Scene title: ${scene.title}.`,
+    `Layout archetype: ${scene.layoutType}.`,
+    `Physical location dressing: ${scene.dressing}.`,
+    `Scene mood: ${scene.mood}.`,
+    `Location-first visual prompt: ${scene.stylePrompt}.`,
+    `Narrative context: ${scene.summary} ${scene.narration}`,
+    `Visible grounded props: ${objects}.`
   ].join(" ");
 }
 

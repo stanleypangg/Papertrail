@@ -15,7 +15,7 @@ export type LayoutNavigation = {
 
 export const PLAYER_HEIGHT = 1.7;
 export const PLAYER_RADIUS = 0.35;
-export const DESKTOP_MOVE_SPEED = 4.2;
+export const DESKTOP_MOVE_SPEED = 7.5;
 export const XR_MOVE_SPEED = 2;
 export const XR_SNAP_TURN_DEGREES = 30;
 

@@ -1,0 +1,49 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e25] [cursor=pointer]:
+    - img [ref=e26]
+  - alert [ref=e29]
+  - main [ref=e30]:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - paragraph: Scene 2 of 3
+            - heading "The Long Passage" [level=1]
+        - paragraph: The pages stretch into a platform. Each step forward turns structure into distance, and distance into memory.
+    - generic [ref=e34]:
+      - button "Lock mouse" [ref=e35] [cursor=pointer]:
+        - img [ref=e36]
+        - text: Lock mouse
+      - button "Scene cards" [ref=e38] [cursor=pointer]:
+        - img [ref=e39]
+        - text: Scene cards
+    - generic [ref=e41]:
+      - button "Debug" [expanded] [ref=e43] [cursor=pointer]:
+        - img [ref=e44]
+        - text: Debug
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - paragraph [ref=e50]:
+              - img [ref=e51]
+              - text: Viewer debug
+            - paragraph [ref=e60]: corridor_path / melancholic / 3 objects
+          - button "Respawn" [ref=e61] [cursor=pointer]:
+            - img [ref=e62]
+            - text: Respawn
+        - generic [ref=e65]:
+          - paragraph [ref=e66]: Scene
+          - generic [ref=e67]:
+            - button "1" [ref=e68] [cursor=pointer]
+            - button "2" [ref=e69] [cursor=pointer]
+            - button "3" [ref=e70] [cursor=pointer]
+        - generic [ref=e71]:
+          - paragraph [ref=e72]: Mural
+          - generic [ref=e73]:
+            - button "Scene art" [ref=e74] [cursor=pointer]
+            - button "Cached" [ref=e75] [cursor=pointer]
+            - button "None" [ref=e76] [cursor=pointer]
+          - paragraph [ref=e77]: No mural texture
+        - generic [ref=e78]:
+          - button "Previous" [ref=e79] [cursor=pointer]
+          - button "Next" [active] [ref=e80] [cursor=pointer]

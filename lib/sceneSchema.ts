@@ -122,7 +122,7 @@ export function normalizeScenePlans(input: unknown): ScenePlan[] {
       mood: raw.mood,
       stylePrompt: stringOrDefault(
         raw.stylePrompt,
-        "cinematic compact story museum scene, atmospheric lighting"
+        "cinematic compact physical story museum gallery with visible floor, walls, depth, and atmospheric lighting"
       ),
       narration: stringOrDefault(
         raw.narration,
@@ -239,4 +239,3 @@ export const scenePlanJsonSchema = {
   },
   required: ["scenes"]
 } as const;
-

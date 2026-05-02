@@ -39,7 +39,7 @@ export function SceneRenderer({
 }: SceneRendererProps) {
   const style = moodStyles[scene.mood];
   const targetedKey = targetKey(targetedTarget);
-  const hasPanorama = Boolean(sceneImageUrl && sceneImagePresentation === "panorama");
+  const hasPanorama = sceneImagePresentation === "panorama";
 
   return (
     <>
@@ -49,12 +49,16 @@ export function SceneRenderer({
       <directionalLight position={[4, 7, 4]} intensity={1.4} color={style.key} castShadow />
       <pointLight position={[0, 2.7, -1.6]} intensity={1.1} color={style.accent} distance={8} />
 
-      {hasPanorama && sceneImageUrl ? (
-        <SceneImageErrorBoundary key={`${scene.id}:${sceneImageUrl}:panorama`} fallback={<PanoramaPlaceholder color={style.background} />}>
-          <Suspense fallback={<PanoramaPlaceholder color={style.background} />}>
-            <PanoramaEnvironment imageUrl={sceneImageUrl} />
-          </Suspense>
-        </SceneImageErrorBoundary>
+      {hasPanorama ? (
+        sceneImageUrl ? (
+          <SceneImageErrorBoundary key={`${scene.id}:${sceneImageUrl}:panorama`} fallback={<PanoramaPlaceholder color={style.background} accent={style.accent} />}>
+            <Suspense fallback={<PanoramaPlaceholder color={style.background} accent={style.accent} />}>
+              <PanoramaEnvironment imageUrl={sceneImageUrl} />
+            </Suspense>
+          </SceneImageErrorBoundary>
+        ) : (
+          <PanoramaPlaceholder color={style.background} accent={style.accent} />
+        )
       ) : (
         <>
           <WorldAtmosphere mood={scene.mood} style={style} />
@@ -115,12 +119,20 @@ function PanoramaEnvironment({ imageUrl }: { imageUrl: string }) {
   );
 }
 
-function PanoramaPlaceholder({ color }: { color: string }) {
+function PanoramaPlaceholder({ color, accent }: { color: string; accent: string }) {
   return (
-    <mesh>
-      <sphereGeometry args={[70, 64, 32]} />
-      <meshBasicMaterial color={color} side={BackSide} />
-    </mesh>
+    <group>
+      <mesh>
+        <sphereGeometry args={[70, 64, 32]} />
+        <meshBasicMaterial color={color} side={BackSide} />
+      </mesh>
+      {[0, 1, 2].map((index) => (
+        <mesh key={index} rotation={[Math.PI / 2, 0, 0]} position={[0, -0.04 - index * 0.01, 0]}>
+          <ringGeometry args={[2 + index * 1.6, 2.05 + index * 1.6, 96]} />
+          <meshBasicMaterial color={accent} transparent opacity={0.12 - index * 0.025} depthWrite={false} />
+        </mesh>
+      ))}
+    </group>
   );
 }
 

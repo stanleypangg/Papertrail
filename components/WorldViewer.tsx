@@ -1,16 +1,13 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { createXRStore, XR } from "@react-three/xr";
-import { ArrowLeft, Bug, Glasses, MousePointer2, RotateCcw, Settings } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Bug, MousePointer2, RotateCcw, Settings } from "lucide-react";
+import { Suspense, useCallback, useState } from "react";
+import { BackSide } from "three";
 
 import { ObjectInfoPanel } from "@/components/ObjectInfoPanel";
 import { PlayerRig } from "@/components/three/PlayerRig";
 import { SceneRenderer } from "@/components/three/SceneRenderer";
-import { VRHelpHint } from "@/components/three/VRHelpHint";
-import { VRInfoPanel } from "@/components/three/VRInfoPanel";
-import { XRSessionBridge } from "@/components/three/XRSessionBridge";
 import { demoMuralUrl } from "@/lib/demoData";
 import type { SceneObjectModelMap } from "@/lib/objectModels";
 import type { WorldTarget } from "@/lib/sceneNavigation";
@@ -28,14 +25,10 @@ type MuralMode = "scene" | "cached" | "none";
 type SceneImagePresentation = "mural" | "panorama";
 
 export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLabel = "Scene cards" }: WorldViewerProps) {
-  const xrStore = useMemo(() => createXRStore({ emulate: false, offerSession: false }), []);
   const [sceneIndex, setSceneIndex] = useState(0);
   const [selectedObject, setSelectedObject] = useState<SceneObject | null>(null);
   const [targetedTarget, setTargetedTarget] = useState<WorldTarget | null>(null);
   const [pointerLocked, setPointerLocked] = useState(false);
-  const [xrActive, setXrActive] = useState(false);
-  const [vrSupported, setVrSupported] = useState(false);
-  const [xrError, setXrError] = useState("");
   const [debugOpen, setDebugOpen] = useState(false);
   const [muralMode, setMuralMode] = useState<MuralMode>("scene");
   const [resetSignal, setResetSignal] = useState(0);
@@ -45,11 +38,11 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
   const sceneImageUrl = sceneImages[scene.id] ?? null;
   const effectiveSceneImageUrl =
     muralMode === "cached" ? demoMuralUrl : muralMode === "none" ? null : sceneImageUrl;
-  const sceneImagePresentation: SceneImagePresentation = effectiveSceneImageUrl === demoMuralUrl ? "panorama" : "mural";
+  const sceneImagePresentation: SceneImagePresentation = "panorama";
   const isLastScene = safeSceneIndex === scenes.length - 1;
   const instruction = pointerLocked
     ? "WASD to move. Aim at glowing objects or portals, then click or press E."
-    : "Lock mouse look to walk the world. Use Enter VR when your browser supports it.";
+    : "Lock mouse look to walk the panorama. WASD moves between nearby objects.";
 
   const releasePointerLock = useCallback(() => {
     document.exitPointerLock?.();
@@ -58,34 +51,8 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
 
   const exitToCards = useCallback(() => {
     releasePointerLock();
-    void xrStore.getState().session?.end();
     onExit();
-  }, [onExit, releasePointerLock, xrStore]);
-
-  useEffect(() => {
-    let active = true;
-
-    if (!navigator.xr) {
-      return;
-    }
-
-    navigator.xr
-      .isSessionSupported("immersive-vr")
-      .then((supported) => {
-        if (active) {
-          setVrSupported(supported);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setVrSupported(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
+  }, [onExit, releasePointerLock]);
 
   const nextScene = useCallback(() => {
     setSelectedObject(null);
@@ -116,16 +83,6 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
     setResetSignal((current) => current + 1);
   }, [releasePointerLock]);
 
-  const handleXRSessionChange = useCallback((active: boolean) => {
-    setXrActive(active);
-    setXrError("");
-
-    if (active) {
-      releasePointerLock();
-      setTargetedTarget(null);
-    }
-  }, [releasePointerLock]);
-
   const selectObject = useCallback((object: SceneObject) => {
     releasePointerLock();
     setSelectedObject(object);
@@ -146,21 +103,10 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
     [nextScene, scene.objects, selectObject]
   );
 
-  async function enterVR() {
-    setXrError("");
-
-    try {
-      await xrStore.enterVR();
-    } catch (reason) {
-      setXrError(reason instanceof Error ? reason.message : "Could not enter VR.");
-    }
-  }
-
   return (
     <main className="canvas-crosshair relative h-svh w-screen overflow-hidden bg-black text-stone-50">
       <Canvas className="h-full w-full" style={{ width: "100vw", height: "100svh" }} shadows="basic">
-        <XR store={xrStore}>
-          <XRSessionBridge onSessionChange={handleXRSessionChange} />
+        <Suspense fallback={<WorldCanvasFallback />}>
           <SceneRenderer
             scene={scene}
             sceneImageUrl={effectiveSceneImageUrl}
@@ -170,18 +116,16 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
             onSelectObject={selectObject}
             onPortalClick={nextScene}
           />
-          <PlayerRig
-            layoutType={scene.layoutType}
-            sceneId={scene.id}
-            resetSignal={resetSignal}
-            pointerLockSelector="#world-pointer-lock"
-            onPointerLockChange={setPointerLocked}
-            onTargetChange={setTargetedTarget}
-            onActivateTarget={activateTarget}
-          />
-          <VRInfoPanel object={selectedObject} visible={xrActive} />
-          <VRHelpHint visible={xrActive && !selectedObject} />
-        </XR>
+        </Suspense>
+        <PlayerRig
+          layoutType={scene.layoutType}
+          sceneId={scene.id}
+          resetSignal={resetSignal}
+          pointerLockSelector="#world-pointer-lock"
+          onPointerLockChange={setPointerLocked}
+          onTargetChange={setTargetedTarget}
+          onActivateTarget={activateTarget}
+        />
       </Canvas>
 
       <div className="pointer-events-none fixed left-4 top-4 z-20 w-[min(560px,calc(100vw-2rem))]">
@@ -198,13 +142,12 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
         </div>
       </div>
 
-      {!xrActive && !debugOpen ? (
+      {!debugOpen ? (
         <div className="pointer-events-none fixed bottom-4 left-4 z-20 w-[min(520px,calc(100vw-8rem))] border border-white/12 bg-[#070b10]/72 p-3 text-xs leading-5 text-stone-300 backdrop-blur">
           <span className="inline-flex items-center gap-2 text-cyan-100">
             <MousePointer2 size={14} />
             {instruction}
           </span>
-          {xrError ? <p className="mt-2 text-rose-200">{xrError}</p> : null}
         </div>
       ) : null}
 
@@ -217,16 +160,6 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
           <MousePointer2 size={16} />
           {pointerLocked ? "Mouse locked" : "Lock mouse"}
         </button>
-        {vrSupported ? (
-          <button
-            type="button"
-            onClick={enterVR}
-            className="inline-flex items-center gap-2 border border-cyan-200/40 bg-cyan-300/12 px-4 py-2 text-sm text-cyan-50 backdrop-blur transition hover:border-cyan-100"
-          >
-            <Glasses size={16} />
-            Enter VR
-          </button>
-        ) : null}
         <button
           type="button"
           onClick={exitToCards}
@@ -297,7 +230,7 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
             </div>
 
             <div className="mt-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-stone-400">Mural</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-stone-400">Panorama</p>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {(
                   [
@@ -327,7 +260,7 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
                 {muralMode === "cached"
                   ? demoMuralUrl
                   : muralMode === "none"
-                    ? "No mural texture"
+                    ? "No panorama texture"
                     : sceneImageUrl || "No scene art available"}
               </p>
             </div>
@@ -354,7 +287,25 @@ export function WorldViewer({ scenes, sceneImages, objectModels, onExit, exitLab
         ) : null}
       </div>
 
-      {!xrActive ? <ObjectInfoPanel object={selectedObject} onClose={() => setSelectedObject(null)} /> : null}
+      <ObjectInfoPanel object={selectedObject} onClose={() => setSelectedObject(null)} />
     </main>
+  );
+}
+
+function WorldCanvasFallback() {
+  return (
+    <>
+      <color attach="background" args={["#101923"]} />
+      <ambientLight intensity={0.95} color="#dff8ff" />
+      <pointLight position={[0, 2.2, 0]} intensity={1.8} color="#79f2ff" distance={9} />
+      <mesh>
+        <sphereGeometry args={[70, 48, 24]} />
+        <meshBasicMaterial color="#101923" side={BackSide} />
+      </mesh>
+      <mesh position={[0, 1.2, -3.4]}>
+        <boxGeometry args={[1.2, 1.2, 1.2]} />
+        <meshStandardMaterial color="#7defff" emissive="#2db8d8" emissiveIntensity={0.45} roughness={0.6} />
+      </mesh>
+    </>
   );
 }
