@@ -653,7 +653,7 @@ export function WorldViewer({
 
   useEffect(() => {
     const threeScene = sceneRef.current;
-    if (!threeScene || !sceneId?.includes("great-hall")) {
+    if (!threeScene) {
       return;
     }
 
