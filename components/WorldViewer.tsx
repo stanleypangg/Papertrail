@@ -236,26 +236,7 @@ export function WorldViewer({
     queueTransitionTimeout(callback, TRANSITION_SWAP_DELAY);
   }, [clearTransitionTimeouts, pauseNarration, queueTransitionTimeout]);
 
-  const goToRelativeSplat = useCallback((direction: -1 | 1) => {
-    if (!scene || splatOptions.length === 0) {
-      return;
-    }
-
-    const currentSplatIndex = Math.max(0, splatOptions.findIndex((option) => option.path === splatUrl));
-    const nextSplatIndex = currentSplatIndex + direction;
-
-    if (nextSplatIndex >= 0 && nextSplatIndex < splatOptions.length) {
-      const nextPath = splatOptions[nextSplatIndex].path;
-      const sceneIdForSelection = scene.id;
-      beginSplatTransition(() => {
-        setSelectedSplats((current) => ({
-          ...current,
-          [sceneIdForSelection]: nextPath
-        }));
-      });
-      return;
-    }
-
+  const goToRelativeScene = useCallback((direction: -1 | 1) => {
     const nextSceneIndex = safeSceneIndex + direction;
     if (nextSceneIndex < 0 || nextSceneIndex >= scenes.length) {
       return;
@@ -274,12 +255,13 @@ export function WorldViewer({
 
     beginSplatTransition(() => {
       setSelectedSceneIndex(nextSceneIndex);
-      setSelectedSplats((current) => ({
-        ...current,
-        [nextScene.id]: direction > 0 ? nextSceneOptions[0].path : nextSceneOptions[nextSceneOptions.length - 1].path
-      }));
+      setSelectedSplats((current) => {
+        const next = { ...current };
+        delete next[nextScene.id];
+        return next;
+      });
     });
-  }, [beginSplatTransition, safeSceneIndex, scene, sceneColliders, scenes, sceneSplats, splatManifest, splatOptions, splatUrl]);
+  }, [beginSplatTransition, safeSceneIndex, sceneColliders, scenes, sceneSplats, splatManifest]);
 
   useEffect(() => () => {
     clearTransitionTimeouts();
@@ -491,12 +473,12 @@ export function WorldViewer({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code === "ArrowRight" || event.code === "ArrowDown") {
         event.preventDefault();
-        goToRelativeSplat(1);
+        goToRelativeScene(1);
         return;
       }
       if (event.code === "ArrowLeft" || event.code === "ArrowUp") {
         event.preventDefault();
-        goToRelativeSplat(-1);
+        goToRelativeScene(-1);
         return;
       }
 
@@ -518,7 +500,7 @@ export function WorldViewer({
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [goToRelativeSplat]);
+  }, [goToRelativeScene]);
 
   useEffect(() => {
     let active = true;

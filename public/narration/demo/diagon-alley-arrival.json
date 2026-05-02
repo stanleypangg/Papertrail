@@ -1,0 +1,26 @@
+{
+  "modelId": "eleven_multilingual_v2",
+  "sceneId": "diagon-alley-arrival",
+  "script": "A wall has become a doorway. The alley ahead is cramped, bright, and alive with magic. Harry has not arrived at a shop; he has arrived at a new life.",
+  "voiceId": "JBFqnCBsd6RMkjVDRZzb",
+  "captions": [
+    {
+      "end": 1.695,
+      "start": 0.046,
+      "text": "A wall has become a doorway."
+    },
+    {
+      "end": 5.329,
+      "start": 2.02,
+      "text": "The alley ahead is cramped, bright, and alive with magic."
+    },
+    {
+      "end": 9.056,
+      "start": 5.712,
+      "text": "Harry has not arrived at a shop; he has arrived at a new life."
+    }
+  ],
+  "audioPath": "/narration/demo/diagon-alley-arrival.mp3",
+  "audioUrl": "/narration/demo/diagon-alley-arrival.mp3",
+  "cachedAt": "2026-05-02T22:55:21.096Z"
+}

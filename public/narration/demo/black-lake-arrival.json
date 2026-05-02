@@ -1,0 +1,21 @@
+{
+  "modelId": "eleven_multilingual_v2",
+  "sceneId": "black-lake-arrival",
+  "script": "The boats slide across the Black Lake, quiet except for water against wood. Then the castle appears above the cliffs, bright with windows, impossible and waiting.",
+  "voiceId": "JBFqnCBsd6RMkjVDRZzb",
+  "captions": [
+    {
+      "end": 4.063,
+      "start": 0.07,
+      "text": "The boats slide across the Black Lake, quiet except for water against wood."
+    },
+    {
+      "end": 8.87,
+      "start": 4.447,
+      "text": "Then the castle appears above the cliffs, bright with windows, impossible and waiting."
+    }
+  ],
+  "audioPath": "/narration/demo/black-lake-arrival.mp3",
+  "audioUrl": "/narration/demo/black-lake-arrival.mp3",
+  "cachedAt": "2026-05-02T22:54:50.962Z"
+}

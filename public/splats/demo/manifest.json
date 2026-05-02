@@ -1,13 +1,26 @@
 {
   "diagon-alley-arrival": {
-    "cachedAt": "2026-05-02T22:04:52.194Z",
-    "colliderPath": "/splats/demo/pageworld-diagon-alley-arrival-v20260502220452-f7568e86-collider.glb",
-    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/44f8e3f0-7e6d-4499-bcad-06f35ceb6b8b/90ef8aa6.glb",
-    "latestVersion": "v20260502220452-f7568e86",
-    "path": "/splats/demo/pageworld-diagon-alley-arrival-v20260502220452-f7568e86.spz",
+    "cachedAt": "2026-05-02T22:44:26.116Z",
+    "colliderPath": "/splats/demo/pageworld-diagon-alley-arrival-v20260502224426-ea1047b7-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/cf2645d8-8b27-4985-8eb0-ebf7194c0d01/6caed376.glb",
+    "latestVersion": "v20260502224426-ea1047b7",
+    "path": "/splats/demo/pageworld-diagon-alley-arrival-v20260502224426-ea1047b7.spz",
     "prompt": "Create a richly detailed walkable first-person 3D world for Diagon Alley, the hidden British wizarding marketplace Harry first discovers behind the Leaky Cauldron. The player should stand just beyond the brick-wall entrance on a narrow cobblestone street with a clear navigable path forward. Include tall crooked shopfronts leaning inward on both sides, stacked chimneys, warm golden window light, hanging lanterns, barrels, crates, owl cages, wand boxes in a narrow wand-shop display, cauldrons, apothecary bottles, broom handles, parchment bundles, cloth awnings, uneven brick walls, and a white marble wizarding bank facade visible far down the street as a distant landmark. Use strong foreground, midground, and background depth so the scene works as a Gaussian splat walkthrough, with realistic stone, wood, brass, glass, paper, feathers, wet cobblestones, and warm window reflections. Whimsical but physically grounded, crowded with magical objects but with enough open floor to walk. No readable text, no logos, no characters, no modern objects, no flat backdrop, no fisheye distortion.",
-    "sourceUrl": "https://cdn.marble.worldlabs.ai/44f8e3f0-7e6d-4499-bcad-06f35ceb6b8b/c0012a8a-cf73-46db-9d2a-59a98d9b1f1b_sand_500k.spz",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/cf2645d8-8b27-4985-8eb0-ebf7194c0d01/cfdbbd4e-b156-4d61-b879-d043832f0223_ceramic_500k.spz",
     "versions": [
+      {
+        "bytes": 7702328,
+        "cachedAt": "2026-05-02T22:44:26.116Z",
+        "colliderBytes": 3133800,
+        "colliderPath": "/splats/demo/pageworld-diagon-alley-arrival-v20260502224426-ea1047b7-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/cf2645d8-8b27-4985-8eb0-ebf7194c0d01/6caed376.glb",
+        "operationId": "ea1047b7-1bf4-4568-9f1f-7409d1c5a8d3",
+        "path": "/splats/demo/pageworld-diagon-alley-arrival-v20260502224426-ea1047b7.spz",
+        "prompt": "Create a richly detailed walkable first-person 3D world for Diagon Alley, the hidden British wizarding marketplace Harry first discovers behind the Leaky Cauldron. The player should stand just beyond the brick-wall entrance on a narrow cobblestone street with a clear navigable path forward. Include tall crooked shopfronts leaning inward on both sides, stacked chimneys, warm golden window light, hanging lanterns, barrels, crates, owl cages, wand boxes in a narrow wand-shop display, cauldrons, apothecary bottles, broom handles, parchment bundles, cloth awnings, uneven brick walls, and a white marble wizarding bank facade visible far down the street as a distant landmark. Use strong foreground, midground, and background depth so the scene works as a Gaussian splat walkthrough, with realistic stone, wood, brass, glass, paper, feathers, wet cobblestones, and warm window reflections. Whimsical but physically grounded, crowded with magical objects but with enough open floor to walk. No readable text, no logos, no characters, no modern objects, no flat backdrop, no fisheye distortion.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/cf2645d8-8b27-4985-8eb0-ebf7194c0d01/cfdbbd4e-b156-4d61-b879-d043832f0223_ceramic_500k.spz",
+        "version": "v20260502224426-ea1047b7",
+        "worldId": "cf2645d8-8b27-4985-8eb0-ebf7194c0d01"
+      },
       {
         "bytes": 5695899,
         "cachedAt": "2026-05-02T22:04:52.194Z",
@@ -35,7 +48,7 @@
         "worldId": "981618d5-08be-40c8-b0f3-eba46c8ef7d4"
       }
     ],
-    "worldId": "44f8e3f0-7e6d-4499-bcad-06f35ceb6b8b"
+    "worldId": "cf2645d8-8b27-4985-8eb0-ebf7194c0d01"
   },
   "forbidden-forest": {
     "cachedAt": "2026-05-02T21:22:37.750Z",
@@ -88,14 +101,40 @@
     "worldId": "a127136c-6f1a-40ad-9a8a-93966bfd2e8a"
   },
   "hogwarts-express-platform": {
-    "cachedAt": "2026-05-02T21:25:40.048Z",
-    "colliderPath": "/splats/demo/pageworld-hogwarts-express-platform-v20260502212540-328b659e-collider.glb",
-    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/3623571a-03c7-48ec-a07d-a3f1bc3cfd1f/577d9de5.glb",
-    "latestVersion": "v20260502212540-328b659e",
-    "path": "/splats/demo/pageworld-hogwarts-express-platform-v20260502212540-328b659e.spz",
-    "prompt": "Create a detailed walkable first-person hidden railway platform for a magical school departure. The player should stand on a long stone platform with brick pillars forming a corridor, a scarlet steam locomotive along one side, open carriage doors, brass handles, luggage carts, stacked school trunks, bird cages, warm hanging lamps, benches, iron railings, polished train wheels, drifting steam layers, and a vanishing point down the platform. Design it for spatial exploration with enough ground clearance to walk, clear left/right landmarks, and dense but readable props. Lighting should be warm amber lamps cutting through cool white steam. No readable platform signs, no logos, no real-world brand marks, no crowds or characters, no flat wall backdrop.",
-    "sourceUrl": "https://cdn.marble.worldlabs.ai/3623571a-03c7-48ec-a07d-a3f1bc3cfd1f/2754513c-9383-4164-a7b6-7ef562e96dc3_sand_500k.spz",
+    "cachedAt": "2026-05-02T23:06:35.164Z",
+    "colliderPath": "/splats/demo/pageworld-hogwarts-express-platform-v20260502230635-c86f7f65-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/cef10e0e-e465-4a83-9bb2-b099b9c175ca/71d88b03.glb",
+    "latestVersion": "v20260502230635-c86f7f65",
+    "path": "/splats/demo/pageworld-hogwarts-express-platform-v20260502230635-c86f7f65.spz",
+    "prompt": "Create a lore-accurate walkable first-person Platform Nine and Three-Quarters scene at King's Cross: a hidden Victorian railway platform revealed after passing through a brick barrier. The player should stand just inside the platform, with the brick arch/barrier behind them, a long stone platform stretching forward, red-brown brick pillars and iron roof trusses overhead, warm hanging lamps, benches, iron railings, luggage trolleys, stacked leather school trunks, bird cages, parcels, loose scarves, and dense white steam drifting across the walking path. Along one side, place the Hogwarts Express as a deep scarlet steam locomotive with black iron undercarriage, brass fittings, large wheels, open carriage doors, warm compartment light, and steam venting around the platform edge. The composition should have a clear navigable corridor beside the train, strong vanishing point depth down the platform, foreground trunks and trolley details, midground train doors and pillars, and background steam swallowing the far end. Make it magical but grounded in an old British station, not a modern station and not a generic fantasy train. No readable signs or numbers, no logos, no real-world brand marks, no characters or crowds, no modern objects, no flat backdrop, no fisheye distortion.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/cef10e0e-e465-4a83-9bb2-b099b9c175ca/2cac6438-f618-49bc-93e9-f172100931b3_ceramic_500k.spz",
     "versions": [
+      {
+        "bytes": 7829724,
+        "cachedAt": "2026-05-02T23:06:35.164Z",
+        "colliderBytes": 2186168,
+        "colliderPath": "/splats/demo/pageworld-hogwarts-express-platform-v20260502230635-c86f7f65-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/cef10e0e-e465-4a83-9bb2-b099b9c175ca/71d88b03.glb",
+        "operationId": "c86f7f65-f9b2-42b5-91a1-81c710b37175",
+        "path": "/splats/demo/pageworld-hogwarts-express-platform-v20260502230635-c86f7f65.spz",
+        "prompt": "Create a lore-accurate walkable first-person Platform Nine and Three-Quarters scene at King's Cross: a hidden Victorian railway platform revealed after passing through a brick barrier. The player should stand just inside the platform, with the brick arch/barrier behind them, a long stone platform stretching forward, red-brown brick pillars and iron roof trusses overhead, warm hanging lamps, benches, iron railings, luggage trolleys, stacked leather school trunks, bird cages, parcels, loose scarves, and dense white steam drifting across the walking path. Along one side, place the Hogwarts Express as a deep scarlet steam locomotive with black iron undercarriage, brass fittings, large wheels, open carriage doors, warm compartment light, and steam venting around the platform edge. The composition should have a clear navigable corridor beside the train, strong vanishing point depth down the platform, foreground trunks and trolley details, midground train doors and pillars, and background steam swallowing the far end. Make it magical but grounded in an old British station, not a modern station and not a generic fantasy train. No readable signs or numbers, no logos, no real-world brand marks, no characters or crowds, no modern objects, no flat backdrop, no fisheye distortion.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/cef10e0e-e465-4a83-9bb2-b099b9c175ca/2cac6438-f618-49bc-93e9-f172100931b3_ceramic_500k.spz",
+        "version": "v20260502230635-c86f7f65",
+        "worldId": "cef10e0e-e465-4a83-9bb2-b099b9c175ca"
+      },
+      {
+        "bytes": 7735486,
+        "cachedAt": "2026-05-02T22:50:51.307Z",
+        "colliderBytes": 965568,
+        "colliderPath": "/splats/demo/pageworld-hogwarts-express-platform-v20260502225051-530d8282-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/df3f153a-0dfe-48b6-afd7-afb34e7fa3a7/a9fa0dbc.glb",
+        "operationId": "530d8282-d366-4541-a6f4-b52420585d41",
+        "path": "/splats/demo/pageworld-hogwarts-express-platform-v20260502225051-530d8282.spz",
+        "prompt": "Create a detailed walkable first-person hidden railway platform for Platform Nine and Three-Quarters, the secret magical departure platform at King's Cross. The player should stand on a long stone platform with brick pillars forming a corridor, a scarlet steam locomotive along one side, open carriage doors with brass handles, polished train wheels, iron railings, luggage carts, stacked school trunks, bird cages, benches, hanging lamps, and thick drifting steam. Include a brick barrier threshold behind the player, warm carriage light spilling from the train, amber platform lamps cutting through cool white steam, and a strong vanishing point down the platform. Make it spatially explorable with enough ground clearance to walk and clear left/right landmarks. No readable platform signs, no logos, no real-world brand marks, no crowds or characters, no modern objects, no flat wall backdrop, no fisheye distortion.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/df3f153a-0dfe-48b6-afd7-afb34e7fa3a7/4e38449a-6dee-45fc-83b9-bf8dba1b53db_ceramic_500k.spz",
+        "version": "v20260502225051-530d8282",
+        "worldId": "df3f153a-0dfe-48b6-afd7-afb34e7fa3a7"
+      },
       {
         "bytes": 5940241,
         "cachedAt": "2026-05-02T21:25:40.048Z",
@@ -110,7 +149,7 @@
         "worldId": "3623571a-03c7-48ec-a07d-a3f1bc3cfd1f"
       }
     ],
-    "worldId": "3623571a-03c7-48ec-a07d-a3f1bc3cfd1f"
+    "worldId": "cef10e0e-e465-4a83-9bb2-b099b9c175ca"
   },
   "black-lake-arrival": {
     "cachedAt": "2026-05-02T22:12:34.953Z",
