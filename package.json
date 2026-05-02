@@ -1,0 +1,36 @@
+{
+  "name": "pageworld",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
+    "@react-three/xr": "^6.6.29",
+    "lucide-react": "^0.562.0",
+    "next": "^16.2.4",
+    "openai": "^6.35.0",
+    "pdf-parse": "^2.4.5",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "three": "^0.184.0",
+    "zod": "^4.1.13",
+    "zod-to-json-schema": "^3.25.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.4",
+    "@types/node": "^25.0.3",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.184.0",
+    "eslint": "^9.39.2",
+    "eslint-config-next": "^16.2.4",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3"
+  }
+}
