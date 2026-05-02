@@ -1,0 +1,38 @@
+{
+  "hogwarts-express-platform": {
+    "cachedAt": "2026-05-02T20:05:20.016Z",
+    "latestVersion": "v20260502200520-a731f798",
+    "path": "/splats/demo/pageworld-hogwarts-express-platform-v20260502200520-a731f798.spz",
+    "prompt": "Create a detailed walkable first-person hidden railway platform for a magical school departure. The player should stand on a long stone platform with brick pillars forming a corridor, a scarlet steam locomotive along one side, open carriage doors, brass handles, luggage carts, stacked school trunks, bird cages, warm hanging lamps, benches, iron railings, polished train wheels, drifting steam layers, and a vanishing point down the platform. Design it for spatial exploration with enough ground clearance to walk, clear left/right landmarks, and dense but readable props. Lighting should be warm amber lamps cutting through cool white steam. No readable platform signs, no logos, no real-world brand marks, no crowds or characters, no flat wall backdrop.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/9bc8a218-71ba-4917-a54b-b31a79e7d427/6413a539-7c6d-483a-8fde-922c656c74a9_sand_500k.spz",
+    "versions": [
+      {
+        "bytes": 5940241,
+        "cachedAt": "2026-05-02T20:05:20.016Z",
+        "operationId": "a731f798-8283-4fa8-a824-9c75fdc4a592",
+        "path": "/splats/demo/pageworld-hogwarts-express-platform-v20260502200520-a731f798.spz",
+        "prompt": "Create a detailed walkable first-person hidden railway platform for a magical school departure. The player should stand on a long stone platform with brick pillars forming a corridor, a scarlet steam locomotive along one side, open carriage doors, brass handles, luggage carts, stacked school trunks, bird cages, warm hanging lamps, benches, iron railings, polished train wheels, drifting steam layers, and a vanishing point down the platform. Design it for spatial exploration with enough ground clearance to walk, clear left/right landmarks, and dense but readable props. Lighting should be warm amber lamps cutting through cool white steam. No readable platform signs, no logos, no real-world brand marks, no crowds or characters, no flat wall backdrop.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/9bc8a218-71ba-4917-a54b-b31a79e7d427/6413a539-7c6d-483a-8fde-922c656c74a9_sand_500k.spz",
+        "version": "v20260502200520-a731f798"
+      }
+    ]
+  },
+  "diagon-alley-arrival": {
+    "cachedAt": "2026-05-02T20:07:46.829Z",
+    "latestVersion": "v20260502200746-3e926fe1",
+    "path": "/splats/demo/pageworld-diagon-alley-arrival-v20260502200746-3e926fe1.spz",
+    "prompt": "Create a richly detailed walkable first-person 3D world for a magical British wizarding marketplace. The player should stand on a narrow cobblestone street with a clear navigable path running forward through the scene, tall crooked shopfronts leaning inward on both sides, stacked chimneys, warm golden window light, hanging lanterns, barrels, crates, owl cages, wand boxes in display windows, broom handles, potion bottles, cloth awnings, uneven brick walls, and a visible brick archway behind the player as the entry threshold. Use strong foreground, midground, and background depth so the scene works as a Gaussian splat walkthrough. Make the environment whimsical but physically grounded, with realistic stone, wood, brass, glass, paper, and feather materials. No readable text, no logos, no characters, no modern objects, no flat backdrop, no fisheye distortion.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/31da25ea-71fe-4dba-9f2c-e1a9711ba90a/6dae2b7b-ae75-4ad0-a034-c9e8c134cbb5_ceramic_500k.spz",
+    "versions": [
+      {
+        "bytes": 7674280,
+        "cachedAt": "2026-05-02T20:07:46.829Z",
+        "operationId": "3e926fe1-5ef0-464d-a58f-5d24f39d839a",
+        "path": "/splats/demo/pageworld-diagon-alley-arrival-v20260502200746-3e926fe1.spz",
+        "prompt": "Create a richly detailed walkable first-person 3D world for a magical British wizarding marketplace. The player should stand on a narrow cobblestone street with a clear navigable path running forward through the scene, tall crooked shopfronts leaning inward on both sides, stacked chimneys, warm golden window light, hanging lanterns, barrels, crates, owl cages, wand boxes in display windows, broom handles, potion bottles, cloth awnings, uneven brick walls, and a visible brick archway behind the player as the entry threshold. Use strong foreground, midground, and background depth so the scene works as a Gaussian splat walkthrough. Make the environment whimsical but physically grounded, with realistic stone, wood, brass, glass, paper, and feather materials. No readable text, no logos, no characters, no modern objects, no flat backdrop, no fisheye distortion.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/31da25ea-71fe-4dba-9f2c-e1a9711ba90a/6dae2b7b-ae75-4ad0-a034-c9e8c134cbb5_ceramic_500k.spz",
+        "version": "v20260502200746-3e926fe1"
+      }
+    ]
+  }
+}

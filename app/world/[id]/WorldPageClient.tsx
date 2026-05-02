@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { LoadingState } from "@/components/LoadingState";
+import { DEMO_SPLAT_MANIFEST_URL, emptySceneSplatMap, sceneSplatsFromManifest, type DemoSplatManifest, type SceneSplatMap } from "@/lib/demoSplats";
 import type { StoredWorld } from "@/lib/worldSchema";
 
 const WorldViewer = dynamic(() => import("@/components/WorldViewer").then((module) => module.WorldViewer), {
@@ -23,6 +24,7 @@ type WorldResponse = {
 
 export function WorldPageClient({ worldId }: WorldPageClientProps) {
   const [world, setWorld] = useState<StoredWorld | null>(null);
+  const [sceneSplats, setSceneSplats] = useState<SceneSplatMap>({});
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -55,6 +57,31 @@ export function WorldPageClient({ worldId }: WorldPageClientProps) {
     };
   }, [worldId]);
 
+  useEffect(() => {
+    if (!world) {
+      return;
+    }
+
+    let active = true;
+
+    fetch(DEMO_SPLAT_MANIFEST_URL, { cache: "no-store" })
+      .then((response) => response.ok ? response.json() as Promise<DemoSplatManifest> : null)
+      .then((manifest) => {
+        if (active) {
+          setSceneSplats(sceneSplatsFromManifest(world.scenes, manifest));
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setSceneSplats(emptySceneSplatMap(world.scenes));
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [world]);
+
   if (error) {
     return (
       <main className="flex min-h-svh items-center justify-center bg-[#090b10] px-6 text-stone-50">
@@ -81,6 +108,7 @@ export function WorldPageClient({ worldId }: WorldPageClientProps) {
     <WorldViewer
       scenes={world.scenes}
       sceneImages={world.sceneImages}
+      sceneSplats={sceneSplats}
       objectModels={world.objectModels}
       onExit={() => {
         window.location.href = "/";
