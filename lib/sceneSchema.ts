@@ -57,6 +57,21 @@ export const sceneObjectSchema = z.object({
   slot: z.enum(slots).catch("center")
 });
 
+export const sceneIntegrationSchema = z.object({
+  narration: z.object({
+    provider: z.literal("elevenlabs"),
+    script: z.string().min(1),
+    audioUrl: z.string().nullable().default(null),
+    voiceId: z.string().optional()
+  }).optional(),
+  walkableWorld: z.object({
+    provider: z.literal("world-labs"),
+    prompt: z.string().min(1),
+    splatUrl: z.string().nullable().default(null),
+    status: z.enum(["planned", "generated"]).default("planned")
+  }).optional()
+}).optional();
+
 export const scenePlanSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -71,11 +86,12 @@ export const scenePlanSchema = z.object({
   transitionToNext: z.object({
     label: z.string().min(1),
     description: z.string().min(1)
-  })
+  }),
+  integrations: sceneIntegrationSchema
 });
 
 export const scenesResponseSchema = z.object({
-  scenes: z.array(scenePlanSchema).min(1).max(3)
+  scenes: z.array(scenePlanSchema).min(1).max(4)
 });
 
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
@@ -94,7 +110,7 @@ const fallbackObject: SceneObject = {
 };
 
 export function normalizeScenePlans(input: unknown): ScenePlan[] {
-  const rawScenes = extractScenes(input).slice(0, 3);
+  const rawScenes = extractScenes(input).slice(0, 4);
   const normalized = rawScenes.map((scene, sceneIndex) => {
     const raw = scene as Record<string, unknown>;
     const rawObjects = Array.isArray(raw.objects) ? raw.objects.slice(0, 3) : [];
@@ -136,7 +152,8 @@ export function normalizeScenePlans(input: unknown): ScenePlan[] {
           : {
               label: sceneIndex === rawScenes.length - 1 ? "Return" : "Next threshold",
               description: "A glowing threshold leads onward."
-            }
+            },
+      integrations: raw.integrations
     });
   });
 
@@ -166,7 +183,7 @@ export const scenePlanJsonSchema = {
     scenes: {
       type: "array",
       minItems: 1,
-      maxItems: 3,
+      maxItems: 4,
       items: {
         type: "object",
         additionalProperties: false,
@@ -219,6 +236,34 @@ export const scenePlanJsonSchema = {
               description: { type: "string" }
             },
             required: ["label", "description"]
+          },
+          integrations: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              narration: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  provider: { type: "string", const: "elevenlabs" },
+                  script: { type: "string" },
+                  audioUrl: { type: ["string", "null"] },
+                  voiceId: { type: "string" }
+                },
+                required: ["provider", "script", "audioUrl"]
+              },
+              walkableWorld: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  provider: { type: "string", const: "world-labs" },
+                  prompt: { type: "string" },
+                  splatUrl: { type: ["string", "null"] },
+                  status: { type: "string", enum: ["planned", "generated"] }
+                },
+                required: ["provider", "prompt", "splatUrl", "status"]
+              }
+            }
           }
         },
         required: [

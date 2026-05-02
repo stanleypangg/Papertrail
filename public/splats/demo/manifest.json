@@ -1,0 +1,27 @@
+{
+  "diagon-alley-arrival": {
+    "cachedAt": "2026-05-02T21:00:30.942Z",
+    "colliderPath": "/splats/demo/pageworld-diagon-alley-arrival-v20260502210030-186e25bc-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/981618d5-08be-40c8-b0f3-eba46c8ef7d4/a7da5f4c.glb",
+    "latestVersion": "v20260502210030-186e25bc",
+    "path": "/splats/demo/pageworld-diagon-alley-arrival-v20260502210030-186e25bc.spz",
+    "prompt": "Create a richly detailed walkable first-person 3D world for a magical British wizarding marketplace. The player should stand on a narrow cobblestone street with a clear navigable path running forward through the scene, tall crooked shopfronts leaning inward on both sides, stacked chimneys, warm golden window light, hanging lanterns, barrels, crates, owl cages, wand boxes in display windows, broom handles, potion bottles, cloth awnings, uneven brick walls, and a visible brick archway behind the player as the entry threshold. Use strong foreground, midground, and background depth so the scene works as a Gaussian splat walkthrough. Make the environment whimsical but physically grounded, with realistic stone, wood, brass, glass, paper, and feather materials. No readable text, no logos, no characters, no modern objects, no flat backdrop, no fisheye distortion.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/981618d5-08be-40c8-b0f3-eba46c8ef7d4/12ec5152-e1e2-4f46-94f6-724049acdbf5_sand_500k.spz",
+    "versions": [
+      {
+        "bytes": 5856439,
+        "cachedAt": "2026-05-02T21:00:30.942Z",
+        "colliderBytes": 1057420,
+        "colliderPath": "/splats/demo/pageworld-diagon-alley-arrival-v20260502210030-186e25bc-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/981618d5-08be-40c8-b0f3-eba46c8ef7d4/a7da5f4c.glb",
+        "operationId": "186e25bc-81e6-4bef-9c44-6001293d2411",
+        "path": "/splats/demo/pageworld-diagon-alley-arrival-v20260502210030-186e25bc.spz",
+        "prompt": "Create a richly detailed walkable first-person 3D world for a magical British wizarding marketplace. The player should stand on a narrow cobblestone street with a clear navigable path running forward through the scene, tall crooked shopfronts leaning inward on both sides, stacked chimneys, warm golden window light, hanging lanterns, barrels, crates, owl cages, wand boxes in display windows, broom handles, potion bottles, cloth awnings, uneven brick walls, and a visible brick archway behind the player as the entry threshold. Use strong foreground, midground, and background depth so the scene works as a Gaussian splat walkthrough. Make the environment whimsical but physically grounded, with realistic stone, wood, brass, glass, paper, and feather materials. No readable text, no logos, no characters, no modern objects, no flat backdrop, no fisheye distortion.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/981618d5-08be-40c8-b0f3-eba46c8ef7d4/12ec5152-e1e2-4f46-94f6-724049acdbf5_sand_500k.spz",
+        "version": "v20260502210030-186e25bc",
+        "worldId": "981618d5-08be-40c8-b0f3-eba46c8ef7d4"
+      }
+    ],
+    "worldId": "981618d5-08be-40c8-b0f3-eba46c8ef7d4"
+  }
+}
