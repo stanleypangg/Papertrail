@@ -10,6 +10,7 @@ import { notFound, redirect } from "next/navigation";
 import { ScriptReader } from "@/components/sleuth/script-reader";
 import { getDb } from "@/lib/sleuth/db/client";
 import { worlds } from "@/lib/sleuth/db/schema";
+import { requireEnv } from "@/lib/sleuth/env";
 import type { SleuthChatMessage } from "@/lib/sleuth/llm/client";
 import { npcReply, streamHost } from "@/lib/sleuth/llm/client";
 import {
@@ -81,13 +82,24 @@ export default async function PlayPage({
     redirect(`/scripts/${id}`);
   }
 
-  const headerStore = await headers();
-  const baseUrl = resolveBaseUrl(headerStore);
-  const initialWorldState = await resolveInitialWorldState(baseUrl, script);
-  const openingMonologue = await streamHost(
-    buildHostOpeningSystemPrompt(script, playerCharacter),
-    buildHostOpeningMessages(script, playerCharacter),
-  );
+  let initialWorldState: InitialWorldState;
+  try {
+    const headerStore = await headers();
+    const baseUrl = resolveBaseUrl(headerStore);
+    initialWorldState = await resolveInitialWorldState(baseUrl, script);
+  } catch {
+    initialWorldState = { kind: "error", degraded: true, message: "World generation unavailable in demo mode." };
+  }
+
+  let openingMonologue: string;
+  try {
+    openingMonologue = await streamHost(
+      buildHostOpeningSystemPrompt(script, playerCharacter),
+      buildHostOpeningMessages(script, playerCharacter),
+    );
+  } catch {
+    openingMonologue = `Welcome to "${script.title}." ${script.synopsis} You are ${playerCharacter.name}. ${playerCharacter.publicBrief} Look around, speak with the other suspects, and piece together what happened here tonight.`;
+  }
 
   async function requestNpcReply(input: {
     npcId: string;
@@ -206,13 +218,14 @@ async function resolveInitialWorldState(
     };
   }
 
-  const secret = process.env.SLEUTH_SECRET;
-  if (!secret) {
+  let secret: string;
+  try {
+    secret = requireEnv("SLEUTH_SECRET");
+  } catch {
     return {
       kind: "error",
-      degraded: false,
-      message:
-        "SLEUTH_SECRET is not configured, so the play page could not start world generation.",
+      degraded: true,
+      message: "World generation unavailable in demo mode.",
     };
   }
 
