@@ -78,6 +78,7 @@ export type {
   GenerateResult,
   PollResult,
   WorldGenerator,
+  WorldPrompt,
 } from "./types";
 export {
   MarbleAuthError,
