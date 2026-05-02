@@ -5,6 +5,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { ArrowLeft, Glasses, Loader2, MousePointer2, Pause, Play, RotateCcw, Settings, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Box3,
   BoxHelper,
   Clock,
   Color,
@@ -73,6 +74,11 @@ type SelectableSplat = {
   version: string;
 };
 
+type ColliderEntry = {
+  bounds: Box3;
+  object: Object3D;
+};
+
 const DEFAULT_SPLAT_TRANSFORM: SplatTransform = {
   position: [0, 0, 0],
   rotation: [-180, 0, 0],
@@ -93,12 +99,16 @@ const COLLISION_SIDE_OFFSETS = [-0.18, 0, 0.18];
 const GRAVITY = -9.8;
 const GROUND_PROBE_HEIGHT = 3;
 const GROUND_PROBE_DEPTH = 8;
+const GROUND_CHECK_INTERVAL = 0.08;
 const GROUND_SNAP_DISTANCE = 0.22;
 const MAX_STEP_HEIGHT = 0.22;
 const LOOK_SENSITIVITY = 0.0022;
 const tempAxisMove = new Vector3();
+const tempCollisionBox = new Box3();
+const tempGroundBox = new Box3();
 const tempMoveDirection = new Vector3();
 const tempMovePerp = new Vector3();
+const tempNextPosition = new Vector3();
 const tempRayOrigin = new Vector3();
 const tempSize = new Vector3();
 const tempNormal = new Vector3();
@@ -127,7 +137,7 @@ export function WorldViewer({
   const cameraRef = useRef<PerspectiveCamera | null>(null);
   const colliderBoundsRef = useRef<BoxHelper | null>(null);
   const colliderRef = useRef<Group | null>(null);
-  const colliderObjectsRef = useRef<Object3D[]>([]);
+  const colliderObjectsRef = useRef<ColliderEntry[]>([]);
   const colliderVisibleRef = useRef(false);
   const rigRef = useRef<Group | null>(null);
   const sceneRef = useRef<Scene | null>(null);
@@ -136,6 +146,8 @@ export function WorldViewer({
   const xrSessionRef = useRef<XRSession | null>(null);
   const controlProvidersRef = useRef<SplatControlProvider[]>([]);
   const keysRef = useRef(new Set<string>());
+  const groundCheckAccumulatorRef = useRef(0);
+  const groundYRef = useRef<number | null>(null);
   const verticalVelocityRef = useRef(0);
   const yawRef = useRef(0);
   const pitchRef = useRef(0);
@@ -216,6 +228,8 @@ export function WorldViewer({
     }
 
     keysRef.current.clear();
+    groundCheckAccumulatorRef.current = 0;
+    groundYRef.current = null;
     verticalVelocityRef.current = 0;
     rig.position.set(0, 0, START_Z);
     rig.rotation.set(0, 0, 0);
@@ -306,7 +320,19 @@ export function WorldViewer({
 
       constrainRigHorizontalMovement(playerRig, previousRigPosition, colliderObjectsRef.current);
       if (!isXR) {
-        verticalVelocityRef.current = updateRigVerticalPhysics(playerRig, delta, colliderObjectsRef.current, verticalVelocityRef.current);
+        groundCheckAccumulatorRef.current += delta;
+        const shouldCheckGround = groundCheckAccumulatorRef.current >= GROUND_CHECK_INTERVAL;
+        if (shouldCheckGround) {
+          groundCheckAccumulatorRef.current = 0;
+        }
+        verticalVelocityRef.current = updateRigVerticalPhysics(
+          playerRig,
+          delta,
+          colliderObjectsRef.current,
+          verticalVelocityRef.current,
+          shouldCheckGround,
+          groundYRef
+        );
       }
 
       sparkRenderer.render(threeScene, camera);
@@ -563,7 +589,7 @@ export function WorldViewer({
     if (colliderRef.current) {
       applySplatTransform(colliderRef.current, DEFAULT_COLLIDER_TRANSFORM);
       colliderRef.current.updateMatrixWorld(true);
-      colliderRef.current.visible = colliderVisible;
+      colliderRef.current.visible = false;
     }
     if (colliderBoundsRef.current) {
       colliderBoundsRef.current.update();
@@ -581,6 +607,7 @@ export function WorldViewer({
       threeScene.remove(colliderRef.current);
       colliderRef.current = null;
       colliderObjectsRef.current = [];
+      groundYRef.current = null;
     }
     if (colliderBoundsRef.current) {
       threeScene.remove(colliderBoundsRef.current);
@@ -615,8 +642,12 @@ export function WorldViewer({
           }
         });
         threeScene.add(collider);
-        collider.visible = colliderVisibleRef.current;
+        collider.visible = false;
         collider.updateMatrixWorld(true);
+        const colliderEntries = meshes.map((object) => ({
+          bounds: new Box3().setFromObject(object),
+          object
+        }));
 
         const bounds = new BoxHelper(collider, 0x34d399);
         bounds.visible = colliderVisibleRef.current;
@@ -626,12 +657,13 @@ export function WorldViewer({
 
         colliderRef.current = collider;
         colliderBoundsRef.current = bounds;
-        colliderObjectsRef.current = meshes;
+        colliderObjectsRef.current = colliderEntries;
       },
       undefined,
       () => {
         if (active) {
           colliderObjectsRef.current = [];
+          groundYRef.current = null;
         }
       }
     );
@@ -647,6 +679,7 @@ export function WorldViewer({
         threeScene.remove(colliderRef.current);
         colliderRef.current = null;
         colliderObjectsRef.current = [];
+        groundYRef.current = null;
       }
     };
   }, [colliderUrl]);
@@ -961,23 +994,23 @@ export function WorldViewer({
         </div>
 
         {debugOpen ? (
-          <div className="mt-2 border border-cyan-200/20 bg-[#070b10]/88 p-4 text-sm text-stone-100 shadow-2xl shadow-black/40 backdrop-blur">
+          <div className="mt-2 max-h-[calc(100svh-7rem)] overflow-y-auto border border-cyan-200/20 bg-[#070b10]/88 p-3 text-sm text-stone-100 shadow-2xl shadow-black/40 backdrop-blur">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">Spark splat viewer</p>
-                <p className="mt-2 break-all text-xs leading-5 text-stone-300">{loadStatus}</p>
+                <p className="mt-1 line-clamp-2 break-all text-xs leading-5 text-stone-300">{loadStatus}</p>
               </div>
               <button
                 type="button"
                 onClick={resetCamera}
-                className="inline-flex min-h-10 items-center gap-2 border border-white/14 px-3 text-xs text-stone-100 transition hover:border-cyan-200/60"
+                className="inline-flex min-h-9 shrink-0 items-center gap-2 border border-white/14 px-3 text-xs text-stone-100 transition hover:border-cyan-200/60"
               >
                 <RotateCcw size={14} />
                 Respawn
               </button>
             </div>
 
-            <div className="mt-4">
+            <div className="mt-3">
               <label className="block">
                 <span className="text-xs uppercase tracking-[0.18em] text-stone-400">Scene</span>
                 <select
@@ -986,7 +1019,7 @@ export function WorldViewer({
                     document.exitPointerLock?.();
                     setSelectedSceneIndex(Number(event.target.value));
                   }}
-                  className="mt-2 min-h-10 w-full border border-white/14 bg-black/35 px-3 text-sm text-stone-100 outline-none transition focus:border-cyan-200/70"
+                  className="mt-1 min-h-9 w-full border border-white/14 bg-black/35 px-3 text-sm text-stone-100 outline-none transition focus:border-cyan-200/70"
                 >
                   {scenes.map((candidate, index) => {
                     const hasSplat = Boolean(sceneSplats[candidate.id]);
@@ -1001,7 +1034,7 @@ export function WorldViewer({
               </label>
             </div>
 
-            <div className="mt-4">
+            <div className="mt-3">
               <label className="block">
                 <span className="text-xs uppercase tracking-[0.18em] text-stone-400">Splat</span>
                 <select
@@ -1018,7 +1051,7 @@ export function WorldViewer({
                     }));
                   }}
                   disabled={!scene || splatOptions.length === 0}
-                  className="mt-2 min-h-10 w-full border border-white/14 bg-black/35 px-3 text-sm text-stone-100 outline-none transition focus:border-cyan-200/70 disabled:cursor-not-allowed disabled:opacity-45"
+                  className="mt-1 min-h-9 w-full border border-white/14 bg-black/35 px-3 text-sm text-stone-100 outline-none transition focus:border-cyan-200/70 disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   {splatOptions.length > 0 ? splatOptions.map((option) => (
                     <option key={option.path} value={option.path}>
@@ -1031,15 +1064,15 @@ export function WorldViewer({
               </label>
             </div>
 
-            <div className="mt-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-stone-400">Splat file</p>
+            <details className="mt-3">
+              <summary className="cursor-pointer text-xs uppercase tracking-[0.18em] text-stone-400">Files</summary>
               <p className="mt-2 break-all text-xs leading-5 text-stone-400">{splatUrl ?? "No cached splat for this scene"}</p>
-              <p className="mt-2 break-all text-xs leading-5 text-stone-500">{colliderUrl ? `Collider: ${colliderUrl}` : "No cached collider for this scene"}</p>
-            </div>
+              <p className="mt-1 break-all text-xs leading-5 text-stone-500">{colliderUrl ? `Collider: ${colliderUrl}` : "No cached collider for this scene"}</p>
+            </details>
 
-            <div className="mt-4">
+            <div className="mt-3">
               <p className="text-xs uppercase tracking-[0.18em] text-stone-400">Splat transform</p>
-              <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="mt-2 grid grid-cols-4 gap-2">
                 <NumberControl label="Scale" value={transform.scale} step={0.1} min={0.01} onChange={(value) => updateTransform({ scale: value })} />
                 <NumberControl label="X rot" value={transform.rotation[0]} step={15} onChange={(value) => updateTransform({ rotation: [value, transform.rotation[1], transform.rotation[2]] })} />
                 <NumberControl label="Y rot" value={transform.rotation[1]} step={15} onChange={(value) => updateTransform({ rotation: [transform.rotation[0], value, transform.rotation[2]] })} />
@@ -1050,7 +1083,7 @@ export function WorldViewer({
                 <button
                   type="button"
                   onClick={resetSplatTransform}
-                  className="min-h-10 border border-white/14 px-3 text-xs text-stone-200 transition hover:border-cyan-200/60"
+                  className="min-h-9 border border-white/14 px-3 text-xs text-stone-200 transition hover:border-cyan-200/60"
                 >
                   Reset
                 </button>
@@ -1058,13 +1091,13 @@ export function WorldViewer({
                   type="button"
                   onClick={() => setColliderVisible((current) => !current)}
                   disabled={!colliderUrl}
-                  className={`min-h-10 border px-3 text-xs transition ${
+                  className={`min-h-9 border px-3 text-xs transition ${
                     colliderVisible
                       ? "border-emerald-200 bg-emerald-200 text-slate-950"
                       : "border-white/14 text-stone-200 hover:border-cyan-200/60 disabled:cursor-not-allowed disabled:opacity-40"
                   }`}
                 >
-                  Collider
+                  Collider box
                 </button>
               </div>
             </div>
@@ -1145,7 +1178,7 @@ function splatOptionsForScene(
   return options;
 }
 
-function constrainRigHorizontalMovement(rig: Group, previousPosition: Vector3, colliders: Object3D[]) {
+function constrainRigHorizontalMovement(rig: Group, previousPosition: Vector3, colliders: ColliderEntry[]) {
   if (colliders.length === 0) {
     return;
   }
@@ -1163,13 +1196,25 @@ function constrainRigHorizontalMovement(rig: Group, previousPosition: Vector3, c
   }
 }
 
-function collidesWithScene(position: Vector3, move: Vector3, colliders: Object3D[]) {
+function collidesWithScene(position: Vector3, move: Vector3, colliders: ColliderEntry[]) {
   if (colliders.length === 0 || move.lengthSq() === 0) {
     return false;
   }
 
   tempMoveDirection.copy(move).normalize();
   tempMovePerp.set(-tempMoveDirection.z, 0, tempMoveDirection.x);
+  tempNextPosition.copy(position).add(move);
+  tempCollisionBox.makeEmpty();
+  tempCollisionBox.expandByPoint(position);
+  tempCollisionBox.expandByPoint(tempNextPosition);
+  tempCollisionBox.expandByScalar(COLLISION_RADIUS + 0.24);
+  tempCollisionBox.min.y = position.y + COLLISION_HEIGHTS[0] - 0.12;
+  tempCollisionBox.max.y = position.y + COLLISION_HEIGHTS[COLLISION_HEIGHTS.length - 1] + 0.12;
+
+  const colliderObjects = colliderObjectsInBox(colliders, tempCollisionBox);
+  if (colliderObjects.length === 0) {
+    return false;
+  }
 
   const distance = move.length() + COLLISION_RADIUS + 0.02;
 
@@ -1183,7 +1228,7 @@ function collidesWithScene(position: Vector3, move: Vector3, colliders: Object3D
       movementRaycaster.set(tempRayOrigin, tempMoveDirection);
       movementRaycaster.far = distance;
 
-      if (rayHitsBlockingSurface(colliders)) {
+      if (rayHitsBlockingSurface(colliderObjects)) {
         return true;
       }
     }
@@ -1209,13 +1254,25 @@ function rayHitsBlockingSurface(colliders: Object3D[]) {
   return false;
 }
 
-function updateRigVerticalPhysics(rig: Group, delta: number, colliders: Object3D[], verticalVelocity: number) {
+function updateRigVerticalPhysics(
+  rig: Group,
+  delta: number,
+  colliders: ColliderEntry[],
+  verticalVelocity: number,
+  shouldCheckGround: boolean,
+  groundY: { current: number | null }
+) {
   if (colliders.length === 0) {
     rig.position.y = 0;
+    groundY.current = null;
     return 0;
   }
 
-  const ground = findGroundY(rig.position, colliders);
+  if (shouldCheckGround || groundY.current === null) {
+    groundY.current = findGroundY(rig.position, colliders);
+  }
+
+  const ground = groundY.current;
   if (ground === null) {
     return 0;
   }
@@ -1231,14 +1288,21 @@ function updateRigVerticalPhysics(rig: Group, delta: number, colliders: Object3D
   return nextVelocity;
 }
 
-function findGroundY(position: Vector3, colliders: Object3D[]) {
+function findGroundY(position: Vector3, colliders: ColliderEntry[]) {
+  tempGroundBox.min.set(position.x - COLLISION_RADIUS, position.y - 0.5, position.z - COLLISION_RADIUS);
+  tempGroundBox.max.set(position.x + COLLISION_RADIUS, position.y + GROUND_PROBE_HEIGHT, position.z + COLLISION_RADIUS);
+  const colliderObjects = colliderObjectsInBox(colliders, tempGroundBox);
+  if (colliderObjects.length === 0) {
+    return null;
+  }
+
   groundRaycaster.set(
     tempRayOriginFrom(position, 0, GROUND_PROBE_HEIGHT, 0),
     tempNormal.set(0, -1, 0)
   );
   groundRaycaster.far = GROUND_PROBE_DEPTH;
 
-  const hits = groundRaycaster.intersectObjects(colliders, true);
+  const hits = groundRaycaster.intersectObjects(colliderObjects, true);
   for (const hit of hits) {
     if (!hit.face) {
       continue;
@@ -1259,6 +1323,12 @@ function findGroundY(position: Vector3, colliders: Object3D[]) {
 
 function tempRayOriginFrom(position: Vector3, x: number, y: number, z: number) {
   return tempRayOrigin.set(position.x + x, position.y + y, position.z + z);
+}
+
+function colliderObjectsInBox(colliders: ColliderEntry[], box: Box3) {
+  return colliders
+    .filter((collider) => collider.bounds.intersectsBox(box))
+    .map((collider) => collider.object);
 }
 
 function firstSplatSceneIndex(scenes: ScenePlan[], sceneSplats: Record<string, string | null>) {
@@ -1317,7 +1387,7 @@ function NumberControl({
         min={min}
         max={max}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="mt-1 min-h-9 w-full border border-white/14 bg-black/35 px-2 text-xs text-stone-100 outline-none focus:border-cyan-200/70"
+        className="mt-1 min-h-8 w-full border border-white/14 bg-black/35 px-2 text-xs text-stone-100 outline-none focus:border-cyan-200/70"
       />
     </label>
   );
