@@ -25,6 +25,7 @@ import {
   createDefaultSplatControlProviders,
   type SplatControlProvider
 } from "@/components/three/splatControls";
+import { DEMO_SPLAT_MANIFEST_URL, type DemoSplatManifest } from "@/lib/demoSplats";
 import type { SceneObjectModelMap } from "@/lib/objectModels";
 import type { ScenePlan } from "@/lib/sceneSchema";
 
@@ -65,6 +66,13 @@ type NarrationCacheEntry =
   | { status: "ready"; response: SceneNarrationResponse }
   | { status: "error"; message: string };
 
+type SelectableSplat = {
+  colliderPath: string | null;
+  label: string;
+  path: string;
+  version: string;
+};
+
 const DEFAULT_SPLAT_TRANSFORM: SplatTransform = {
   position: [0, 0, 0],
   rotation: [-180, 0, 0],
@@ -79,9 +87,9 @@ const DEFAULT_COLLIDER_TRANSFORM: SplatTransform = {
 
 const PLAYER_HEIGHT = 1;
 const START_Z = 2.5;
-const COLLISION_RADIUS = 0.36;
+const COLLISION_RADIUS = 0.28;
 const COLLISION_HEIGHTS = [0.24, 0.74];
-const COLLISION_SIDE_OFFSETS = [-0.24, 0, 0.24];
+const COLLISION_SIDE_OFFSETS = [-0.18, 0, 0.18];
 const GRAVITY = -9.8;
 const GROUND_PROBE_HEIGHT = 3;
 const GROUND_PROBE_DEPTH = 8;
@@ -144,13 +152,21 @@ export function WorldViewer({
   const [narrationLoadingSceneId, setNarrationLoadingSceneId] = useState<string | null>(null);
   const [narrationPlaying, setNarrationPlaying] = useState(false);
   const [activeCaptionIndex, setActiveCaptionIndex] = useState(0);
+  const [selectedSplats, setSelectedSplats] = useState<Record<string, string>>({});
+  const [splatManifest, setSplatManifest] = useState<DemoSplatManifest | null>(null);
   const [transforms, setTransforms] = useState<Record<string, SplatTransform>>({});
   const sceneIndex = selectedSceneIndex ?? firstSplatSceneIndex(scenes, sceneSplats);
   const safeSceneIndex = Math.max(0, Math.min(sceneIndex, scenes.length - 1));
   const scene = scenes[safeSceneIndex] ?? scenes[0];
   const sceneId = scene?.id;
-  const colliderUrl = scene ? sceneColliders[scene.id] ?? null : null;
-  const splatUrl = scene ? sceneSplats[scene.id] ?? null : null;
+  const splatOptions = useMemo(
+    () => scene ? splatOptionsForScene(scene, sceneSplats[scene.id] ?? null, sceneColliders[scene.id] ?? null, splatManifest) : [],
+    [scene, sceneColliders, sceneSplats, splatManifest]
+  );
+  const selectedSplatPath = sceneId ? selectedSplats[sceneId] : undefined;
+  const selectedSplat = splatOptions.find((option) => option.path === selectedSplatPath) ?? splatOptions[0] ?? null;
+  const colliderUrl = selectedSplat?.colliderPath ?? null;
+  const splatUrl = selectedSplat?.path ?? null;
   const transform = scene ? transforms[scene.id] ?? DEFAULT_SPLAT_TRANSFORM : DEFAULT_SPLAT_TRANSFORM;
   const narrationEntry = sceneId ? narrationCache[sceneId] : undefined;
   const narrationResponse = narrationEntry?.status === "ready" ? narrationEntry.response : null;
@@ -170,6 +186,27 @@ export function WorldViewer({
   useEffect(() => {
     controlProvidersRef.current = resolvedControlProviders;
   }, [resolvedControlProviders]);
+
+  useEffect(() => {
+    let canceled = false;
+
+    fetch(DEMO_SPLAT_MANIFEST_URL, { cache: "no-store" })
+      .then((response) => response.ok ? response.json() as Promise<DemoSplatManifest> : null)
+      .then((manifest) => {
+        if (!canceled) {
+          setSplatManifest(manifest);
+        }
+      })
+      .catch(() => {
+        if (!canceled) {
+          setSplatManifest(null);
+        }
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, []);
 
   const resetCamera = useCallback(() => {
     const camera = cameraRef.current;
@@ -941,32 +978,57 @@ export function WorldViewer({
             </div>
 
             <div className="mt-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-stone-400">Scene</p>
-              <div className="mt-2 grid grid-cols-4 gap-2">
-                {scenes.map((candidate, index) => {
-                  const hasSplat = Boolean(sceneSplats[candidate.id]);
-                  return (
-                    <button
-                      key={candidate.id}
-                      type="button"
-                      onClick={() => {
-                        document.exitPointerLock?.();
-                        setSelectedSceneIndex(index);
-                      }}
-                      className={`min-h-10 border px-3 text-xs transition ${
-                        index === safeSceneIndex
-                          ? "border-cyan-200 bg-cyan-200 text-slate-950"
-                          : hasSplat
-                            ? "border-white/14 text-stone-200 hover:border-cyan-200/60"
-                            : "border-white/10 text-stone-500"
-                      }`}
-                      title={candidate.title}
-                    >
-                      {index + 1}
-                    </button>
-                  );
-                })}
-              </div>
+              <label className="block">
+                <span className="text-xs uppercase tracking-[0.18em] text-stone-400">Scene</span>
+                <select
+                  value={safeSceneIndex}
+                  onChange={(event) => {
+                    document.exitPointerLock?.();
+                    setSelectedSceneIndex(Number(event.target.value));
+                  }}
+                  className="mt-2 min-h-10 w-full border border-white/14 bg-black/35 px-3 text-sm text-stone-100 outline-none transition focus:border-cyan-200/70"
+                >
+                  {scenes.map((candidate, index) => {
+                    const hasSplat = Boolean(sceneSplats[candidate.id]);
+                    const hasCollider = Boolean(sceneColliders[candidate.id]);
+                    return (
+                      <option key={candidate.id} value={index} disabled={!hasSplat}>
+                        {index + 1}. {candidate.title}{hasCollider ? " - collider" : ""}{hasSplat ? "" : " - no splat"}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+            </div>
+
+            <div className="mt-4">
+              <label className="block">
+                <span className="text-xs uppercase tracking-[0.18em] text-stone-400">Splat</span>
+                <select
+                  value={selectedSplat?.path ?? ""}
+                  onChange={(event) => {
+                    if (!scene) {
+                      return;
+                    }
+
+                    document.exitPointerLock?.();
+                    setSelectedSplats((current) => ({
+                      ...current,
+                      [scene.id]: event.target.value
+                    }));
+                  }}
+                  disabled={!scene || splatOptions.length === 0}
+                  className="mt-2 min-h-10 w-full border border-white/14 bg-black/35 px-3 text-sm text-stone-100 outline-none transition focus:border-cyan-200/70 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  {splatOptions.length > 0 ? splatOptions.map((option) => (
+                    <option key={option.path} value={option.path}>
+                      {option.label}{option.colliderPath ? " - collider" : " - no collider"}
+                    </option>
+                  )) : (
+                    <option value="">No cached splats</option>
+                  )}
+                </select>
+              </label>
             </div>
 
             <div className="mt-4">
@@ -1034,6 +1096,55 @@ function cameraLookAtOrigin(x: number, y: number, z: number) {
   };
 }
 
+function splatOptionsForScene(
+  scene: ScenePlan,
+  fallbackSplat: string | null,
+  fallbackCollider: string | null,
+  manifest: DemoSplatManifest | null
+): SelectableSplat[] {
+  const entry = manifest?.[scene.id];
+  const options: SelectableSplat[] = [];
+  const seen = new Set<string>();
+
+  function addOption(option: SelectableSplat) {
+    if (!option.path || seen.has(option.path)) {
+      return;
+    }
+
+    seen.add(option.path);
+    options.push(option);
+  }
+
+  if (entry?.path) {
+    addOption({
+      colliderPath: entry.colliderPath ?? fallbackCollider,
+      label: entry.latestVersion ? `Latest (${entry.latestVersion})` : "Latest",
+      path: entry.path,
+      version: entry.latestVersion ?? "latest"
+    });
+  }
+
+  for (const version of entry?.versions ?? []) {
+    addOption({
+      colliderPath: version.colliderPath ?? (version.path === entry?.path ? entry?.colliderPath ?? fallbackCollider : null),
+      label: version.version,
+      path: version.path,
+      version: version.version
+    });
+  }
+
+  if (fallbackSplat) {
+    addOption({
+      colliderPath: fallbackCollider,
+      label: "Current scene splat",
+      path: fallbackSplat,
+      version: "current"
+    });
+  }
+
+  return options;
+}
+
 function constrainRigHorizontalMovement(rig: Group, previousPosition: Vector3, colliders: Object3D[]) {
   if (colliders.length === 0) {
     return;
@@ -1060,7 +1171,7 @@ function collidesWithScene(position: Vector3, move: Vector3, colliders: Object3D
   tempMoveDirection.copy(move).normalize();
   tempMovePerp.set(-tempMoveDirection.z, 0, tempMoveDirection.x);
 
-  const distance = move.length() + COLLISION_RADIUS + 0.04;
+  const distance = move.length() + COLLISION_RADIUS + 0.02;
 
   for (const height of COLLISION_HEIGHTS) {
     for (const sideOffset of COLLISION_SIDE_OFFSETS) {

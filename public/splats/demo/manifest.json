@@ -23,5 +23,80 @@
       }
     ],
     "worldId": "981618d5-08be-40c8-b0f3-eba46c8ef7d4"
+  },
+  "forbidden-forest": {
+    "cachedAt": "2026-05-02T21:22:37.750Z",
+    "colliderPath": "/splats/demo/pageworld-forbidden-forest-v20260502212237-b975dfb2-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/8d00c3fb-ad8f-4c75-bd3c-8d21f0a67cdb/e6474409.glb",
+    "latestVersion": "v20260502212237-b975dfb2",
+    "path": "/splats/demo/pageworld-forbidden-forest-v20260502212237-b975dfb2.spz",
+    "prompt": "Create a tense walkable first-person moonlit magical forest clearing outside a distant castle. The player should stand on a narrow dirt path that opens into a small clearing with navigable ground, twisted tree trunks, exposed roots crossing the path, mossy stones, broken branches, low blue-gray fog, silver moonlight shafts, wet leaves, a half-buried lantern near the trail, and a faint castle glow visible far behind the trees. Build strong foreground roots, midground clearing details, and background tree silhouettes for deep spatial parallax in a Gaussian splat. The mood should be dangerous but beautiful, with cool moonlight and small warm lantern contrast. No characters, no creatures, no readable text, no logos, no flat painted backdrop, no fisheye distortion.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/8d00c3fb-ad8f-4c75-bd3c-8d21f0a67cdb/b1e5c726-85b5-47a9-a245-fe66d96c9ccd_sand_500k.spz",
+    "versions": [
+      {
+        "bytes": 6025169,
+        "cachedAt": "2026-05-02T21:22:37.750Z",
+        "colliderBytes": 3109212,
+        "colliderPath": "/splats/demo/pageworld-forbidden-forest-v20260502212237-b975dfb2-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/8d00c3fb-ad8f-4c75-bd3c-8d21f0a67cdb/e6474409.glb",
+        "operationId": "b975dfb2-11f2-449a-8af2-941f480bb0c9",
+        "path": "/splats/demo/pageworld-forbidden-forest-v20260502212237-b975dfb2.spz",
+        "prompt": "Create a tense walkable first-person moonlit magical forest clearing outside a distant castle. The player should stand on a narrow dirt path that opens into a small clearing with navigable ground, twisted tree trunks, exposed roots crossing the path, mossy stones, broken branches, low blue-gray fog, silver moonlight shafts, wet leaves, a half-buried lantern near the trail, and a faint castle glow visible far behind the trees. Build strong foreground roots, midground clearing details, and background tree silhouettes for deep spatial parallax in a Gaussian splat. The mood should be dangerous but beautiful, with cool moonlight and small warm lantern contrast. No characters, no creatures, no readable text, no logos, no flat painted backdrop, no fisheye distortion.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/8d00c3fb-ad8f-4c75-bd3c-8d21f0a67cdb/b1e5c726-85b5-47a9-a245-fe66d96c9ccd_sand_500k.spz",
+        "version": "v20260502212237-b975dfb2",
+        "worldId": "8d00c3fb-ad8f-4c75-bd3c-8d21f0a67cdb"
+      }
+    ],
+    "worldId": "8d00c3fb-ad8f-4c75-bd3c-8d21f0a67cdb"
+  },
+  "great-hall-sorting": {
+    "cachedAt": "2026-05-02T21:24:26.401Z",
+    "colliderPath": "/splats/demo/pageworld-great-hall-sorting-v20260502212426-11b2f0bf-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/a127136c-6f1a-40ad-9a8a-93966bfd2e8a/80538b5f.glb",
+    "latestVersion": "v20260502212426-11b2f0bf",
+    "path": "/splats/demo/pageworld-great-hall-sorting-v20260502212426-11b2f0bf.spz",
+    "prompt": "Create a grand walkable first-person magical castle dining hall for a ceremonial school sorting scene. The space should be a large stone interior with a clear central aisle, long wooden banquet tables on both sides, benches, brass plates, goblets, candles, towering stone arches, tall leaded windows, hanging fabric banners with no readable symbols, a small wooden stool and pedestal at the far end, and an enchanted ceiling that feels like a starry night sky. Floating candles should create warm golden pools of light with soft shadows on the stone floor. Use strong architectural depth, visible walls, ceiling, floor, and a clear navigable route from entrance to front. No readable text, no logos, no characters, no modern objects, no abstract title-card composition.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/a127136c-6f1a-40ad-9a8a-93966bfd2e8a/ede92c3b-2492-460a-91ff-590a087fe08a_sand_500k.spz",
+    "versions": [
+      {
+        "bytes": 5833553,
+        "cachedAt": "2026-05-02T21:24:26.401Z",
+        "colliderBytes": 3814120,
+        "colliderPath": "/splats/demo/pageworld-great-hall-sorting-v20260502212426-11b2f0bf-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/a127136c-6f1a-40ad-9a8a-93966bfd2e8a/80538b5f.glb",
+        "operationId": "11b2f0bf-f9c6-4007-ac5c-5ff6967cc955",
+        "path": "/splats/demo/pageworld-great-hall-sorting-v20260502212426-11b2f0bf.spz",
+        "prompt": "Create a grand walkable first-person magical castle dining hall for a ceremonial school sorting scene. The space should be a large stone interior with a clear central aisle, long wooden banquet tables on both sides, benches, brass plates, goblets, candles, towering stone arches, tall leaded windows, hanging fabric banners with no readable symbols, a small wooden stool and pedestal at the far end, and an enchanted ceiling that feels like a starry night sky. Floating candles should create warm golden pools of light with soft shadows on the stone floor. Use strong architectural depth, visible walls, ceiling, floor, and a clear navigable route from entrance to front. No readable text, no logos, no characters, no modern objects, no abstract title-card composition.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/a127136c-6f1a-40ad-9a8a-93966bfd2e8a/ede92c3b-2492-460a-91ff-590a087fe08a_sand_500k.spz",
+        "version": "v20260502212426-11b2f0bf",
+        "worldId": "a127136c-6f1a-40ad-9a8a-93966bfd2e8a"
+      }
+    ],
+    "worldId": "a127136c-6f1a-40ad-9a8a-93966bfd2e8a"
+  },
+  "hogwarts-express-platform": {
+    "cachedAt": "2026-05-02T21:25:40.048Z",
+    "colliderPath": "/splats/demo/pageworld-hogwarts-express-platform-v20260502212540-328b659e-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/3623571a-03c7-48ec-a07d-a3f1bc3cfd1f/577d9de5.glb",
+    "latestVersion": "v20260502212540-328b659e",
+    "path": "/splats/demo/pageworld-hogwarts-express-platform-v20260502212540-328b659e.spz",
+    "prompt": "Create a detailed walkable first-person hidden railway platform for a magical school departure. The player should stand on a long stone platform with brick pillars forming a corridor, a scarlet steam locomotive along one side, open carriage doors, brass handles, luggage carts, stacked school trunks, bird cages, warm hanging lamps, benches, iron railings, polished train wheels, drifting steam layers, and a vanishing point down the platform. Design it for spatial exploration with enough ground clearance to walk, clear left/right landmarks, and dense but readable props. Lighting should be warm amber lamps cutting through cool white steam. No readable platform signs, no logos, no real-world brand marks, no crowds or characters, no flat wall backdrop.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/3623571a-03c7-48ec-a07d-a3f1bc3cfd1f/2754513c-9383-4164-a7b6-7ef562e96dc3_sand_500k.spz",
+    "versions": [
+      {
+        "bytes": 5940241,
+        "cachedAt": "2026-05-02T21:25:40.048Z",
+        "colliderBytes": 1680076,
+        "colliderPath": "/splats/demo/pageworld-hogwarts-express-platform-v20260502212540-328b659e-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/3623571a-03c7-48ec-a07d-a3f1bc3cfd1f/577d9de5.glb",
+        "operationId": "328b659e-8077-4e8c-bb9e-572a40437670",
+        "path": "/splats/demo/pageworld-hogwarts-express-platform-v20260502212540-328b659e.spz",
+        "prompt": "Create a detailed walkable first-person hidden railway platform for a magical school departure. The player should stand on a long stone platform with brick pillars forming a corridor, a scarlet steam locomotive along one side, open carriage doors, brass handles, luggage carts, stacked school trunks, bird cages, warm hanging lamps, benches, iron railings, polished train wheels, drifting steam layers, and a vanishing point down the platform. Design it for spatial exploration with enough ground clearance to walk, clear left/right landmarks, and dense but readable props. Lighting should be warm amber lamps cutting through cool white steam. No readable platform signs, no logos, no real-world brand marks, no crowds or characters, no flat wall backdrop.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/3623571a-03c7-48ec-a07d-a3f1bc3cfd1f/2754513c-9383-4164-a7b6-7ef562e96dc3_sand_500k.spz",
+        "version": "v20260502212540-328b659e",
+        "worldId": "3623571a-03c7-48ec-a07d-a3f1bc3cfd1f"
+      }
+    ],
+    "worldId": "3623571a-03c7-48ec-a07d-a3f1bc3cfd1f"
   }
 }
