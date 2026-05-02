@@ -5,6 +5,12 @@ export type ThumbstickAxes = {
   y: number;
 };
 
+export type XRInputSnapshot = {
+  leftStick: ThumbstickAxes | null;
+  rightStick: ThumbstickAxes | null;
+  rightButtons: Set<number>;
+};
+
 export type SplatControlContext = {
   camera: Camera;
   delta: number;
@@ -12,10 +18,14 @@ export type SplatControlContext = {
   keys: ReadonlySet<string>;
   rig: Group;
   webXRSession: XRSession | null;
+  xrInput: XRInputSnapshot | null;
   yaw: number;
 };
 
 export type SplatControlProvider = (context: SplatControlContext) => void;
+
+export const XR_STANDARD_TRIGGER_BUTTON_INDEX = 0;
+export const XR_STANDARD_A_BUTTON_INDEX = 4;
 
 type KeyboardControlOptions = {
   speed?: number;
@@ -72,14 +82,14 @@ export function createQuestThumbstickSplatControlProvider({
 }: QuestThumbstickControlOptions = {}): SplatControlProvider {
   const snapTurnState: SnapTurnState = { ready: true };
 
-  return ({ camera, delta, isXR, rig, webXRSession }) => {
+  return ({ camera, delta, isXR, rig, webXRSession, xrInput }) => {
     if (!isXR || !webXRSession) {
       snapTurnState.ready = true;
       return;
     }
 
-    const leftStick = readXRThumbstick(webXRSession, "left");
-    const rightStick = readXRThumbstick(webXRSession, "right");
+    const leftStick = xrInput?.leftStick ?? readXRThumbstick(webXRSession, "left");
+    const rightStick = xrInput?.rightStick ?? readXRThumbstick(webXRSession, "right");
 
     const turnRadians = updateSnapTurn({
       axis: rightStick?.x ?? 0,
@@ -141,6 +151,61 @@ export function readXRThumbstick(session: XRSession, handedness: XRHandedness): 
   }
 
   return null;
+}
+
+export function readXRInputSnapshot(session: Pick<XRSession, "inputSources"> | null): XRInputSnapshot | null {
+  if (!session) {
+    return null;
+  }
+
+  const snapshot: XRInputSnapshot = {
+    leftStick: null,
+    rightButtons: new Set<number>(),
+    rightStick: null
+  };
+
+  for (const inputSource of Array.from(session.inputSources)) {
+    const axes = readXRInputSourceAxes(inputSource);
+    if (inputSource.handedness === "left") {
+      snapshot.leftStick = axes;
+      continue;
+    }
+
+    if (inputSource.handedness !== "right") {
+      continue;
+    }
+
+    snapshot.rightStick = axes;
+    inputSource.gamepad?.buttons.forEach((button, index) => {
+      if (button.pressed) {
+        snapshot.rightButtons.add(index);
+      }
+    });
+  }
+
+  return snapshot;
+}
+
+export function readXRGamepadButtonPressed(
+  session: Pick<XRSession, "inputSources"> | null,
+  handedness: XRHandedness,
+  buttonIndex: number
+): boolean {
+  if (!session) {
+    return false;
+  }
+
+  for (const inputSource of Array.from(session.inputSources)) {
+    if (inputSource.handedness !== handedness) {
+      continue;
+    }
+
+    if (Boolean(inputSource.gamepad?.buttons[buttonIndex]?.pressed)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export function readXRInputSourceAxes(inputSource: Pick<XRInputSource, "gamepad">): ThumbstickAxes | null {

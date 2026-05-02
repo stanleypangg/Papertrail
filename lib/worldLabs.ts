@@ -4,7 +4,14 @@ import path from "path";
 import { demoScenes } from "./demoData";
 
 const WORLD_LABS_API_URL = "https://api.worldlabs.ai/marble/v1";
-const WORLD_LABS_MODEL = "marble-1.0-draft";
+export const WORLD_LABS_MODELS = [
+  { label: "Marble 1.1 Plus", value: "marble-1.1-plus" },
+  { label: "Marble 1.1", value: "marble-1.1" },
+  { label: "Marble 1.0", value: "marble-1.0" },
+  { label: "Marble 1.0 Draft", value: "marble-1.0-draft" }
+] as const;
+export type WorldLabsModel = typeof WORLD_LABS_MODELS[number]["value"];
+export const DEFAULT_WORLD_LABS_MODEL: WorldLabsModel = "marble-1.0-draft";
 const DEMO_SPLAT_DIR = path.join(process.cwd(), "public", "splats", "demo");
 const DEMO_SPLAT_MANIFEST = path.join(DEMO_SPLAT_DIR, "manifest.json");
 
@@ -98,7 +105,11 @@ export function getWorldLabsDemoScene(sceneId: string) {
   return demoScenes.find((scene) => scene.id === sceneId) ?? null;
 }
 
-export async function generateWorldLabsScene(sceneId: string, customPrompt?: string): Promise<{ operationId: string; raw: unknown }> {
+export async function generateWorldLabsScene(
+  sceneId: string,
+  customPrompt?: string,
+  model: WorldLabsModel = DEFAULT_WORLD_LABS_MODEL
+): Promise<{ operationId: string; raw: unknown }> {
   const apiKey = getWorldLabsApiKey();
   const scene = getWorldLabsDemoScene(sceneId);
 
@@ -111,12 +122,12 @@ export async function generateWorldLabsScene(sceneId: string, customPrompt?: str
     method: "POST",
     headers: worldLabsHeaders(apiKey),
     body: JSON.stringify({
-      display_name: `pageworld-demo-${scene.id}`.slice(0, 64),
-      model: WORLD_LABS_MODEL,
+      display_name: `papertrail-demo-${scene.id}`.slice(0, 64),
+      model,
       permission: {
         public: false
       },
-      tags: ["pageworld", "demo", scene.id.slice(0, 32)],
+      tags: ["papertrail", "demo", scene.id.slice(0, 32)],
       world_prompt: {
         type: "text",
         text_prompt: prompt,
@@ -207,7 +218,7 @@ export async function cacheWorldLabsAssets(
   const extension = extensionFromUrl(splatUrl) ?? ".spz";
   const cachedAt = new Date().toISOString();
   const version = createSplatVersion(cachedAt, options.operationId);
-  const fileName = `pageworld-${scene.id}-${version}${extension}`;
+  const fileName = `papertrail-${scene.id}-${version}${extension}`;
   const filePath = path.join(DEMO_SPLAT_DIR, fileName);
   const publicPath = `/splats/demo/${fileName}`;
   const manifest = await readCachedSplatManifest();
@@ -381,7 +392,7 @@ function readSpzUrls(value: unknown): string[] {
 
 async function downloadWorldLabsCollider(sceneId: string, version: string, colliderUrl: string) {
   const collider = await downloadRemoteAsset(colliderUrl, "collider");
-  const fileName = `pageworld-${sceneId}-${version}-collider.glb`;
+  const fileName = `papertrail-${sceneId}-${version}-collider.glb`;
   const filePath = path.join(DEMO_SPLAT_DIR, fileName);
   const publicPath = `/splats/demo/${fileName}`;
 

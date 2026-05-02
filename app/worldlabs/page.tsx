@@ -64,6 +64,13 @@ type OperationResponse = {
 };
 
 const POLL_INTERVAL_MS = 8000;
+const WORLD_LABS_MODELS = [
+  { label: "Marble 1.1 Plus", value: "marble-1.1-plus" },
+  { label: "Marble 1.1", value: "marble-1.1" },
+  { label: "Marble 1.0", value: "marble-1.0" },
+  { label: "Marble 1.0 Draft", value: "marble-1.0-draft" }
+] as const;
+type WorldLabsModel = typeof WORLD_LABS_MODELS[number]["value"];
 
 export default function WorldLabsPage() {
   const [scenes, setScenes] = useState<WorldLabsScene[]>([]);
@@ -71,6 +78,7 @@ export default function WorldLabsPage() {
   const [loadError, setLoadError] = useState("");
   const [operations, setOperations] = useState<Record<string, OperationState>>({});
   const [prompts, setPrompts] = useState<Record<string, string>>({});
+  const [selectedModel, setSelectedModel] = useState<WorldLabsModel>("marble-1.0-draft");
   const pollTimers = useRef<Record<string, number>>({});
 
   const allBusy = useMemo(
@@ -153,7 +161,7 @@ export default function WorldLabsPage() {
       const response = await fetch("/api/worldlabs/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sceneId, prompt: prompts[sceneId] })
+        body: JSON.stringify({ model: selectedModel, sceneId, prompt: prompts[sceneId] })
       });
       const body = (await response.json()) as { operationId?: string; raw?: unknown; error?: string };
 
@@ -395,7 +403,22 @@ export default function WorldLabsPage() {
               Generate the hardcoded demo scenes with World Labs, then cache each returned splat under public/splats/demo for a faster demo.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="block">
+              <span className="text-xs uppercase tracking-[0.18em] text-stone-500">Model</span>
+              <select
+                value={selectedModel}
+                onChange={(event) => setSelectedModel(event.target.value as WorldLabsModel)}
+                disabled={allBusy}
+                className="mt-2 min-h-10 border border-white/14 bg-black/35 px-3 text-sm text-stone-100 outline-none transition focus:border-cyan-200/70 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {WORLD_LABS_MODELS.map((model) => (
+                  <option key={model.value} value={model.value}>
+                    {model.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button
               type="button"
               onClick={loadScenes}

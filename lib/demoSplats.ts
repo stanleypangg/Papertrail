@@ -39,3 +39,27 @@ export function sceneCollidersFromManifest(scenes: ScenePlan[], manifest: DemoSp
     scenes.map((scene) => [scene.id, manifest?.[scene.id]?.colliderPath ?? null])
   ) as SceneColliderMap;
 }
+
+export function firstSplatSceneIndex(scenes: Pick<ScenePlan, "id">[], sceneSplats: SceneSplatMap): number {
+  const index = scenes.findIndex((scene) => Boolean(sceneSplats[scene.id]));
+  return Math.max(index, 0);
+}
+
+export function nextSplatSceneIndex(
+  scenes: Pick<ScenePlan, "id">[],
+  sceneSplats: SceneSplatMap,
+  currentIndex: number
+): number | null {
+  if (scenes.length === 0) {
+    return null;
+  }
+
+  for (let offset = 1; offset <= scenes.length; offset += 1) {
+    const index = (currentIndex + offset) % scenes.length;
+    if (sceneSplats[scenes[index]?.id ?? ""]) {
+      return index;
+    }
+  }
+
+  return null;
+}

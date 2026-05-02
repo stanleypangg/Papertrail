@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This is a Next.js App Router TypeScript MVP for PageWorld.
+This is a Next.js App Router TypeScript MVP for Papertrail.
 
 - `app/` contains pages, global styles, metadata, and API routes.
 - `app/api/parse-pdf`, `app/api/generate-scenes`, `app/api/generate-scene-image`, and `app/api/generate-scene-narration` contain backend route handlers.

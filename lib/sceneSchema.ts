@@ -62,6 +62,13 @@ export const sceneIntegrationSchema = z.object({
     provider: z.literal("elevenlabs"),
     script: z.string().min(1),
     audioUrl: z.string().nullable().default(null),
+    captions: z.array(z.object({
+      end: z.number(),
+      start: z.number(),
+      text: z.string().min(1)
+    })).optional(),
+    modelId: z.string().optional(),
+    warning: z.string().optional(),
     voiceId: z.string().optional()
   }).optional(),
   walkableWorld: z.object({
@@ -248,6 +255,21 @@ export const scenePlanJsonSchema = {
                   provider: { type: "string", const: "elevenlabs" },
                   script: { type: "string" },
                   audioUrl: { type: ["string", "null"] },
+                  captions: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        end: { type: "number" },
+                        start: { type: "number" },
+                        text: { type: "string" }
+                      },
+                      required: ["end", "start", "text"]
+                    }
+                  },
+                  modelId: { type: "string" },
+                  warning: { type: "string" },
                   voiceId: { type: "string" }
                 },
                 required: ["provider", "script", "audioUrl"]
