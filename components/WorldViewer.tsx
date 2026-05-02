@@ -5,11 +5,17 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { ArrowLeft, Glasses, Loader2, MousePointer2, Pause, Play, RotateCcw, Settings, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  AmbientLight,
+  Box3,
   BoxHelper,
+  CircleGeometry,
   Clock,
   Color,
+  ConeGeometry,
+  DirectionalLight,
   DoubleSide,
   Group,
+  HemisphereLight,
   Mesh,
   MeshBasicMaterial,
   Object3D,
@@ -21,10 +27,12 @@ import {
   type Camera
 } from "three";
 
+import { DemoNpcDialog } from "@/components/DemoNpcDialog";
 import {
   createDefaultSplatControlProviders,
   type SplatControlProvider
 } from "@/components/three/splatControls";
+import { DEMO_NPCS, DEMO_NPC_SLOTS, NPC_INTERACTION_RADIUS, rosterForPlayer } from "@/lib/demoNpcs";
 import { DEMO_SPLAT_MANIFEST_URL, type DemoSplatManifest } from "@/lib/demoSplats";
 import type { SceneObjectModelMap } from "@/lib/objectModels";
 import type { ScenePlan } from "@/lib/sceneSchema";
@@ -38,6 +46,7 @@ export type WorldViewerProps = {
   onExit: () => void;
   exitLabel?: string;
   controlProviders?: SplatControlProvider[];
+  playerCharacterId?: string | null;
 };
 
 type SplatTransform = {
@@ -87,6 +96,9 @@ const DEFAULT_COLLIDER_TRANSFORM: SplatTransform = {
 
 const PLAYER_HEIGHT = 1;
 const START_Z = 2.5;
+// World-space height for an NPC at scale=1.0. Sized just under the 1m player
+// camera so the character's head sits around the player's chin.
+const TARGET_NPC_HEIGHT = 0.85;
 const COLLISION_RADIUS = 0.28;
 const COLLISION_HEIGHTS = [0.24, 0.74];
 const COLLISION_SIDE_OFFSETS = [-0.18, 0, 0.18];
@@ -119,7 +131,8 @@ export function WorldViewer({
   sceneColliders = {},
   sceneSplats = {},
   onExit,
-  exitLabel = "Scene cards"
+  exitLabel = "Scene cards",
+  playerCharacterId = null
 }: WorldViewerProps) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<WebGLRenderer | null>(null);
@@ -139,6 +152,12 @@ export function WorldViewer({
   const verticalVelocityRef = useRef(0);
   const yawRef = useRef(0);
   const pitchRef = useRef(0);
+  const npcGroupsRef = useRef<Map<string, Group>>(new Map());
+  const npcRingsRef = useRef<Map<string, Mesh>>(new Map());
+  const npcConesRef = useRef<Map<string, Mesh>>(new Map());
+  const nearestNpcIdRef = useRef<string | null>(null);
+  const activeNpcIdRef = useRef<string | null>(null);
+  const xrControllerCleanupRef = useRef<(() => void) | null>(null);
   const [selectedSceneIndex, setSelectedSceneIndex] = useState<number | null>(null);
   const [colliderVisible, setColliderVisible] = useState(false);
   const [pointerLocked, setPointerLocked] = useState(false);
@@ -155,6 +174,26 @@ export function WorldViewer({
   const [selectedSplats, setSelectedSplats] = useState<Record<string, string>>({});
   const [splatManifest, setSplatManifest] = useState<DemoSplatManifest | null>(null);
   const [transforms, setTransforms] = useState<Record<string, SplatTransform>>({});
+  const [nearestNpcId, setNearestNpcId] = useState<string | null>(null);
+  const [activeNpcId, setActiveNpcId] = useState<string | null>(null);
+  const nearestNpc = nearestNpcId ? DEMO_NPCS.find((npc) => npc.id === nearestNpcId) ?? null : null;
+  const activeNpc = activeNpcId ? DEMO_NPCS.find((npc) => npc.id === activeNpcId) ?? null : null;
+
+  useEffect(() => {
+    activeNpcIdRef.current = activeNpcId;
+  }, [activeNpcId]);
+
+  const triggerNpcInteraction = useCallback(() => {
+    const id = nearestNpcIdRef.current;
+    if (!id || activeNpcIdRef.current) {
+      return;
+    }
+    setActiveNpcId(id);
+  }, []);
+
+  const closeNpcDialog = useCallback(() => {
+    setActiveNpcId(null);
+  }, []);
   const sceneIndex = selectedSceneIndex ?? firstSplatSceneIndex(scenes, sceneSplats);
   const safeSceneIndex = Math.max(0, Math.min(sceneIndex, scenes.length - 1));
   const scene = scenes[safeSceneIndex] ?? scenes[0];
@@ -253,6 +292,15 @@ export function WorldViewer({
     const threeScene = new Scene();
     threeScene.background = new Color("#05070b");
 
+    const ambientLight = new AmbientLight(0xffffff, 0.85);
+    threeScene.add(ambientLight);
+    const hemiLight = new HemisphereLight(0xfff1d6, 0x2a1a10, 0.55);
+    hemiLight.position.set(0, 6, 0);
+    threeScene.add(hemiLight);
+    const keyLight = new DirectionalLight(0xfff0d8, 1.1);
+    keyLight.position.set(3, 8, 4);
+    threeScene.add(keyLight);
+
     const camera = new PerspectiveCamera(70, mountElement.clientWidth / mountElement.clientHeight, 0.05, 1000);
     const playerRig = new Group();
     playerRig.position.set(0, 0, START_Z);
@@ -309,7 +357,76 @@ export function WorldViewer({
         verticalVelocityRef.current = updateRigVerticalPhysics(playerRig, delta, colliderObjectsRef.current, verticalVelocityRef.current);
       }
 
+      groundNpcsIfNeeded(colliderObjectsRef.current);
+      updateNpcProximity(playerRig.position, clock.elapsedTime);
+
       sparkRenderer.render(threeScene, camera);
+    }
+
+    function groundNpcsIfNeeded(colliders: Object3D[]) {
+      if (colliders.length === 0) {
+        return;
+      }
+      const groups = npcGroupsRef.current;
+      if (groups.size === 0) {
+        return;
+      }
+      // Sample the floor once at the player spawn (x=0, z=START_Z). All NPCs share
+      // this single y so they stand on the same elevation regardless of awnings,
+      // signs, or roof geometry that a per-NPC raycast might hit first.
+      tempRayOrigin.set(0, 0, START_Z);
+      const sharedGround = sampleNpcGroundY(tempRayOrigin, colliders) ?? 0;
+      groups.forEach((group) => {
+        if (group.userData.grounded) {
+          return;
+        }
+        group.position.y = sharedGround;
+        group.visible = true;
+        group.userData.grounded = true;
+      });
+    }
+
+    function updateNpcProximity(rigPosition: Vector3, elapsed: number) {
+      const groups = npcGroupsRef.current;
+      if (groups.size === 0) {
+        if (nearestNpcIdRef.current !== null) {
+          nearestNpcIdRef.current = null;
+          setNearestNpcId(null);
+        }
+        return;
+      }
+
+      let nearestId: string | null = null;
+      let nearestDistSq = NPC_INTERACTION_RADIUS * NPC_INTERACTION_RADIUS;
+      groups.forEach((group, id) => {
+        const dx = group.position.x - rigPosition.x;
+        const dz = group.position.z - rigPosition.z;
+        const distSq = dx * dx + dz * dz;
+        if (distSq < nearestDistSq) {
+          nearestDistSq = distSq;
+          nearestId = id;
+        }
+      });
+
+      if (nearestId !== nearestNpcIdRef.current) {
+        nearestNpcIdRef.current = nearestId;
+        setNearestNpcId(nearestId);
+        npcRingsRef.current.forEach((ring, id) => {
+          const material = ring.material as MeshBasicMaterial;
+          material.opacity = id === nearestId ? 0.55 : 0.16;
+          material.color.setHex(id === nearestId ? 0xa5f3fc : 0x67e8f9);
+        });
+        npcConesRef.current.forEach((cone, id) => {
+          cone.visible = id === nearestId;
+        });
+      }
+
+      if (nearestId) {
+        const cone = npcConesRef.current.get(nearestId);
+        if (cone) {
+          cone.position.y = 1.95 + Math.sin(elapsed * 3.2) * 0.08;
+        }
+      }
     }
 
     renderer.setAnimationLoop(animate);
@@ -378,6 +495,10 @@ export function WorldViewer({
 
     const onKeyDown = (event: KeyboardEvent) => {
       keysRef.current.add(event.code);
+      if (event.code === "KeyE" && !activeNpcIdRef.current && nearestNpcIdRef.current) {
+        event.preventDefault();
+        triggerNpcInteraction();
+      }
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
@@ -395,7 +516,7 @@ export function WorldViewer({
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, []);
+  }, [triggerNpcInteraction]);
 
   useEffect(() => {
     let active = true;
@@ -454,8 +575,25 @@ export function WorldViewer({
       setPointerLocked(false);
       setXrActive(true);
 
+      const controllers = [renderer.xr.getController(0), renderer.xr.getController(1)];
+      const handleControllerSelect = () => {
+        if (!activeNpcIdRef.current && nearestNpcIdRef.current) {
+          triggerNpcInteraction();
+        }
+      };
+      controllers.forEach((controller) => {
+        controller.addEventListener("selectstart", handleControllerSelect);
+      });
+      xrControllerCleanupRef.current = () => {
+        controllers.forEach((controller) => {
+          controller.removeEventListener("selectstart", handleControllerSelect);
+        });
+      };
+
       const onSessionEnd = () => {
         session.removeEventListener("end", onSessionEnd);
+        xrControllerCleanupRef.current?.();
+        xrControllerCleanupRef.current = null;
         if (xrSessionRef.current === session) {
           xrSessionRef.current = null;
         }
@@ -474,7 +612,7 @@ export function WorldViewer({
     } finally {
       setXrStarting(false);
     }
-  }, [restoreDesktopCamera]);
+  }, [restoreDesktopCamera, triggerNpcInteraction]);
 
   const exitVR = useCallback(() => {
     xrSessionRef.current?.end().catch((error: unknown) => {
@@ -660,31 +798,103 @@ export function WorldViewer({
     let active = true;
     const loader = new GLTFLoader();
     const npcs = new Group();
+    npcs.name = "demo-npcs";
     threeScene.add(npcs);
 
-    const characters = [
-      { id: "harry-potter", pos: [0.0, 0, -5.0] },
-      { id: "severus-snape", pos: [1.5, 0, -4.5] },
-      { id: "draco-malfoy", pos: [3.0, 0, -6.5] },
-      { id: "hermione-granger", pos: [-1.5, 0, -4.5] },
-      { id: "luna-lovegood", pos: [-3.0, 0, -6.5] }
-    ];
+    const ringGeometry = new CircleGeometry(0.55, 32);
+    const coneGeometry = new ConeGeometry(0.12, 0.22, 12);
+    const groups = new Map<string, Group>();
+    const rings = new Map<string, Mesh>();
+    const cones = new Map<string, Mesh>();
+    const ringMaterials: MeshBasicMaterial[] = [];
+    const coneMaterials: MeshBasicMaterial[] = [];
 
-    characters.forEach((c) => {
-      loader.load(`/models/sleuth/${c.id}.glb`, (gltf) => {
+    const npcRoster = rosterForPlayer(playerCharacterId);
+
+    npcRoster.forEach((npc, slotIndex) => {
+      const slot = DEMO_NPC_SLOTS[slotIndex];
+
+      const group = new Group();
+      group.position.set(slot.position[0], slot.position[1], slot.position[2]);
+      group.rotation.y = slot.rotationY;
+      group.userData.npcId = npc.id;
+      group.userData.grounded = false;
+      group.visible = false;
+      npcs.add(group);
+
+      const ringMaterial = new MeshBasicMaterial({
+        color: 0x67e8f9,
+        transparent: true,
+        opacity: 0.32,
+        depthWrite: false,
+        side: DoubleSide
+      });
+      ringMaterials.push(ringMaterial);
+      const ring = new Mesh(ringGeometry, ringMaterial);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.04;
+      ring.renderOrder = 5;
+      group.add(ring);
+      rings.set(npc.id, ring);
+
+      const coneMaterial = new MeshBasicMaterial({
+        color: 0xa5f3fc,
+        transparent: true,
+        opacity: 0.92,
+        depthWrite: false
+      });
+      coneMaterials.push(coneMaterial);
+      const cone = new Mesh(coneGeometry, coneMaterial);
+      cone.rotation.x = Math.PI;
+      cone.position.y = 1.95;
+      cone.renderOrder = 6;
+      cone.visible = false;
+      group.add(cone);
+      cones.set(npc.id, cone);
+
+      loader.load(`/models/sleuth/${npc.id}.glb`, (gltf) => {
         if (!active) return;
         const model = gltf.scene;
-        model.position.set(c.pos[0], c.pos[1], c.pos[2]);
-        model.scale.setScalar(0.5);
-        npcs.add(model);
+
+        // Normalize: measure the raw GLB height, then scale so the final character
+        // height is TARGET_NPC_HEIGHT * npc.scale. Different GLB exports come in
+        // wildly different sizes (Meshy outputs ~2m, others ~1m); normalizing keeps
+        // every character at a believable size next to the 1m-tall player rig.
+        const rawBbox = new Box3().setFromObject(model);
+        const rawHeight = Math.max(rawBbox.max.y - rawBbox.min.y, 0.001);
+        const finalScale = (TARGET_NPC_HEIGHT / rawHeight) * npc.scale;
+        model.scale.setScalar(finalScale);
+
+        const scaledBbox = new Box3().setFromObject(model);
+        model.position.y -= scaledBbox.min.y;
+        group.add(model);
       });
+
+      groups.set(npc.id, group);
     });
+
+    npcGroupsRef.current = groups;
+    npcRingsRef.current = rings;
+    npcConesRef.current = cones;
+    nearestNpcIdRef.current = null;
+    setNearestNpcId(null);
 
     return () => {
       active = false;
       threeScene.remove(npcs);
+      ringGeometry.dispose();
+      coneGeometry.dispose();
+      ringMaterials.forEach((material) => material.dispose());
+      coneMaterials.forEach((material) => material.dispose());
+      groups.clear();
+      rings.clear();
+      cones.clear();
+      npcGroupsRef.current = groups;
+      npcRingsRef.current = rings;
+      npcConesRef.current = cones;
+      nearestNpcIdRef.current = null;
     };
-  }, [sceneId]);
+  }, [sceneId, playerCharacterId]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -937,6 +1147,24 @@ export function WorldViewer({
             {activeCaption.text}
           </p>
         </div>
+      ) : null}
+
+      {nearestNpc && !activeNpc && !xrActive ? (
+        <div className="pointer-events-none fixed bottom-24 left-1/2 z-30 -translate-x-1/2">
+          <div className="border border-cyan-200/40 bg-[#070b10]/90 px-5 py-3 text-center text-stone-100 shadow-2xl shadow-black/50 backdrop-blur">
+            <p className="text-[0.7rem] uppercase tracking-[0.22em] text-cyan-200/80">
+              {nearestNpc.role}
+            </p>
+            <p className="mt-1 text-sm font-semibold">{nearestNpc.name}</p>
+            <p className="mt-1 text-xs text-stone-300">
+              Press <span className="font-semibold text-cyan-100">E</span> to talk
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {activeNpc ? (
+        <DemoNpcDialog key={activeNpc.id} npc={activeNpc} onClose={closeNpcDialog} />
       ) : null}
 
       <div className="fixed right-4 top-4 z-30 flex flex-wrap justify-end gap-2">
@@ -1264,6 +1492,23 @@ function updateRigVerticalPhysics(rig: Group, delta: number, colliders: Object3D
   }
 
   return nextVelocity;
+}
+
+function sampleNpcGroundY(position: Vector3, colliders: Object3D[]) {
+  groundRaycaster.set(
+    tempRayOrigin.set(position.x, 30, position.z),
+    tempNormal.set(0, -1, 0)
+  );
+  groundRaycaster.far = 80;
+  const hits = groundRaycaster.intersectObjects(colliders, true);
+  for (const hit of hits) {
+    if (!hit.face) continue;
+    tempNormal.copy(hit.face.normal).transformDirection(hit.object.matrixWorld);
+    if (tempNormal.y > 0.45) {
+      return hit.point.y;
+    }
+  }
+  return null;
 }
 
 function findGroundY(position: Vector3, colliders: Object3D[]) {

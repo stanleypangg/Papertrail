@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { DemoCharacterSelect } from "@/components/DemoCharacterSelect";
 import { ErrorState } from "@/components/ErrorState";
 import { LoadingState, type LoadingProgressState } from "@/components/LoadingState";
 import { SceneCards } from "@/components/SceneCards";
@@ -20,12 +20,11 @@ const WorldViewer = dynamic(() => import("@/components/WorldViewer").then((modul
   loading: () => <LoadingState label="Opening the world" />
 });
 
-type AppMode = "upload" | "loading" | "cards" | "world" | "error";
+type AppMode = "upload" | "loading" | "cards" | "character-select" | "world" | "error";
 
 let nextProgressLogId = 0;
 
 export default function Home() {
-  const router = useRouter();
   const [mode, setMode] = useState<AppMode>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [scenes, setScenes] = useState<ScenePlan[]>(demoScenes);
@@ -39,6 +38,7 @@ export default function Home() {
   const [joinCode, setJoinCode] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgressState>(() => createInitialProgress());
   const [error, setError] = useState("");
+  const [playerCharacterId, setPlayerCharacterId] = useState<string | null>(null);
   const generationAbortRef = useRef<AbortController | null>(null);
   const visibleImages = visibleSceneImages(scenes, sceneImages);
 
@@ -77,8 +77,11 @@ export default function Home() {
     await generateWorldFromStream(formData, { openWorldOnComplete: false });
   }
 
-  function useDemoWorld() {
-    router.push("/scripts/the-headmasters-last-feast");
+  async function useDemoWorld() {
+    const formData = new FormData();
+    formData.append("mode", "demo");
+
+    await generateWorldFromStream(formData, { openWorldOnComplete: true });
   }
 
   async function generateWorldFromStream(
@@ -176,7 +179,7 @@ export default function Home() {
       setWarnings([...event.warnings, ...(shareResult.warning ? [shareResult.warning] : [])]);
       setShareUrl(shareResult.url);
       setJoinCode(event.joinCode);
-      setMode(openWorldOnComplete ? "world" : "cards");
+      setMode(openWorldOnComplete ? "character-select" : "cards");
     }
   }
 
@@ -209,8 +212,20 @@ export default function Home() {
         warnings={warnings}
         shareUrl={shareUrl}
         joinCode={joinCode}
-        onEnterWorld={() => setMode("world")}
+        onEnterWorld={() => setMode("character-select")}
         onReset={reset}
+      />
+    );
+  }
+
+  if (mode === "character-select") {
+    return (
+      <DemoCharacterSelect
+        onConfirm={(npcId) => {
+          setPlayerCharacterId(npcId);
+          setMode("world");
+        }}
+        onBack={() => setMode("cards")}
       />
     );
   }
@@ -223,7 +238,8 @@ export default function Home() {
         sceneColliders={sceneColliders}
         sceneSplats={sceneSplats}
         objectModels={objectModels}
-        onExit={() => setMode("cards")}
+        playerCharacterId={playerCharacterId}
+        onExit={() => setMode("character-select")}
       />
     );
   }
