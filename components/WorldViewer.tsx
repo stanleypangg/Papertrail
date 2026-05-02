@@ -652,6 +652,41 @@ export function WorldViewer({
   }, [colliderUrl]);
 
   useEffect(() => {
+    const threeScene = sceneRef.current;
+    if (!threeScene || !sceneId?.includes("great-hall")) {
+      return;
+    }
+
+    let active = true;
+    const loader = new GLTFLoader();
+    const npcs = new Group();
+    threeScene.add(npcs);
+
+    const characters = [
+      { id: "harry-potter", pos: [0.0, 0, -5.0] },
+      { id: "severus-snape", pos: [1.5, 0, -4.5] },
+      { id: "draco-malfoy", pos: [3.0, 0, -6.5] },
+      { id: "hermione-granger", pos: [-1.5, 0, -4.5] },
+      { id: "luna-lovegood", pos: [-3.0, 0, -6.5] }
+    ];
+
+    characters.forEach((c) => {
+      loader.load(`/models/sleuth/${c.id}.glb`, (gltf) => {
+        if (!active) return;
+        const model = gltf.scene;
+        model.position.set(c.pos[0], c.pos[1], c.pos[2]);
+        model.scale.setScalar(0.5);
+        npcs.add(model);
+      });
+    });
+
+    return () => {
+      active = false;
+      threeScene.remove(npcs);
+    };
+  }, [sceneId]);
+
+  useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
       audio.pause();
