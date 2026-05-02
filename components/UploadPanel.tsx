@@ -1,6 +1,7 @@
 "use client";
 
 import { FileUp, Sparkles } from "lucide-react";
+import Image from "next/image";
 import { useRef } from "react";
 
 type UploadPanelProps = {
@@ -15,79 +16,71 @@ export function UploadPanel({ file, onFileChange, onGenerate, onUseDemo, busy }:
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   return (
-    <section className="min-h-svh overflow-hidden bg-[#090b10] text-stone-50">
-      <div className="relative min-h-svh px-5 py-6 sm:px-8">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_24%,rgba(93,183,255,0.24),transparent_32%),radial-gradient(circle_at_78%_18%,rgba(128,255,204,0.16),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_42%)]" />
-        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#090b10] to-transparent" />
+    <section className="relative min-h-svh overflow-hidden bg-[#e8ded0] text-[#171715]">
+      <Image
+        src="/landing/pageworld-hero.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="absolute inset-0 h-full w-full object-cover object-[58%_50%]"
+      />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(244,237,224,0.78)_0%,rgba(244,237,224,0.52)_40%,rgba(244,237,224,0.2)_68%,rgba(30,28,24,0.1)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_46%,rgba(255,248,237,0.68),rgba(255,248,237,0.26)_34%,transparent_58%)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52svh] bg-gradient-to-t from-[#d77954]/62 via-[#d77954]/18 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#fff8ee]/55 to-transparent" />
 
-        <main className="relative mx-auto flex min-h-[calc(100svh-3rem)] w-full max-w-6xl flex-col justify-between gap-10">
-          <header className="flex items-center justify-between border-b border-white/10 pb-4">
-            <div className="text-sm font-semibold tracking-[0.18em] text-cyan-100">PAGEWORLD</div>
+      <main className="relative z-10 min-h-svh px-5 py-6 sm:px-8 sm:py-8 lg:px-12">
+        <div className="absolute left-1/2 top-[47%] w-[min(46rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 text-center">
+          <p className="text-xs font-bold uppercase text-[#4d4038]">From page to place</p>
+          <p className="mx-auto mt-4 max-w-[36rem] text-balance text-2xl font-semibold leading-[1.08] text-[#171715] sm:text-4xl">
+            Upload a PDF and turn it into a walkable 3D story.
+          </p>
+          <p className="mx-auto mt-4 max-w-[31rem] text-sm leading-6 text-[#4f463f] sm:text-base">
+            3 scenes max. Source-grounded objects. WASD and mouse look.
+          </p>
+
+          <div className="mx-auto mt-8 flex w-full max-w-[43rem] flex-col gap-3 border-t border-[#171715]/18 pt-4 sm:flex-row sm:items-center sm:justify-center">
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={busy}
+              className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 border border-[#171715]/18 bg-[#fff8ed]/48 px-4 text-sm font-semibold text-[#171715] transition hover:bg-[#fff8ed]/75 focus:outline-none focus:ring-2 focus:ring-[#171715]/35 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <FileUp size={18} aria-hidden="true" />
+              <span className="min-w-0 truncate">{file ? file.name : "Choose PDF"}</span>
+            </button>
+            <input
+              ref={inputRef}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="hidden"
+              onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
+            />
+            <button
+              type="button"
+              onClick={onGenerate}
+              disabled={busy || !file}
+              className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#171715] px-6 text-sm font-semibold text-[#f8f3ea] transition hover:bg-[#2c2924] focus:outline-none focus:ring-2 focus:ring-[#171715]/35 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Sparkles size={18} aria-hidden="true" />
+              Generate world
+            </button>
             <button
               type="button"
               onClick={onUseDemo}
               disabled={busy}
-              className="rounded-full border border-white/16 px-4 py-2 text-sm text-stone-200 transition hover:border-cyan-200/60 hover:text-white disabled:opacity-50"
+              className="inline-flex min-h-12 items-center justify-center px-3 text-sm font-semibold text-[#171715] underline decoration-[#171715]/35 underline-offset-4 transition hover:text-[#614131] hover:decoration-[#614131] focus:outline-none focus:ring-2 focus:ring-[#171715]/30 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Demo data
+              Use demo data
             </button>
-          </header>
-
-          <div className="grid items-end gap-10 lg:grid-cols-[1fr_410px]">
-            <div className="max-w-3xl pb-2">
-              <p className="mb-4 text-sm uppercase tracking-[0.22em] text-cyan-200/80">Interactive story space</p>
-              <h1 className="max-w-4xl text-6xl font-semibold leading-[0.9] text-stone-50 sm:text-7xl lg:text-8xl">
-                Walk inside a PDF.
-              </h1>
-              <p className="mt-7 max-w-2xl text-lg leading-8 text-stone-300 sm:text-xl">
-                Upload a PDF and walk through its story as a chain of interactive 3D scenes.
-              </p>
-            </div>
-
-            <div className="border border-white/12 bg-black/36 p-5 shadow-2xl shadow-cyan-950/20 backdrop-blur">
-              <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                disabled={busy}
-                className="group flex min-h-48 w-full flex-col items-center justify-center gap-4 border border-dashed border-cyan-100/30 bg-white/[0.03] p-6 text-center transition hover:border-cyan-100/70 hover:bg-cyan-100/[0.06] disabled:opacity-50"
-              >
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-200 text-slate-950 shadow-lg shadow-cyan-400/20">
-                  <FileUp size={22} />
-                </span>
-                <span className="text-base font-medium text-white">
-                  {file ? file.name : "Choose a story PDF"}
-                </span>
-                <span className="max-w-xs text-sm leading-6 text-stone-400">
-                  Fiction works best, but articles, biographies, and personal documents are supported.
-                </span>
-              </button>
-              <input
-                ref={inputRef}
-                type="file"
-                accept="application/pdf,.pdf"
-                className="hidden"
-                onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
-              />
-              <button
-                type="button"
-                onClick={onGenerate}
-                disabled={busy || !file}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 bg-cyan-200 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Sparkles size={18} />
-                Generate world
-              </button>
-            </div>
           </div>
+        </div>
 
-          <div className="grid gap-3 border-t border-white/10 pt-4 text-sm text-stone-400 sm:grid-cols-3">
-            <p>3 scenes max</p>
-            <p>Source-grounded objects</p>
-            <p>WASD + mouse look</p>
-          </div>
-        </main>
-      </div>
+        <h1 className="pointer-events-none absolute inset-x-0 bottom-[clamp(1.25rem,3vw,3rem)] select-none text-center text-[clamp(4.7rem,16vw,16rem)] font-black leading-none tracking-normal text-[#171715] sm:text-[clamp(7rem,16vw,16rem)]">
+          PageWorld
+        </h1>
+      </main>
     </section>
   );
 }
-

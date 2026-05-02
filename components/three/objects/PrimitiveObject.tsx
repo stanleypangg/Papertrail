@@ -1,34 +1,44 @@
 "use client";
 
-import { Text } from "@react-three/drei";
+import { Text, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
-import type { Group } from "three";
+import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Box3, Mesh, Vector3, type Group } from "three";
 
+import type { GeneratedObjectModel } from "@/lib/objectModels";
 import type { ObjectPlacement } from "@/lib/sceneMapping";
 import type { WorldTarget } from "@/lib/sceneNavigation";
 import type { SceneObject } from "@/lib/sceneSchema";
 
 type PrimitiveObjectProps = {
   object: SceneObject;
+  model?: GeneratedObjectModel;
   placement: ObjectPlacement;
   accent: string;
   targeted: boolean;
   onSelect: () => void;
 };
 
-export function PrimitiveObject({ object, placement, accent, targeted, onSelect }: PrimitiveObjectProps) {
+export function PrimitiveObject({ object, model, placement, accent, targeted, onSelect }: PrimitiveObjectProps) {
   const groupRef = useRef<Group | null>(null);
   const [hovered, setHovered] = useState(false);
   const scale = placement.scale ?? 1;
   const highlighted = hovered || targeted;
   const target: WorldTarget = { type: "object", id: object.id };
+  const modelUrl = model?.status === "succeeded" ? model.modelUrl : null;
+  const primitiveGeometry = <ObjectGeometry object={object} accent={accent} hovered={highlighted} />;
 
   useEffect(() => {
     return () => {
       document.body.style.cursor = "auto";
     };
   }, []);
+
+  useEffect(() => {
+    if (modelUrl) {
+      useGLTF.preload(modelUrl);
+    }
+  }, [modelUrl]);
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -61,13 +71,70 @@ export function PrimitiveObject({ object, placement, accent, targeted, onSelect 
         <boxGeometry args={[1.35, 1.55, 1.35]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
-      <ObjectGeometry object={object} accent={accent} hovered={highlighted} />
+      {modelUrl ? (
+        <ModelErrorBoundary key={modelUrl} fallback={primitiveGeometry}>
+          <Suspense fallback={primitiveGeometry}>
+            <GeneratedModel url={modelUrl} />
+          </Suspense>
+        </ModelErrorBoundary>
+      ) : (
+        primitiveGeometry
+      )}
       <pointLight color={accent} intensity={highlighted ? 1.2 : 0.65} distance={3.2} />
       <Text position={[0, 0.78, 0]} fontSize={0.14} maxWidth={1.7} textAlign="center" color="#f8fbff">
         {object.label}
       </Text>
     </group>
   );
+}
+
+class ModelErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
+
+function GeneratedModel({ url }: { url: string }) {
+  const gltf = useGLTF(url);
+  const normalized = useMemo(() => {
+    const scene = gltf.scene.clone(true);
+
+    scene.traverse((child) => {
+      if (child instanceof Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+
+    const box = new Box3().setFromObject(scene);
+
+    if (box.isEmpty()) {
+      return { scene, fitScale: 1, position: [0, 0, 0] as [number, number, number] };
+    }
+
+    const size = new Vector3();
+    const center = new Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+
+    const maxDimension = Math.max(size.x, size.y, size.z, 1);
+    const fitScale = 0.9 / maxDimension;
+    const position: [number, number, number] = [
+      -center.x * fitScale,
+      -box.min.y * fitScale,
+      -center.z * fitScale
+    ];
+
+    return { scene, fitScale, position };
+  }, [gltf.scene]);
+
+  return <primitive object={normalized.scene} position={normalized.position} scale={normalized.fitScale} />;
 }
 
 function ObjectGeometry({ object, accent, hovered }: { object: SceneObject; accent: string; hovered: boolean }) {

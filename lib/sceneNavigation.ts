@@ -1,19 +1,11 @@
+import { layoutSpecs, type Blocker, type Vec3, type WalkZone } from "./layoutSpecs";
 import type { LayoutType, SceneObject } from "./sceneSchema";
 
-export type Vec2 = [number, number];
-export type Vec3 = [number, number, number];
+export type { Blocker, Vec2, Vec3, WalkZone } from "./layoutSpecs";
 
 export type WorldTarget =
   | { type: "object"; id: SceneObject["id"] }
   | { type: "portal" };
-
-export type WalkZone =
-  | { type: "rect"; minX: number; maxX: number; minZ: number; maxZ: number }
-  | { type: "circle"; center: Vec2; radius: number };
-
-export type Blocker =
-  | { type: "rect"; minX: number; maxX: number; minZ: number; maxZ: number }
-  | { type: "circle"; center: Vec2; radius: number };
 
 export type LayoutNavigation = {
   spawn: Vec3;
@@ -27,28 +19,16 @@ export const DESKTOP_MOVE_SPEED = 4.2;
 export const XR_MOVE_SPEED = 2;
 export const XR_SNAP_TURN_DEGREES = 30;
 
-export const layoutNavigation: Record<LayoutType, LayoutNavigation> = {
-  interior_room: {
-    spawn: [0, 0, 3.2],
-    walkZone: { type: "rect", minX: -3.35, maxX: 3.35, minZ: -3.2, maxZ: 3.35 },
-    blockers: [{ type: "rect", minX: -1.35, maxX: 1.35, minZ: -1.6, maxZ: -0.2 }]
-  },
-  open_clearing: {
-    spawn: [0, 0, 3.4],
-    walkZone: { type: "circle", center: [0, -1.5], radius: 4.6 },
-    blockers: [{ type: "rect", minX: -4.15, maxX: 4.15, minZ: -6.05, maxZ: -5.55 }]
-  },
-  corridor_path: {
-    spawn: [0, 0, 1.45],
-    walkZone: { type: "rect", minX: -1.85, maxX: 1.85, minZ: -10.55, maxZ: 1.55 },
-    blockers: [-1.7, -3.8, -5.9, -8].map((z) => ({ type: "circle", center: [-1.85, z], radius: 0.22 }))
-  },
-  exhibit_space: {
-    spawn: [0, 0, 1.05],
-    walkZone: { type: "rect", minX: -3.55, maxX: 3.55, minZ: -4.8, maxZ: 0.8 },
-    blockers: [-2.6, 0, 2.6].map((x) => ({ type: "circle", center: [x, -2.5], radius: 0.72 }))
-  }
-};
+export const layoutNavigation: Record<LayoutType, LayoutNavigation> = Object.fromEntries(
+  Object.entries(layoutSpecs).map(([layoutType, spec]) => [
+    layoutType,
+    {
+      spawn: spec.spawn,
+      walkZone: spec.walkZone,
+      blockers: spec.blockers
+    }
+  ])
+) as Record<LayoutType, LayoutNavigation>;
 
 export function targetKey(target: WorldTarget | null): string | null {
   if (!target) {

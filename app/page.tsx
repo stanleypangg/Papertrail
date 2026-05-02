@@ -1,14 +1,17 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 
 import { ErrorState } from "@/components/ErrorState";
-import { LoadingState } from "@/components/LoadingState";
+import { LoadingState, type LoadingProgressState } from "@/components/LoadingState";
 import { SceneCards } from "@/components/SceneCards";
 import { UploadPanel } from "@/components/UploadPanel";
-import { demoScenes } from "@/lib/demoData";
+import { demoMuralUrl, demoScenes } from "@/lib/demoData";
+import type { SceneObjectModelMap } from "@/lib/objectModels";
+import { sceneImageKey, visibleSceneImages, type SceneImageMap } from "@/lib/sceneImages";
 import type { ScenePlan } from "@/lib/sceneSchema";
+import type { WorldGenerationEvent } from "@/lib/worldGenerationEvents";
 
 const WorldViewer = dynamic(() => import("@/components/WorldViewer").then((module) => module.WorldViewer), {
   ssr: false,
@@ -17,182 +20,150 @@ const WorldViewer = dynamic(() => import("@/components/WorldViewer").then((modul
 
 type AppMode = "upload" | "loading" | "cards" | "world" | "error";
 
-type GenerateResponse = {
-  scenes?: ScenePlan[];
-  source?: string;
-  warning?: string;
-  warnings?: string[];
-};
-
-type GenerateImageResponse = {
-  imageUrl?: string | null;
-  warning?: string;
-};
-
-type SceneImageResult = readonly [string, string, string | null, string | null];
-type SceneImageMap = Record<string, string | null>;
-
-const IMAGE_PROMPT_VERSION = "panorama-v1";
-
-async function generateImagesForScenes(scenes: ScenePlan[]) {
-  const entries = await Promise.all(
-    scenes.map(async (scene) => {
-      try {
-        const response = await fetch("/api/generate-scene-image", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: scene.stylePrompt })
-        });
-        const body = (await response.json()) as GenerateImageResponse;
-        return [sceneImageKey(scene), scene.id, body.imageUrl ?? null, body.warning ?? null] as SceneImageResult;
-      } catch {
-        return [sceneImageKey(scene), scene.id, null, `Could not generate a preview image for ${scene.title}.`] as SceneImageResult;
-      }
-    })
-  );
-
-  const images = Object.fromEntries(entries.map(([key, , imageUrl]) => [key, imageUrl])) as SceneImageMap;
-  const warnings = entries.flatMap(([, sceneId, imageUrl, warning]) => {
-    if (imageUrl || !warning) {
-      return [];
-    }
-
-    const scene = scenes.find((candidate) => candidate.id === sceneId);
-    return [`${scene?.title ?? sceneId}: ${warning}`];
-  });
-
-  return { images, warnings };
-}
-
-function sceneImageKey(scene: ScenePlan) {
-  return `${IMAGE_PROMPT_VERSION}:${scene.id}`;
-}
-
-function visibleSceneImages(scenes: ScenePlan[], images: SceneImageMap): SceneImageMap {
-  return Object.fromEntries(scenes.map((scene) => [scene.id, images[sceneImageKey(scene)] ?? null])) as SceneImageMap;
-}
+let nextProgressLogId = 0;
 
 export default function Home() {
   const [mode, setMode] = useState<AppMode>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [scenes, setScenes] = useState<ScenePlan[]>(demoScenes);
-  const [sceneImages, setSceneImages] = useState<SceneImageMap>({});
-  const [imageWarnings, setImageWarnings] = useState<string[]>([]);
+  const [sceneImages, setSceneImages] = useState<SceneImageMap>(() => demoSceneImages());
+  const [objectModels, setObjectModels] = useState<SceneObjectModelMap>({});
   const [source, setSource] = useState("demo");
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [loadingProgress, setLoadingProgress] = useState<LoadingProgressState>(() => createInitialProgress());
   const [error, setError] = useState("");
+  const generationAbortRef = useRef<AbortController | null>(null);
   const visibleImages = visibleSceneImages(scenes, sceneImages);
-
-  useEffect(() => {
-    if (mode !== "cards" && mode !== "world") {
-      return;
-    }
-
-    let active = true;
-    const missingScenes = scenes.filter((scene) => !(sceneImageKey(scene) in sceneImages));
-
-    if (missingScenes.length === 0) {
-      return;
-    }
-
-    async function generateImages() {
-      const { images, warnings } = await generateImagesForScenes(missingScenes);
-
-      if (active) {
-        setSceneImages((current) => ({ ...current, ...images }));
-        setImageWarnings((current) => Array.from(new Set([...current, ...warnings])));
-      }
-    }
-
-    generateImages();
-
-    return () => {
-      active = false;
-    };
-  }, [mode, sceneImages, scenes]);
 
   async function generateFromPdf() {
     if (!file) {
       return;
     }
 
-    setMode("loading");
-    setWarnings([]);
-    setError("");
+    const formData = new FormData();
+    formData.append("mode", "pdf");
+    formData.append("file", file);
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const parseResponse = await fetch("/api/parse-pdf", {
-        method: "POST",
-        body: formData
-      });
-      const parsed = (await parseResponse.json()) as {
-        text?: string;
-        warning?: string;
-        error?: string;
-      };
-
-      if (!parseResponse.ok || !parsed.text) {
-        throw new Error(parsed.error ?? "Could not extract text from the PDF.");
-      }
-
-      const sceneResponse = await fetch("/api/generate-scenes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: parsed.text })
-      });
-      const generated = (await sceneResponse.json()) as GenerateResponse;
-
-      if (!generated.scenes || generated.scenes.length === 0) {
-        throw new Error("No scenes were returned.");
-      }
-
-      const imageResult = await generateImagesForScenes(generated.scenes);
-
-      setScenes(generated.scenes);
-      setSceneImages(imageResult.images);
-      setImageWarnings(imageResult.warnings);
-      setSource(generated.source ?? "unknown");
-      setWarnings([
-        ...(parsed.warning ? [parsed.warning] : []),
-        ...(generated.warning ? [generated.warning] : []),
-        ...(generated.warnings ?? [])
-      ]);
-      setMode("cards");
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Something went wrong.");
-      setMode("error");
-    }
+    await generateWorldFromStream(formData, { openWorldOnComplete: false });
   }
 
   async function useDemoWorld() {
+    const formData = new FormData();
+    formData.append("mode", "demo");
+
+    await generateWorldFromStream(formData, { openWorldOnComplete: true });
+  }
+
+  async function generateWorldFromStream(
+    formData: FormData,
+    options: { openWorldOnComplete?: boolean } = {}
+  ) {
+    generationAbortRef.current?.abort();
+
+    const controller = new AbortController();
+    generationAbortRef.current = controller;
+
     setMode("loading");
+    setSceneImages({});
+    setObjectModels({});
+    setShareUrl(null);
     setWarnings([]);
     setError("");
+    setLoadingProgress(createInitialProgress());
 
-    const imageResult = await generateImagesForScenes(demoScenes);
+    try {
+      const response = await fetch("/api/generate-world-stream", {
+        method: "POST",
+        body: formData,
+        signal: controller.signal
+      });
 
-    setScenes(demoScenes);
-    setSceneImages(imageResult.images);
-    setImageWarnings(imageResult.warnings);
-    setSource("demo");
-    setWarnings(["Using hardcoded fallback scenes so the demo remains playable."]);
-    setMode("cards");
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      let completed = false;
+      await readWorldGenerationStream(response, (event) => {
+        if (event.type === "error") {
+          throw new Error(event.message);
+        }
+
+        handleWorldGenerationEvent(event, options.openWorldOnComplete === true);
+        completed = completed || event.type === "complete";
+      });
+
+      if (!completed) {
+        throw new Error("World generation ended before the world was assembled.");
+      }
+    } catch (reason) {
+      if (reason instanceof Error && reason.name === "AbortError") {
+        return;
+      }
+
+      setError(reason instanceof Error ? reason.message : "Something went wrong.");
+      setMode("error");
+    } finally {
+      if (generationAbortRef.current === controller) {
+        generationAbortRef.current = null;
+      }
+    }
+  }
+
+  function handleWorldGenerationEvent(event: WorldGenerationEvent, openWorldOnComplete = false) {
+    if (event.type === "progress") {
+      setLoadingProgress((current) => applyProgressEvent(current, event));
+      return;
+    }
+
+    if (event.type === "image-complete") {
+      setSceneImages((current) => ({ ...current, [event.imageKey]: event.imageUrl }));
+      return;
+    }
+
+    if (event.type === "model-progress") {
+      setLoadingProgress((current) => applyModelProgressEvent(current, event));
+      return;
+    }
+
+    if (event.type === "model-complete") {
+      setObjectModels((current) => ({
+        ...current,
+        [event.sceneId]: {
+          ...(current[event.sceneId] ?? {}),
+          [event.objectId]: event.model
+        }
+      }));
+      return;
+    }
+
+    if (event.type === "complete") {
+      const shareResult = createShareUrl(event.sharePath);
+      setScenes(event.scenes);
+      setSceneImages(event.sceneImages);
+      setObjectModels(event.objectModels);
+      setSource(event.source);
+      setWarnings([...event.warnings, ...(shareResult.warning ? [shareResult.warning] : [])]);
+      setShareUrl(shareResult.url);
+      setMode(openWorldOnComplete ? "world" : "cards");
+    }
   }
 
   function reset() {
+    generationAbortRef.current?.abort();
+    generationAbortRef.current = null;
     setFile(null);
-    setSceneImages({});
-    setImageWarnings([]);
+    setSceneImages(demoSceneImages());
+    setObjectModels({});
+    setShareUrl(null);
     setWarnings([]);
     setError("");
+    setLoadingProgress(createInitialProgress());
     setMode("upload");
   }
 
   if (mode === "loading") {
-    return <LoadingState label="Generating the world" />;
+    return <LoadingState label="Generating the world" progress={loadingProgress} />;
   }
 
   if (mode === "cards") {
@@ -201,7 +172,8 @@ export default function Home() {
         scenes={scenes}
         images={visibleImages}
         source={source}
-        warnings={[...warnings, ...imageWarnings]}
+        warnings={warnings}
+        shareUrl={shareUrl}
         onEnterWorld={() => setMode("world")}
         onReset={reset}
       />
@@ -209,7 +181,14 @@ export default function Home() {
   }
 
   if (mode === "world") {
-    return <WorldViewer scenes={scenes} sceneImages={visibleImages} onExit={() => setMode("cards")} />;
+    return (
+      <WorldViewer
+        scenes={scenes}
+        sceneImages={visibleImages}
+        objectModels={objectModels}
+        onExit={() => setMode("cards")}
+      />
+    );
   }
 
   if (mode === "error") {
@@ -225,4 +204,171 @@ export default function Home() {
       busy={false}
     />
   );
+}
+
+async function readWorldGenerationStream(
+  response: Response,
+  onEvent: (event: WorldGenerationEvent) => void
+): Promise<void> {
+  if (!response.body) {
+    throw new Error("World generation did not return a stream.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    buffer += decoder.decode(value, { stream: true });
+
+    while (true) {
+      const separatorIndex = buffer.indexOf("\n\n");
+      if (separatorIndex === -1) {
+        break;
+      }
+
+      const frame = buffer.slice(0, separatorIndex);
+      buffer = buffer.slice(separatorIndex + 2);
+      const event = parseStreamFrame(frame);
+
+      if (event) {
+        onEvent(event);
+      }
+    }
+  }
+
+  const trailing = decoder.decode();
+  if (trailing) {
+    buffer += trailing;
+  }
+
+  if (buffer.trim()) {
+    const event = parseStreamFrame(buffer);
+
+    if (event) {
+      onEvent(event);
+    }
+  }
+}
+
+function parseStreamFrame(frame: string): WorldGenerationEvent | null {
+  const dataLines = frame
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith("data:"))
+    .map((line) => line.slice("data:".length).trimStart());
+
+  if (dataLines.length === 0) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(dataLines.join("\n")) as WorldGenerationEvent;
+  } catch {
+    return null;
+  }
+}
+
+function demoSceneImages(): SceneImageMap {
+  return Object.fromEntries(demoScenes.map((scene) => [sceneImageKey(scene), demoMuralUrl])) as SceneImageMap;
+}
+
+function createShareUrl(sharePath: string | null | undefined): { url: string | null; warning?: string } {
+  if (!sharePath) {
+    return { url: null };
+  }
+
+  const configuredOrigin = process.env.NEXT_PUBLIC_SHARE_ORIGIN?.trim();
+  const fallbackOrigin = window.location.origin;
+  const originResult = configuredOrigin ? parseShareOrigin(configuredOrigin) : { origin: fallbackOrigin };
+
+  return {
+    url: new URL(sharePath, originResult.origin).toString(),
+    warning: originResult.warning
+  };
+}
+
+function parseShareOrigin(value: string): { origin: string; warning?: string } {
+  try {
+    return { origin: new URL(value).origin };
+  } catch {
+    return {
+      origin: window.location.origin,
+      warning: `NEXT_PUBLIC_SHARE_ORIGIN is invalid; using ${window.location.origin} for the VR headset link.`
+    };
+  }
+}
+
+function createInitialProgress(): LoadingProgressState {
+  return {
+    percent: 0,
+    title: "Opening the workshop",
+    detail: "Preparing the generation stream.",
+    logs: [],
+    objectProgress: {},
+    steps: [
+      { stage: "parsing", label: "Read PDF", status: "pending" },
+      { stage: "planning", label: "Plan scenes", status: "pending" },
+      { stage: "images", label: "Paint worlds", status: "pending" },
+      { stage: "models", label: "Sculpt objects", status: "pending" },
+      { stage: "saving", label: "Save link", status: "pending" }
+    ]
+  };
+}
+
+function applyProgressEvent(
+  current: LoadingProgressState,
+  event: Extract<WorldGenerationEvent, { type: "progress" }>
+): LoadingProgressState {
+  return {
+    ...current,
+    percent: Math.max(current.percent, event.percent),
+    title: event.title,
+    detail: event.detail ?? current.detail,
+    logs: event.log ? [{ id: nextProgressLogId++, text: event.log }, ...current.logs].slice(0, 5) : current.logs,
+    steps: current.steps.map((step) => {
+      if (step.stage === event.stage) {
+        return { ...step, status: event.status };
+      }
+
+      if (step.status === "pending" && event.percent >= stageCompletionFloor(step.stage)) {
+        return { ...step, status: "complete" };
+      }
+
+      return step;
+    })
+  };
+}
+
+function applyModelProgressEvent(
+  current: LoadingProgressState,
+  event: Extract<WorldGenerationEvent, { type: "model-progress" }>
+): LoadingProgressState {
+  return {
+    ...current,
+    objectProgress: {
+      ...current.objectProgress,
+      [`${event.sceneId}:${event.objectId}`]: {
+        label: event.label,
+        progress: event.providerProgress,
+        status: event.status
+      }
+    }
+  };
+}
+
+function stageCompletionFloor(stage: LoadingProgressState["steps"][number]["stage"]): number {
+  const floors: Record<LoadingProgressState["steps"][number]["stage"], number> = {
+    parsing: 22,
+    planning: 42,
+    images: 68,
+    models: 94,
+    saving: 98
+  };
+
+  return floors[stage];
 }

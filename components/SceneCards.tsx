@@ -1,6 +1,8 @@
 "use client";
 
-import { DoorOpen, ImageIcon } from "lucide-react";
+import { Check, Copy, DoorOpen, ImageIcon } from "lucide-react";
+import { useState } from "react";
+import QRCode from "react-qr-code";
 
 import type { ScenePlan } from "@/lib/sceneSchema";
 
@@ -11,11 +13,28 @@ type SceneCardsProps = {
   images: SceneImageMap;
   source: string;
   warnings: string[];
+  shareUrl?: string | null;
   onEnterWorld: () => void;
   onReset: () => void;
 };
 
-export function SceneCards({ scenes, images, source, warnings, onEnterWorld, onReset }: SceneCardsProps) {
+export function SceneCards({ scenes, images, source, warnings, shareUrl, onEnterWorld, onReset }: SceneCardsProps) {
+  const [copied, setCopied] = useState(false);
+
+  async function copyShareUrl() {
+    if (!shareUrl) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   return (
     <section className="min-h-svh bg-[#080a0f] px-5 py-6 text-stone-50 sm:px-8">
       <div className="mx-auto flex min-h-[calc(100svh-3rem)] w-full max-w-7xl flex-col">
@@ -42,6 +61,28 @@ export function SceneCards({ scenes, images, source, warnings, onEnterWorld, onR
         {warnings.length > 0 ? (
           <div className="mt-4 border border-amber-200/20 bg-amber-200/8 p-3 text-sm leading-6 text-amber-100">
             {warnings.join(" ")}
+          </div>
+        ) : null}
+
+        {shareUrl ? (
+          <div className="mt-4 flex flex-col gap-4 border border-cyan-200/18 bg-cyan-200/[0.055] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 flex-1 items-center gap-4">
+              <div className="shrink-0 bg-white p-2">
+                <QRCode value={shareUrl} size={112} bgColor="#ffffff" fgColor="#080a0f" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs uppercase tracking-[0.18em] text-cyan-100/80">VR headset link</p>
+                <p className="mt-2 break-all text-sm leading-6 text-stone-200">{shareUrl}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={copyShareUrl}
+              className="inline-flex min-h-11 items-center justify-center gap-2 border border-cyan-100/28 px-4 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100"
+            >
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+              {copied ? "Copied" : "Copy link"}
+            </button>
           </div>
         ) : null}
 

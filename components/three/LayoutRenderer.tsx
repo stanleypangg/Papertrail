@@ -28,4 +28,3 @@ export function LayoutRenderer({ layoutType, style, dressing }: LayoutRendererPr
 
   return <ExhibitSpaceLayout style={style} dressing={dressing} />;
 }
-

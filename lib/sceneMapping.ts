@@ -1,12 +1,9 @@
+import { layoutSpecs, type LayoutObjectPlacement } from "./layoutSpecs";
 import type { LayoutType, Mood, SceneObject } from "./sceneSchema";
 
 export type Vec3 = [number, number, number];
 
-export type ObjectPlacement = {
-  position: Vec3;
-  rotation?: Vec3;
-  scale?: number;
-};
+export type ObjectPlacement = LayoutObjectPlacement;
 
 export type MoodStyle = {
   background: string;
@@ -100,45 +97,7 @@ export function getPlacement(layoutType: LayoutType, object: SceneObject, index:
   const fallbackSlots: SceneObject["slot"][] = ["left", "center", "right"];
   const slot = object.slot === "floor" ? fallbackSlots[index] ?? "center" : object.slot;
 
-  const maps: Record<LayoutType, Record<SceneObject["slot"], ObjectPlacement>> = {
-    interior_room: {
-      center: { position: [0, 1.05, -1.2], scale: 1.1 },
-      left: { position: [-2.8, 0.75, -1.2], rotation: [0, 0.35, 0] },
-      right: { position: [2.8, 0.75, -1.2], rotation: [0, -0.35, 0] },
-      back: { position: [0, 1.2, -3.25] },
-      table: { position: [0, 1.45, -0.9], scale: 0.85 },
-      floor: { position: [0, 0.55, -0.5] },
-      wall: { position: [0, 1.9, -3.65], rotation: [0, 0, 0], scale: 1.1 }
-    },
-    open_clearing: {
-      center: { position: [0, 1, -1.2], scale: 1.2 },
-      left: { position: [-3.2, 0.9, -1.7] },
-      right: { position: [3.2, 0.9, -1.7] },
-      back: { position: [0, 1, -4.1] },
-      table: { position: [0, 1.1, -1.2] },
-      floor: { position: [0, 0.55, -1.2] },
-      wall: { position: [0, 1.4, -4.2] }
-    },
-    corridor_path: {
-      center: { position: [0, 0.95, -5] },
-      left: { position: [-2.15, 0.95, -3.2], rotation: [0, 0.25, 0] },
-      right: { position: [2.15, 0.95, -6.2], rotation: [0, -0.25, 0] },
-      back: { position: [0, 1.35, -8.8] },
-      table: { position: [-1.8, 1.2, -3.8] },
-      floor: { position: [0, 0.5, -5.2] },
-      wall: { position: [2.35, 1.7, -4.7], rotation: [0, -Math.PI / 2, 0] }
-    },
-    exhibit_space: {
-      center: { position: [0, 1.3, -2.5], scale: 1.1 },
-      left: { position: [-2.6, 1.25, -2.2] },
-      right: { position: [2.6, 1.25, -2.2] },
-      back: { position: [0, 1.35, -4.5] },
-      table: { position: [0, 1.35, -2.5] },
-      floor: { position: [0, 0.55, -2.6] },
-      wall: { position: [0, 2, -4.85], scale: 1.2 }
-    }
-  };
+  const placements = layoutSpecs[layoutType].objects;
 
-  return maps[layoutType][slot] ?? maps[layoutType][fallbackSlots[index] ?? "center"];
+  return placements[slot] ?? placements[fallbackSlots[index] ?? "center"];
 }
-

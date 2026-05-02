@@ -1,5 +1,7 @@
 import type { ScenePlan } from "./sceneSchema";
 
+export const demoMuralUrl = "/demo/pageworld-demo-panorama.png";
+
 export const demoScenes: ScenePlan[] = [
   {
     id: "archive-arrival",
@@ -156,4 +158,3 @@ export const demoScenes: ScenePlan[] = [
     }
   }
 ];
-
