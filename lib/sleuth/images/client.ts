@@ -16,12 +16,13 @@ export interface GeneratePortraitInput {
   publicBrief: string;
   scriptMood: string;
   outPath: string;
+  force?: boolean;
 }
 
 type SupportedImageModel = (typeof IMAGE_MODELS)[number];
 
 export async function generatePortrait(input: GeneratePortraitInput): Promise<string> {
-  if (fs.existsSync(input.outPath)) {
+  if (!input.force && fs.existsSync(input.outPath)) {
     return input.outPath;
   }
 

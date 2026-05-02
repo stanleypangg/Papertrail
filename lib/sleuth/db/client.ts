@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS ${schema.SLEUTH_WORLDS_TABLE} (
   status TEXT,
   world_prompt_json TEXT,
   created_at INTEGER,
-  expires_at INTEGER
+  expires_at INTEGER,
+  portraits_generated_at INTEGER
 )
 `;
 
@@ -37,6 +38,13 @@ function resolveDbPath(): string {
 function ensureSchema(sqlite: Database.Database): void {
   const runDdl = sqlite.exec.bind(sqlite);
   runDdl(CREATE_TABLE_SQL);
+  try {
+    runDdl(
+      `ALTER TABLE ${schema.SLEUTH_WORLDS_TABLE} ADD COLUMN portraits_generated_at INTEGER`,
+    );
+  } catch {
+    // Existing DBs already have the column or SQLite rejected duplicate add.
+  }
 }
 
 export function getDb(): SleuthDb {
