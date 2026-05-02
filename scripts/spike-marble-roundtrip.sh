@@ -37,7 +37,7 @@ GEN_RESPONSE=$(curl -sS -X POST "https://api.worldlabs.ai/marble/v1/worlds:gener
 EOF
 )")
 
-OPERATION_ID=$(echo "$GEN_RESPONSE" | python3 -c "import json,sys;print(json.load(sys.stdin).get('operation_id') or json.load(sys.stdin).get('name') or '')" 2>/dev/null || echo "")
+OPERATION_ID=$(echo "$GEN_RESPONSE" | python3 -c "import json,sys;d=json.load(sys.stdin);print(d.get('operation_id') or d.get('name') or '')" 2>/dev/null || echo "")
 
 if [ -z "$OPERATION_ID" ]; then
   echo "ERROR: did not get operation_id from generate response:"
