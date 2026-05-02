@@ -1,6 +1,6 @@
 # Story PDF Samples
 
-These PDFs are short-story sample inputs for PageWorld. They were rendered from Project Gutenberg plain-text editions on 2026-05-02 and are public domain in the United States according to the linked Project Gutenberg records.
+These PDFs are short-story sample inputs for Papertrail. They were rendered from Project Gutenberg plain-text editions on 2026-05-02 and are public domain in the United States according to the linked Project Gutenberg records.
 
 | File | Work | Source |
 | --- | --- | --- |

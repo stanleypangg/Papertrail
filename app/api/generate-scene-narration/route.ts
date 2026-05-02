@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(narration, {
       headers: {
-        "x-pageworld-narration-cache": cacheState
+        "x-papertrail-narration-cache": cacheState
       }
     });
   } catch (error) {

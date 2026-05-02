@@ -342,9 +342,9 @@ describe("scene narration", () => {
     const cachedResponse = await POST(requestForScene());
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(firstResponse.headers.get("x-pageworld-narration-cache")).toBe("miss");
-    expect(pendingResponse.headers.get("x-pageworld-narration-cache")).toBe("pending");
-    expect(cachedResponse.headers.get("x-pageworld-narration-cache")).toBe("hit");
+    expect(firstResponse.headers.get("x-papertrail-narration-cache")).toBe("miss");
+    expect(pendingResponse.headers.get("x-papertrail-narration-cache")).toBe("pending");
+    expect(cachedResponse.headers.get("x-papertrail-narration-cache")).toBe("hit");
     await expect(cachedResponse.json()).resolves.toMatchObject({
       audioUrl: "data:audio/mpeg;base64,cached-audio",
       sceneId: "route-cache-scene"

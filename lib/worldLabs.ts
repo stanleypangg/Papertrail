@@ -122,12 +122,12 @@ export async function generateWorldLabsScene(
     method: "POST",
     headers: worldLabsHeaders(apiKey),
     body: JSON.stringify({
-      display_name: `pageworld-demo-${scene.id}`.slice(0, 64),
+      display_name: `papertrail-demo-${scene.id}`.slice(0, 64),
       model,
       permission: {
         public: false
       },
-      tags: ["pageworld", "demo", scene.id.slice(0, 32)],
+      tags: ["papertrail", "demo", scene.id.slice(0, 32)],
       world_prompt: {
         type: "text",
         text_prompt: prompt,
@@ -218,7 +218,7 @@ export async function cacheWorldLabsAssets(
   const extension = extensionFromUrl(splatUrl) ?? ".spz";
   const cachedAt = new Date().toISOString();
   const version = createSplatVersion(cachedAt, options.operationId);
-  const fileName = `pageworld-${scene.id}-${version}${extension}`;
+  const fileName = `papertrail-${scene.id}-${version}${extension}`;
   const filePath = path.join(DEMO_SPLAT_DIR, fileName);
   const publicPath = `/splats/demo/${fileName}`;
   const manifest = await readCachedSplatManifest();
@@ -392,7 +392,7 @@ function readSpzUrls(value: unknown): string[] {
 
 async function downloadWorldLabsCollider(sceneId: string, version: string, colliderUrl: string) {
   const collider = await downloadRemoteAsset(colliderUrl, "collider");
-  const fileName = `pageworld-${sceneId}-${version}-collider.glb`;
+  const fileName = `papertrail-${sceneId}-${version}-collider.glb`;
   const filePath = path.join(DEMO_SPLAT_DIR, fileName);
   const publicPath = `/splats/demo/${fileName}`;
 

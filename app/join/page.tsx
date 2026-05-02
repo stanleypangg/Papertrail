@@ -23,7 +23,7 @@ export default function JoinPage() {
   return (
     <main className="flex min-h-svh items-center justify-center bg-[#080a0f] px-5 py-8 text-stone-50">
       <section className="w-full max-w-xl border border-cyan-200/20 bg-cyan-200/[0.045] p-5 sm:p-7">
-        <p className="text-xs uppercase tracking-[0.22em] text-cyan-100/80">PageWorld headset join</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-cyan-100/80">Papertrail headset join</p>
         <h1 className="mt-3 text-3xl font-semibold">Enter the desktop code</h1>
         <p className="mt-3 text-sm leading-6 text-stone-300">
           Use the short code shown on the generated scene screen. The local dev server and ngrok tunnel must stay running.

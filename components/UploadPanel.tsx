@@ -9,17 +9,16 @@ type UploadPanelProps = {
   file: File | null;
   onFileChange: (file: File | null) => void;
   onGenerate: () => void;
-  onUseDemo: () => void;
   busy: boolean;
 };
 
-export function UploadPanel({ file, onFileChange, onGenerate, onUseDemo, busy }: UploadPanelProps) {
+export function UploadPanel({ file, onFileChange, onGenerate, busy }: UploadPanelProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   return (
     <section className="relative min-h-svh overflow-hidden bg-[#e8ded0] text-[#171715]">
       <Image
-        src="/landing/pageworld-hero.png"
+        src="/landing/papertrail-hero.png"
         alt=""
         fill
         priority
@@ -73,19 +72,11 @@ export function UploadPanel({ file, onFileChange, onGenerate, onUseDemo, busy }:
               <Sparkles size={18} aria-hidden="true" />
               Generate world
             </button>
-            <button
-              type="button"
-              onClick={onUseDemo}
-              disabled={busy}
-              className="inline-flex min-h-12 items-center justify-center px-3 text-sm font-semibold text-[#171715] underline decoration-[#171715]/35 underline-offset-4 transition hover:text-[#614131] hover:decoration-[#614131] focus:outline-none focus:ring-2 focus:ring-[#171715]/30 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Use demo data
-            </button>
           </div>
         </div>
 
         <h1 className="pointer-events-none absolute inset-x-0 bottom-[clamp(1.25rem,3vw,3rem)] select-none text-center text-[clamp(4.7rem,16vw,16rem)] font-black leading-none tracking-normal text-[#171715] sm:text-[clamp(7rem,16vw,16rem)]">
-          PageWorld
+          Papertrail
         </h1>
       </main>
     </section>

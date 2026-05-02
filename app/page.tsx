@@ -68,10 +68,10 @@ export default function Home() {
     }
 
     const formData = new FormData();
-    formData.append("mode", "pdf");
+    formData.append("mode", "demo");
     formData.append("file", file);
 
-    await generateWorldFromStream(formData, { openWorldOnComplete: false });
+    await generateWorldFromStream(formData, { openWorldOnComplete: true });
   }
 
   async function useDemoWorld() {
@@ -235,7 +235,6 @@ export default function Home() {
       file={file}
       onFileChange={setFile}
       onGenerate={generateFromPdf}
-      onUseDemo={useDemoWorld}
       busy={false}
     />
   );

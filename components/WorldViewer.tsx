@@ -505,7 +505,7 @@ export function WorldViewer({
     camera.add(narrationHud.mesh);
     xrNarrationHudRef.current = narrationHud;
 
-    const captionPanel = createXRTextPanel({ width: 1400, height: 320, worldWidth: 1.9, worldHeight: 0.43, rotationZOffset: Math.PI });
+    const captionPanel = createXRTextPanel({ width: 1400, height: 320, worldWidth: 1.9, worldHeight: 0.43 });
     captionPanel.mesh.position.set(0, -0.86, -1.55);
     captionPanel.mesh.visible = false;
     camera.add(captionPanel.mesh);
@@ -1439,14 +1439,14 @@ export function WorldViewer({
       <audio ref={audioRef} preload="metadata" />
 
       <div
-        className={`pageworld-zoom-transition pointer-events-none fixed inset-0 z-40 bg-black transition-opacity duration-300 ${
-          transitionCovered ? "pageworld-zoom-transition-active opacity-100" : "opacity-0"
+        className={`papertrail-zoom-transition pointer-events-none fixed inset-0 z-40 bg-black transition-opacity duration-300 ${
+          transitionCovered ? "papertrail-zoom-transition-active opacity-100" : "opacity-0"
         }`}
       >
-        <span className="pageworld-zoom-ring" />
-        <span className="pageworld-zoom-streak pageworld-zoom-streak-a" />
-        <span className="pageworld-zoom-streak pageworld-zoom-streak-b" />
-        <span className="pageworld-zoom-streak pageworld-zoom-streak-c" />
+        <span className="papertrail-zoom-ring" />
+        <span className="papertrail-zoom-streak papertrail-zoom-streak-a" />
+        <span className="papertrail-zoom-streak papertrail-zoom-streak-b" />
+        <span className="papertrail-zoom-streak papertrail-zoom-streak-c" />
       </div>
 
       <div className="pointer-events-none fixed left-4 top-4 z-20 w-[min(560px,calc(100vw-2rem))]">

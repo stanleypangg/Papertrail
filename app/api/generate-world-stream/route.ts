@@ -59,7 +59,7 @@ async function generateWorld(request: Request, emit: Emit) {
   if (mode === "demo") {
     scenes = demoScenes;
     source = "demo";
-    emitProgress(emit, "planning", "complete", 42, "Demo scenes ready", "Loaded the built-in PageWorld scene chain.", "Loaded demo scenes.");
+    emitProgress(emit, "planning", "complete", 42, "Demo scenes ready", "Loaded the built-in Papertrail scene chain.", "Loaded demo scenes.");
   } else {
     const parsed = await parseUploadedPdf(formData, emit);
     warnings.push(...parsed.warnings);
@@ -189,7 +189,7 @@ async function planScenes(
       "warning",
       42,
       "Using demo scene fallback",
-      "Backboard was unavailable, so PageWorld kept the demo playable.",
+      "Backboard was unavailable, so Papertrail kept the demo playable.",
       "Backboard failed; loaded demo scenes."
     );
 

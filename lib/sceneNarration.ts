@@ -43,19 +43,19 @@ const DEMO_NARRATION_DIR = path.join(process.cwd(), "public", "demo", "narration
 const DEMO_NARRATION_MANIFEST = path.join(DEMO_NARRATION_DIR, "manifest.json");
 
 type SceneNarrationGlobal = typeof globalThis & {
-  __pageWorldLongDescriptionCache?: Map<string, string>;
-  __pageWorldNarrationCache?: Map<string, SceneNarrationResult>;
-  __pageWorldInFlightNarrations?: Map<string, Promise<SceneNarrationResult>>;
+  __papertrailLongDescriptionCache?: Map<string, string>;
+  __papertrailNarrationCache?: Map<string, SceneNarrationResult>;
+  __papertrailInFlightNarrations?: Map<string, Promise<SceneNarrationResult>>;
 };
 
 const globalNarrationCache = globalThis as SceneNarrationGlobal;
-const longDescriptionCache = globalNarrationCache.__pageWorldLongDescriptionCache ?? new Map<string, string>();
-const narrationCache = globalNarrationCache.__pageWorldNarrationCache ?? new Map<string, SceneNarrationResult>();
-const inFlightNarrations = globalNarrationCache.__pageWorldInFlightNarrations ?? new Map<string, Promise<SceneNarrationResult>>();
+const longDescriptionCache = globalNarrationCache.__papertrailLongDescriptionCache ?? new Map<string, string>();
+const narrationCache = globalNarrationCache.__papertrailNarrationCache ?? new Map<string, SceneNarrationResult>();
+const inFlightNarrations = globalNarrationCache.__papertrailInFlightNarrations ?? new Map<string, Promise<SceneNarrationResult>>();
 
-globalNarrationCache.__pageWorldLongDescriptionCache = longDescriptionCache;
-globalNarrationCache.__pageWorldNarrationCache = narrationCache;
-globalNarrationCache.__pageWorldInFlightNarrations = inFlightNarrations;
+globalNarrationCache.__papertrailLongDescriptionCache = longDescriptionCache;
+globalNarrationCache.__papertrailNarrationCache = narrationCache;
+globalNarrationCache.__papertrailInFlightNarrations = inFlightNarrations;
 
 type SceneNarrationProviderConfig = {
   apiKey: string | null;

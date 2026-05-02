@@ -1,6 +1,6 @@
 import type { ScenePlan } from "./sceneSchema";
 
-export const demoMuralUrl = "/demo/pageworld-demo-panorama.png";
+export const demoMuralUrl = "/demo/papertrail-demo-panorama.png";
 
 export const demoSplatPreviewImages: Record<string, string> = {
   "diagon-alley-arrival": "/demo/splat-previews/diagon-alley-arrival.webp",
