@@ -2,6 +2,13 @@ import type { ScenePlan } from "./sceneSchema";
 
 export const demoMuralUrl = "/demo/pageworld-demo-panorama.png";
 
+export const demoSplatPreviewImages: Record<string, string> = {
+  "diagon-alley-arrival": "/demo/splat-previews/diagon-alley-arrival.webp",
+  "hogwarts-express-platform": "/demo/splat-previews/hogwarts-express-platform.webp",
+  "great-hall-sorting": "/demo/splat-previews/great-hall-sorting.webp",
+  "forbidden-forest": "/demo/splat-previews/forbidden-forest.webp"
+};
+
 export const demoScenes: ScenePlan[] = [
   {
     id: "diagon-alley-arrival",
@@ -58,7 +65,7 @@ export const demoScenes: ScenePlan[] = [
       narration: {
         provider: "elevenlabs",
         script:
-          "A wall has become a doorway. The alley ahead is cramped, bright, and alive with magic. Harry has not arrived at a shop; he has arrived at a new life.",
+          "The brick wall behind Harry has not simply opened; it has folded one life into another. A narrow cobblestone street stretches ahead, crowded with crooked shopfronts, stacked chimneys, hanging lanterns, and windows warm enough to make the whole alley feel awake. On the right, a wand shop window is packed with long boxes, but one box seems to catch the light as if it has been waiting for a particular hand. On the left, an owl cage sits beside a cluttered step, with pale feathers caught in the brass latch, making the impossible feel practical, ordinary, and close enough to touch. Behind you, the brick threshold is still visible, a reminder that the nonmagical city is only a few steps away, but already feels very far behind. This is the first real proof that magic is not a rumor or a trick. It has streets, tools, companions, shop windows, errands, and rules. Harry is not just looking at a hidden marketplace. He is standing at the entrance to a world that expects him to keep walking.",
         audioUrl: null
       },
       walkableWorld: {

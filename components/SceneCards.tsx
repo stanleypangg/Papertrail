@@ -10,7 +10,6 @@ type SceneImageMap = Record<string, string | null>;
 type SceneCardsProps = {
   scenes: ScenePlan[];
   images: SceneImageMap;
-  source: string;
   warnings: string[];
   shareUrl?: string | null;
   joinCode?: string | null;
@@ -18,7 +17,7 @@ type SceneCardsProps = {
   onReset: () => void;
 };
 
-export function SceneCards({ scenes, images, source, warnings, shareUrl, joinCode, onEnterWorld, onReset }: SceneCardsProps) {
+export function SceneCards({ scenes, images, warnings, shareUrl, joinCode, onEnterWorld, onReset }: SceneCardsProps) {
   const [copied, setCopied] = useState(false);
   const shareOrigin = getShareOrigin(shareUrl);
 
@@ -41,8 +40,7 @@ export function SceneCards({ scenes, images, source, warnings, shareUrl, joinCod
       <div className="mx-auto flex min-h-[calc(100svh-3rem)] w-full max-w-7xl flex-col">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-cyan-200/80">Generated with {source}</p>
-            <h1 className="mt-2 text-3xl font-semibold">Scene chain</h1>
+            <h1 className="text-3xl font-semibold">Scene chain</h1>
           </div>
           <div className="flex gap-3">
             <button type="button" onClick={onReset} className="border border-white/14 px-4 py-2 text-sm text-stone-200">

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { generateSceneNarration } from "@/lib/sceneNarration";
+import {
+  getCachedSceneNarration
+} from "@/lib/sceneNarration";
 import { scenePlanSchema } from "@/lib/sceneSchema";
 
 export async function POST(request: Request) {
@@ -19,7 +21,13 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json(await generateSceneNarration(parsed.data));
+    const { cacheState, ...narration } = await getCachedSceneNarration(parsed.data);
+
+    return NextResponse.json(narration, {
+      headers: {
+        "x-pageworld-narration-cache": cacheState
+      }
+    });
   } catch (error) {
     return NextResponse.json(
       {
