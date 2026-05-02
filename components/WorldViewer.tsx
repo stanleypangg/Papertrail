@@ -236,6 +236,51 @@ export function WorldViewer({
     queueTransitionTimeout(callback, TRANSITION_SWAP_DELAY);
   }, [clearTransitionTimeouts, pauseNarration, queueTransitionTimeout]);
 
+  const goToRelativeSplat = useCallback((direction: -1 | 1) => {
+    if (!scene || splatOptions.length === 0) {
+      return;
+    }
+
+    const currentSplatIndex = Math.max(0, splatOptions.findIndex((option) => option.path === splatUrl));
+    const nextSplatIndex = currentSplatIndex + direction;
+
+    if (nextSplatIndex >= 0 && nextSplatIndex < splatOptions.length) {
+      const nextPath = splatOptions[nextSplatIndex].path;
+      const sceneIdForSelection = scene.id;
+      beginSplatTransition(() => {
+        setSelectedSplats((current) => ({
+          ...current,
+          [sceneIdForSelection]: nextPath
+        }));
+      });
+      return;
+    }
+
+    const nextSceneIndex = safeSceneIndex + direction;
+    if (nextSceneIndex < 0 || nextSceneIndex >= scenes.length) {
+      return;
+    }
+
+    const nextScene = scenes[nextSceneIndex];
+    const nextSceneOptions = splatOptionsForScene(
+      nextScene,
+      sceneSplats[nextScene.id] ?? null,
+      sceneColliders[nextScene.id] ?? null,
+      splatManifest
+    );
+    if (nextSceneOptions.length === 0) {
+      return;
+    }
+
+    beginSplatTransition(() => {
+      setSelectedSceneIndex(nextSceneIndex);
+      setSelectedSplats((current) => ({
+        ...current,
+        [nextScene.id]: direction > 0 ? nextSceneOptions[0].path : nextSceneOptions[nextSceneOptions.length - 1].path
+      }));
+    });
+  }, [beginSplatTransition, safeSceneIndex, scene, sceneColliders, scenes, sceneSplats, splatManifest, splatOptions, splatUrl]);
+
   useEffect(() => () => {
     clearTransitionTimeouts();
   }, [clearTransitionTimeouts]);
@@ -444,6 +489,17 @@ export function WorldViewer({
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "ArrowRight" || event.code === "ArrowDown") {
+        event.preventDefault();
+        goToRelativeSplat(1);
+        return;
+      }
+      if (event.code === "ArrowLeft" || event.code === "ArrowUp") {
+        event.preventDefault();
+        goToRelativeSplat(-1);
+        return;
+      }
+
       keysRef.current.add(event.code);
     };
 
@@ -462,7 +518,7 @@ export function WorldViewer({
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, []);
+  }, [goToRelativeSplat]);
 
   useEffect(() => {
     let active = true;
