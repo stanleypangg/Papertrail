@@ -3,8 +3,16 @@ import type { ScenePlan } from "./sceneSchema";
 export type DemoSplatManifest = Record<string, {
   cachedAt: string;
   colliderPath?: string;
+  latestVersion?: string;
   path: string;
   sourceUrl: string;
+  versions?: Array<{
+    cachedAt: string;
+    colliderPath?: string;
+    path: string;
+    sourceUrl: string;
+    version: string;
+  }>;
 }>;
 
 export type SceneSplatMap = Record<string, string | null>;
