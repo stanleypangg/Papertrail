@@ -68,6 +68,11 @@ type CachedSceneNarration = SceneNarrationResult & {
   cacheState: "hit" | "miss" | "pending";
 };
 
+type CachedSceneNarrationOptions = {
+  fetchImpl?: FetchLike;
+  force?: boolean;
+};
+
 type DemoNarrationManifestEntry = {
   audioPath: string | null;
   cachedAt: string;
@@ -124,17 +129,22 @@ export function sceneNarrationCacheKey(scene: ScenePlan): string {
   });
 }
 
-export async function getCachedSceneNarration(scene: ScenePlan, fetchImpl: FetchLike = fetch): Promise<CachedSceneNarration> {
+export async function getCachedSceneNarration(
+  scene: ScenePlan,
+  options: FetchLike | CachedSceneNarrationOptions = {}
+): Promise<CachedSceneNarration> {
+  const fetchImpl = typeof options === "function" ? options : options.fetchImpl ?? fetch;
+  const force = typeof options === "function" ? false : options.force === true;
   const cacheKey = sceneNarrationCacheKey(scene);
   const cached = narrationCache.get(cacheKey);
 
-  if (cached) {
+  if (cached && !force) {
     return { ...cached, cacheState: "hit" };
   }
 
   const pending = inFlightNarrations.get(cacheKey);
 
-  if (pending) {
+  if (pending && !force) {
     return { ...await pending, cacheState: "pending" };
   }
 

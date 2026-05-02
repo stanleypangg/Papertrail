@@ -1,13 +1,26 @@
 {
   "diagon-alley-arrival": {
-    "cachedAt": "2026-05-02T21:00:30.942Z",
-    "colliderPath": "/splats/demo/pageworld-diagon-alley-arrival-v20260502210030-186e25bc-collider.glb",
-    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/981618d5-08be-40c8-b0f3-eba46c8ef7d4/a7da5f4c.glb",
-    "latestVersion": "v20260502210030-186e25bc",
-    "path": "/splats/demo/pageworld-diagon-alley-arrival-v20260502210030-186e25bc.spz",
-    "prompt": "Create a richly detailed walkable first-person 3D world for a magical British wizarding marketplace. The player should stand on a narrow cobblestone street with a clear navigable path running forward through the scene, tall crooked shopfronts leaning inward on both sides, stacked chimneys, warm golden window light, hanging lanterns, barrels, crates, owl cages, wand boxes in display windows, broom handles, potion bottles, cloth awnings, uneven brick walls, and a visible brick archway behind the player as the entry threshold. Use strong foreground, midground, and background depth so the scene works as a Gaussian splat walkthrough. Make the environment whimsical but physically grounded, with realistic stone, wood, brass, glass, paper, and feather materials. No readable text, no logos, no characters, no modern objects, no flat backdrop, no fisheye distortion.",
-    "sourceUrl": "https://cdn.marble.worldlabs.ai/981618d5-08be-40c8-b0f3-eba46c8ef7d4/12ec5152-e1e2-4f46-94f6-724049acdbf5_sand_500k.spz",
+    "cachedAt": "2026-05-02T22:04:52.194Z",
+    "colliderPath": "/splats/demo/pageworld-diagon-alley-arrival-v20260502220452-f7568e86-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/44f8e3f0-7e6d-4499-bcad-06f35ceb6b8b/90ef8aa6.glb",
+    "latestVersion": "v20260502220452-f7568e86",
+    "path": "/splats/demo/pageworld-diagon-alley-arrival-v20260502220452-f7568e86.spz",
+    "prompt": "Create a richly detailed walkable first-person 3D world for Diagon Alley, the hidden British wizarding marketplace Harry first discovers behind the Leaky Cauldron. The player should stand just beyond the brick-wall entrance on a narrow cobblestone street with a clear navigable path forward. Include tall crooked shopfronts leaning inward on both sides, stacked chimneys, warm golden window light, hanging lanterns, barrels, crates, owl cages, wand boxes in a narrow wand-shop display, cauldrons, apothecary bottles, broom handles, parchment bundles, cloth awnings, uneven brick walls, and a white marble wizarding bank facade visible far down the street as a distant landmark. Use strong foreground, midground, and background depth so the scene works as a Gaussian splat walkthrough, with realistic stone, wood, brass, glass, paper, feathers, wet cobblestones, and warm window reflections. Whimsical but physically grounded, crowded with magical objects but with enough open floor to walk. No readable text, no logos, no characters, no modern objects, no flat backdrop, no fisheye distortion.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/44f8e3f0-7e6d-4499-bcad-06f35ceb6b8b/c0012a8a-cf73-46db-9d2a-59a98d9b1f1b_sand_500k.spz",
     "versions": [
+      {
+        "bytes": 5695899,
+        "cachedAt": "2026-05-02T22:04:52.194Z",
+        "colliderBytes": 1625952,
+        "colliderPath": "/splats/demo/pageworld-diagon-alley-arrival-v20260502220452-f7568e86-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/44f8e3f0-7e6d-4499-bcad-06f35ceb6b8b/90ef8aa6.glb",
+        "operationId": "f7568e86-d363-49c4-8d06-85b4dca8262d",
+        "path": "/splats/demo/pageworld-diagon-alley-arrival-v20260502220452-f7568e86.spz",
+        "prompt": "Create a richly detailed walkable first-person 3D world for Diagon Alley, the hidden British wizarding marketplace Harry first discovers behind the Leaky Cauldron. The player should stand just beyond the brick-wall entrance on a narrow cobblestone street with a clear navigable path forward. Include tall crooked shopfronts leaning inward on both sides, stacked chimneys, warm golden window light, hanging lanterns, barrels, crates, owl cages, wand boxes in a narrow wand-shop display, cauldrons, apothecary bottles, broom handles, parchment bundles, cloth awnings, uneven brick walls, and a white marble wizarding bank facade visible far down the street as a distant landmark. Use strong foreground, midground, and background depth so the scene works as a Gaussian splat walkthrough, with realistic stone, wood, brass, glass, paper, feathers, wet cobblestones, and warm window reflections. Whimsical but physically grounded, crowded with magical objects but with enough open floor to walk. No readable text, no logos, no characters, no modern objects, no flat backdrop, no fisheye distortion.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/44f8e3f0-7e6d-4499-bcad-06f35ceb6b8b/c0012a8a-cf73-46db-9d2a-59a98d9b1f1b_sand_500k.spz",
+        "version": "v20260502220452-f7568e86",
+        "worldId": "44f8e3f0-7e6d-4499-bcad-06f35ceb6b8b"
+      },
       {
         "bytes": 5856439,
         "cachedAt": "2026-05-02T21:00:30.942Z",
@@ -22,7 +35,7 @@
         "worldId": "981618d5-08be-40c8-b0f3-eba46c8ef7d4"
       }
     ],
-    "worldId": "981618d5-08be-40c8-b0f3-eba46c8ef7d4"
+    "worldId": "44f8e3f0-7e6d-4499-bcad-06f35ceb6b8b"
   },
   "forbidden-forest": {
     "cachedAt": "2026-05-02T21:22:37.750Z",
@@ -98,5 +111,55 @@
       }
     ],
     "worldId": "3623571a-03c7-48ec-a07d-a3f1bc3cfd1f"
+  },
+  "black-lake-arrival": {
+    "cachedAt": "2026-05-02T22:12:34.953Z",
+    "colliderPath": "/splats/demo/pageworld-black-lake-arrival-v20260502221234-07ac6027-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/eeb6c050-2460-42f8-92c9-bc422811cfc5/cae30c72.glb",
+    "latestVersion": "v20260502221234-07ac6027",
+    "path": "/splats/demo/pageworld-black-lake-arrival-v20260502221234-07ac6027.spz",
+    "prompt": "Create an impressive walkable first-person magical castle arrival scene on the edge of the Black Lake at night, inspired by the first-years' boat approach to Hogwarts. The player should stand on a wet stone lakeshore or boathouse landing with a clear walkable path from foreground boats toward the castle. Include small old wooden boats pulled up to the shore, black reflective water, reeds, slick stones, rope posts, warm lanterns, drifting lake mist, moonlight, and a towering medieval castle with many lit windows rising on cliffs in the background. The castle should feel vast and vertical, with towers, turrets, bridges, steep roofs, and warm window grids reflected in the water. Use strong foreground/midground/background depth for a Gaussian splat walkthrough, realistic wet stone, dark water, wood, brass lanterns, and cold fog. No readable text, no characters, no modern objects, no logos, no flat backdrop, no fisheye distortion.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/eeb6c050-2460-42f8-92c9-bc422811cfc5/0d68536c-533e-49a5-88c4-91abe513141b_sand_500k.spz",
+    "versions": [
+      {
+        "bytes": 6170563,
+        "cachedAt": "2026-05-02T22:12:34.953Z",
+        "colliderBytes": 3069992,
+        "colliderPath": "/splats/demo/pageworld-black-lake-arrival-v20260502221234-07ac6027-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/eeb6c050-2460-42f8-92c9-bc422811cfc5/cae30c72.glb",
+        "operationId": "07ac6027-165e-4098-987e-74c038bf2fed",
+        "path": "/splats/demo/pageworld-black-lake-arrival-v20260502221234-07ac6027.spz",
+        "prompt": "Create an impressive walkable first-person magical castle arrival scene on the edge of the Black Lake at night, inspired by the first-years' boat approach to Hogwarts. The player should stand on a wet stone lakeshore or boathouse landing with a clear walkable path from foreground boats toward the castle. Include small old wooden boats pulled up to the shore, black reflective water, reeds, slick stones, rope posts, warm lanterns, drifting lake mist, moonlight, and a towering medieval castle with many lit windows rising on cliffs in the background. The castle should feel vast and vertical, with towers, turrets, bridges, steep roofs, and warm window grids reflected in the water. Use strong foreground/midground/background depth for a Gaussian splat walkthrough, realistic wet stone, dark water, wood, brass lanterns, and cold fog. No readable text, no characters, no modern objects, no logos, no flat backdrop, no fisheye distortion.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/eeb6c050-2460-42f8-92c9-bc422811cfc5/0d68536c-533e-49a5-88c4-91abe513141b_sand_500k.spz",
+        "version": "v20260502221234-07ac6027",
+        "worldId": "eeb6c050-2460-42f8-92c9-bc422811cfc5"
+      }
+    ],
+    "worldId": "eeb6c050-2460-42f8-92c9-bc422811cfc5"
+  },
+  "grand-staircase-portraits": {
+    "cachedAt": "2026-05-02T22:15:53.133Z",
+    "colliderPath": "/splats/demo/pageworld-grand-staircase-portraits-v20260502221553-9bbb305b-collider.glb",
+    "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/9353d011-a3b8-4529-9b68-3bf2e5f5fae3/8a52d8ba.glb",
+    "latestVersion": "v20260502221553-9bbb305b",
+    "path": "/splats/demo/pageworld-grand-staircase-portraits-v20260502221553-9bbb305b.spz",
+    "prompt": "Create a dramatic walkable first-person magical castle stairwell inspired by the Grand Staircase at Hogwarts. The player should stand on a broad stone landing with a clear safe walking area, surrounded by multiple intersecting stone staircases at different heights, carved railings, arched openings, portrait-covered walls, torch brackets, candle sconces, hanging shadows, and deep vertical space above and below. Make the stairs feel as if they could move: angled spans, offset landings, unusual connections, and impossible but physically grounded castle geometry. Include many framed portraits with no readable text and no recognizable faces, warm torchlight against cool gray stone, dust motes, worn steps, and strong parallax from foreground railing to distant upper landings. No characters, no readable signs, no modern objects, no logos, no flat backdrop, no fisheye distortion.",
+    "sourceUrl": "https://cdn.marble.worldlabs.ai/9353d011-a3b8-4529-9b68-3bf2e5f5fae3/e871eb46-9ea7-4cfd-83b1-06b5d6603bee_sand_500k.spz",
+    "versions": [
+      {
+        "bytes": 5812286,
+        "cachedAt": "2026-05-02T22:15:53.133Z",
+        "colliderBytes": 7292212,
+        "colliderPath": "/splats/demo/pageworld-grand-staircase-portraits-v20260502221553-9bbb305b-collider.glb",
+        "colliderSourceUrl": "https://cdn.marble.worldlabs.ai/9353d011-a3b8-4529-9b68-3bf2e5f5fae3/8a52d8ba.glb",
+        "operationId": "9bbb305b-0107-4043-8e71-6f6a94d5a853",
+        "path": "/splats/demo/pageworld-grand-staircase-portraits-v20260502221553-9bbb305b.spz",
+        "prompt": "Create a dramatic walkable first-person magical castle stairwell inspired by the Grand Staircase at Hogwarts. The player should stand on a broad stone landing with a clear safe walking area, surrounded by multiple intersecting stone staircases at different heights, carved railings, arched openings, portrait-covered walls, torch brackets, candle sconces, hanging shadows, and deep vertical space above and below. Make the stairs feel as if they could move: angled spans, offset landings, unusual connections, and impossible but physically grounded castle geometry. Include many framed portraits with no readable text and no recognizable faces, warm torchlight against cool gray stone, dust motes, worn steps, and strong parallax from foreground railing to distant upper landings. No characters, no readable signs, no modern objects, no logos, no flat backdrop, no fisheye distortion.",
+        "sourceUrl": "https://cdn.marble.worldlabs.ai/9353d011-a3b8-4529-9b68-3bf2e5f5fae3/e871eb46-9ea7-4cfd-83b1-06b5d6603bee_sand_500k.spz",
+        "version": "v20260502221553-9bbb305b",
+        "worldId": "9353d011-a3b8-4529-9b68-3bf2e5f5fae3"
+      }
+    ],
+    "worldId": "9353d011-a3b8-4529-9b68-3bf2e5f5fae3"
   }
 }

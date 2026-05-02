@@ -244,11 +244,12 @@ describe("scene narration", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("hydrates every demo scene from committed narration assets without provider fetches", async () => {
+  it("hydrates demo narration assets and falls back for the expected uncached demo screens", async () => {
     const fetchMock = vi.fn(() => {
       throw new Error("Demo narration must stay offline.");
     });
     vi.stubGlobal("fetch", fetchMock);
+    const expectedUncachedSceneIds = new Set(["black-lake-arrival", "grand-staircase-portraits"]);
 
     const result = await prepareSceneNarrations(demoScenes, {
       fetchImpl: fetchMock as unknown as typeof fetch,
@@ -256,11 +257,18 @@ describe("scene narration", () => {
     });
 
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(result.warnings).toEqual([]);
+    expect(result.warnings).toHaveLength(expectedUncachedSceneIds.size);
     expect(result.scenes).toHaveLength(demoScenes.length);
 
     for (const scene of result.scenes) {
-      expect(scene.integrations?.narration?.audioUrl).toMatch(/^\/demo\/narration\/.+\.mp3$/);
+      if (expectedUncachedSceneIds.has(scene.id)) {
+        expect(scene.integrations?.narration?.audioUrl).toBeNull();
+        expect(scene.integrations?.narration?.warning).toBe("Demo narration cache is missing; using captions without provider generation.");
+        expect(result.warnings.some((warning) => warning.includes(scene.title))).toBe(true);
+      } else {
+        expect(scene.integrations?.narration?.audioUrl).toMatch(/^\/demo\/narration\/.+\.mp3$/);
+      }
+
       expect(scene.integrations?.narration?.captions?.length).toBeGreaterThan(0);
       expect(scene.integrations?.narration?.script).toBeTruthy();
     }
