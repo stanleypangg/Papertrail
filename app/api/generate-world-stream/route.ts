@@ -1,5 +1,5 @@
-import { demoMuralUrl, demoScenes } from "@/lib/demoData";
-import { generateSceneMuralImage } from "@/lib/imageGeneration";
+import { demoScenes } from "@/lib/demoData";
+import { generateSceneMuralImage, IMAGE_GENERATION_UNAVAILABLE_WARNING } from "@/lib/imageGeneration";
 import { generateObjectModelsWithMeshy } from "@/lib/meshy";
 import { parsePdfBuffer } from "@/lib/pdf";
 import { sceneImageKey, visibleSceneImages, type SceneImageMap } from "@/lib/sceneImages";
@@ -70,11 +70,11 @@ async function generateWorld(request: Request, emit: Emit) {
     warnings.push(...planned.warnings);
   }
 
-  const useStaticDemoAssets = source === "demo";
-  const imageResult = useStaticDemoAssets ? generateDemoImages(scenes, emit) : await generateImages(scenes, emit);
+  const useStaticDemoObjects = source === "demo";
+  const imageResult = await generateImages(scenes, emit);
   warnings.push(...imageResult.warnings);
 
-  const objectModelResult = useStaticDemoAssets ? createPrimitiveDemoObjects(emit) : await generateObjectModels(scenes, emit);
+  const objectModelResult = useStaticDemoObjects ? createPrimitiveDemoObjects(emit) : await generateObjectModels(scenes, emit);
   warnings.push(...objectModelResult.warnings);
 
   emitProgress(emit, "saving", "active", 96, "Saving VR link", "Creating a shareable world for headset handoff.");
@@ -205,7 +205,7 @@ async function generateImages(scenes: ScenePlan[], emit: Emit): Promise<{ images
 
       try {
         const imageUrl = await generateSceneMuralImage(scene);
-        const warning = imageUrl ? undefined : "OPENAI_API_KEY missing or no image returned; skipped scene mural.";
+        const warning = imageUrl ? undefined : IMAGE_GENERATION_UNAVAILABLE_WARNING;
         images[imageKey] = imageUrl;
 
         if (warning) {
@@ -235,21 +235,6 @@ async function generateImages(scenes: ScenePlan[], emit: Emit): Promise<{ images
   );
 
   return { images, warnings };
-}
-
-function generateDemoImages(scenes: ScenePlan[], emit: Emit): { images: SceneImageMap; warnings: string[] } {
-  emitProgress(emit, "images", "active", 54, "Loading cached mural", "Using the built-in scene art for the demo world.");
-
-  const images = Object.fromEntries(scenes.map((scene) => {
-    const imageKey = sceneImageKey(scene);
-    emit({ type: "image-complete", sceneId: scene.id, imageKey, imageUrl: demoMuralUrl });
-
-    return [imageKey, demoMuralUrl];
-  })) as SceneImageMap;
-
-  emitProgress(emit, "images", "complete", 68, "Demo murals ready", "Cached mural art is ready.", "Loaded cached demo mural.");
-
-  return { images, warnings: [] };
 }
 
 function createPrimitiveDemoObjects(emit: Emit) {
