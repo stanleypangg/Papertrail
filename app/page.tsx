@@ -70,7 +70,7 @@ export default function Home() {
     }
 
     const formData = new FormData();
-    formData.append("mode", "demo");
+    formData.append("mode", "pdf");
     formData.append("file", file);
 
     await generateWorldFromStream(formData, { openWorldOnComplete: true });

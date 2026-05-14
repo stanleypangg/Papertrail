@@ -1,6 +1,6 @@
 "use client";
 
-import { FileUp, Sparkles } from "lucide-react";
+import { FileUp, Play, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
@@ -32,7 +32,7 @@ export function UploadPanel({ file, onFileChange, onGenerate, onUseDemo, busy }:
       <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/35 to-transparent" />
 
       <main className="relative z-10 min-h-svh px-5 py-6 sm:px-8 sm:py-8 lg:px-12">
-        <div className="absolute left-1/2 top-[47%] w-[min(46rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 text-center">
+        <div className="absolute left-1/2 top-[47%] w-[min(58rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 text-center">
           <p className="text-xs font-bold uppercase text-[#f4d7a4]">From page to place</p>
           <p className="mx-auto mt-4 max-w-[36rem] text-balance text-2xl font-semibold leading-[1.08] text-[#fff8ec] sm:text-4xl">
             Upload a PDF and turn it into a walkable 3D story.
@@ -44,40 +44,56 @@ export function UploadPanel({ file, onFileChange, onGenerate, onUseDemo, busy }:
             Join with headset code
           </Link>
 
-          <div className="mx-auto mt-8 flex w-full max-w-[43rem] flex-col gap-3 border-t border-[#fff8ec]/18 pt-4 sm:flex-row sm:items-center sm:justify-center">
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              disabled={busy}
-              className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 border border-[#fff8ec]/20 bg-[#fff8ec]/12 px-4 text-sm font-semibold text-[#fff8ec] transition hover:bg-[#fff8ec]/20 focus:outline-none focus:ring-2 focus:ring-[#f4d7a4]/45 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <FileUp size={18} aria-hidden="true" />
-              <span className="min-w-0 truncate">{file ? file.name : "Choose PDF"}</span>
-            </button>
-            <input
-              ref={inputRef}
-              type="file"
-              accept="application/pdf,.pdf"
-              className="hidden"
-              onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
-            />
-            <button
-              type="button"
-              onClick={onGenerate}
-              disabled={busy || !file}
-              className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#f4d7a4] px-6 text-sm font-semibold text-[#171715] transition hover:bg-[#ffe2ad] focus:outline-none focus:ring-2 focus:ring-[#f4d7a4]/45 disabled:cursor-not-allowed disabled:opacity-45"
-            >
-              <Sparkles size={18} aria-hidden="true" />
-              Generate world
-            </button>
-            <button
-              type="button"
-              onClick={onUseDemo}
-              disabled={busy}
-              className="inline-flex min-h-12 items-center justify-center px-3 text-sm font-semibold text-[#fff8ec] underline decoration-[#fff8ec]/35 underline-offset-4 transition hover:text-[#f4d7a4] hover:decoration-[#f4d7a4] focus:outline-none focus:ring-2 focus:ring-[#f4d7a4]/40 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Use demo data
-            </button>
+          <div className="mx-auto mt-8 grid w-full max-w-[52rem] gap-3 border-t border-[#fff8ec]/18 pt-4 text-left md:grid-cols-[0.85fr_1.15fr]">
+            <section className="border border-[#f4d7a4]/35 bg-[#f4d7a4]/12 p-4">
+              <p className="text-xs font-bold uppercase text-[#f4d7a4]">Demo path</p>
+              <p className="mt-2 min-h-12 text-sm leading-6 text-[#fff8ec]/82">
+                Jump straight into the prepared story world with cached scenes, narration, and characters.
+              </p>
+              <button
+                type="button"
+                onClick={onUseDemo}
+                disabled={busy}
+                className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 bg-[#f4d7a4] px-5 text-sm font-semibold text-[#171715] transition hover:bg-[#ffe2ad] focus:outline-none focus:ring-2 focus:ring-[#f4d7a4]/45 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Play size={18} aria-hidden="true" />
+                Start demo
+              </button>
+            </section>
+
+            <section className="border border-[#fff8ec]/20 bg-[#fff8ec]/10 p-4">
+              <p className="text-xs font-bold uppercase text-[#fff8ec]/78">Non-demo path</p>
+              <p className="mt-2 min-h-12 text-sm leading-6 text-[#fff8ec]/78">
+                Upload your own PDF, generate scenes from its text, then enter the resulting world.
+              </p>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={busy}
+                  className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 border border-[#fff8ec]/22 bg-[#0b0d11]/42 px-4 text-sm font-semibold text-[#fff8ec] transition hover:bg-[#fff8ec]/14 focus:outline-none focus:ring-2 focus:ring-[#f4d7a4]/45 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <FileUp size={18} aria-hidden="true" />
+                  <span className="min-w-0 truncate">{file ? file.name : "Choose PDF"}</span>
+                </button>
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  className="hidden"
+                  onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
+                />
+                <button
+                  type="button"
+                  onClick={onGenerate}
+                  disabled={busy || !file}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 border border-[#f4d7a4]/70 px-5 text-sm font-semibold text-[#f4d7a4] transition hover:bg-[#f4d7a4]/12 focus:outline-none focus:ring-2 focus:ring-[#f4d7a4]/45 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  <Sparkles size={18} aria-hidden="true" />
+                  Generate from PDF
+                </button>
+              </div>
+            </section>
           </div>
         </div>
 
