@@ -2,10 +2,10 @@
 
 ## Project Structure & Module Organization
 
-This is a Next.js App Router TypeScript MVP for PageWorld.
+This is a Next.js App Router TypeScript MVP for Papertrail.
 
 - `app/` contains pages, global styles, metadata, and API routes.
-- `app/api/parse-pdf`, `app/api/generate-scenes`, and `app/api/generate-scene-image` contain backend route handlers.
+- `app/api/parse-pdf`, `app/api/generate-scenes`, `app/api/generate-scene-image`, and `app/api/generate-scene-narration` contain backend route handlers.
 - `components/` contains UI components such as upload, scene cards, loading/error states, and panels.
 - `components/three/` contains React Three Fiber world code, first-person controls, layout archetypes, and primitive interactable objects.
 - `lib/` contains shared schema, demo data, PDF parsing, provider adapters, prompts, and scene mapping.
@@ -47,4 +47,4 @@ Pull requests should include a short summary, verification commands run, relevan
 
 ## Security & Configuration Tips
 
-Do not commit `.env` files or API keys. Expected variables are `BACKBOARD_API_KEY` and optional `OPENAI_API_KEY`. Provider failures must keep falling back to demo data so the hackathon demo remains playable.
+Do not commit `.env` files or API keys. Expected variables are `BACKBOARD_API_KEY`, optional `OPENAI_API_KEY`, and optional ElevenLabs narration variables `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, and `ELEVENLABS_MODEL_ID`. Provider failures must keep falling back to demo data so the hackathon demo remains playable.
