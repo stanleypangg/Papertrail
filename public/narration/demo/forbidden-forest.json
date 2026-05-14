@@ -1,0 +1,21 @@
+{
+  "modelId": "eleven_multilingual_v2",
+  "sceneId": "forbidden-forest",
+  "script": "The forest is where the bright rules of school stop working. Moonlight catches the roots, fog hides the path, and courage becomes the only clear direction.",
+  "voiceId": "JBFqnCBsd6RMkjVDRZzb",
+  "captions": [
+    {
+      "end": 3.03,
+      "start": 0.07,
+      "text": "The forest is where the bright rules of school stop working."
+    },
+    {
+      "end": 8.916,
+      "start": 3.471,
+      "text": "Moonlight catches the roots, fog hides the path, and courage becomes the only clear direction."
+    }
+  ],
+  "audioPath": "/narration/demo/forbidden-forest.mp3",
+  "audioUrl": "/narration/demo/forbidden-forest.mp3",
+  "cachedAt": "2026-05-02T22:56:17.403Z"
+}
