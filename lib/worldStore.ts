@@ -3,16 +3,16 @@ import { randomInt, randomUUID } from "crypto";
 import type { CreateWorldPayload, StoredWorld } from "./worldSchema";
 
 type WorldStoreGlobal = typeof globalThis & {
-  __pageWorldWorlds?: Map<string, StoredWorld>;
-  __pageWorldJoinCodes?: Map<string, string>;
+  __papertrailWorlds?: Map<string, StoredWorld>;
+  __papertrailJoinCodes?: Map<string, string>;
 };
 
 const globalStore = globalThis as WorldStoreGlobal;
-const worlds = globalStore.__pageWorldWorlds ?? new Map<string, StoredWorld>();
-const joinCodes = globalStore.__pageWorldJoinCodes ?? new Map<string, string>();
+const worlds = globalStore.__papertrailWorlds ?? new Map<string, StoredWorld>();
+const joinCodes = globalStore.__papertrailJoinCodes ?? new Map<string, string>();
 
-globalStore.__pageWorldWorlds = worlds;
-globalStore.__pageWorldJoinCodes = joinCodes;
+globalStore.__papertrailWorlds = worlds;
+globalStore.__papertrailJoinCodes = joinCodes;
 
 export function saveWorld(payload: CreateWorldPayload): StoredWorld {
   const id = randomUUID();

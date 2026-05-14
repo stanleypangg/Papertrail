@@ -1,0 +1,226 @@
+{
+  "diagon-alley-arrival": {
+    "audioPath": "/demo/narration/diagon-alley-arrival-elevenlabs.mp3",
+    "cachedAt": "2026-05-02T22:32:53.207Z",
+    "captions": [
+      {
+        "end": 5.364,
+        "start": 0,
+        "text": "The brick wall behind Harry has not simply opened; it has folded one life into another."
+      },
+      {
+        "end": 15.813,
+        "start": 5.364,
+        "text": "A narrow cobblestone street stretches ahead, crowded with crooked shopfronts, stacked chimneys, hanging lanterns, and windows warm enough to make the whole alley feel awake."
+      },
+      {
+        "end": 23.998,
+        "start": 15.813,
+        "text": "On the right, a wand shop window is packed with long boxes, but one box seems to catch the light as if it has been waiting for a particular hand."
+      },
+      {
+        "end": 34.273,
+        "start": 23.998,
+        "text": "On the left, an owl cage sits beside a cluttered step, with pale feathers caught in the brass latch, making the impossible feel practical, ordinary, and close enough to touch."
+      },
+      {
+        "end": 43.132,
+        "start": 34.273,
+        "text": "Behind you, the brick threshold is still visible, a reminder that the nonmagical city is only a few steps away, but already feels very far behind."
+      },
+      {
+        "end": 47.091,
+        "start": 43.132,
+        "text": "This is the first real proof that magic is not a rumor or a trick."
+      },
+      {
+        "end": 52.675,
+        "start": 47.091,
+        "text": "It has streets, tools, companions, shop windows, errands, and rules."
+      },
+      {
+        "end": 55.346,
+        "start": 52.675,
+        "text": "Harry is not just looking at a hidden marketplace."
+      },
+      {
+        "end": 59.444,
+        "start": 55.346,
+        "text": "He is standing at the entrance to a world that expects him to keep walking."
+      }
+    ],
+    "longDescriptionCacheKey": "committed-demo-cache-v1-diagon-alley-arrival-long-description",
+    "modelId": "eleven_multilingual_v2",
+    "narrationCacheKey": "committed-demo-cache-v1-diagon-alley-arrival-narration",
+    "script": "The brick wall behind Harry has not simply opened; it has folded one life into another. A narrow cobblestone street stretches ahead, crowded with crooked shopfronts, stacked chimneys, hanging lanterns, and windows warm enough to make the whole alley feel awake. On the right, a wand shop window is packed with long boxes, but one box seems to catch the light as if it has been waiting for a particular hand. On the left, an owl cage sits beside a cluttered step, with pale feathers caught in the brass latch, making the impossible feel practical, ordinary, and close enough to touch. Behind you, the brick threshold is still visible, a reminder that the nonmagical city is only a few steps away, but already feels very far behind. This is the first real proof that magic is not a rumor or a trick. It has streets, tools, companions, shop windows, errands, and rules. Harry is not just looking at a hidden marketplace. He is standing at the entrance to a world that expects him to keep walking.",
+    "voiceId": "JBFqnCBsd6RMkjVDRZzb"
+  },
+  "hogwarts-express-platform": {
+    "audioPath": "/demo/narration/hogwarts-express-platform-84226d4d4708.mp3",
+    "cachedAt": "2026-05-02T22:21:30.790Z",
+    "captions": [
+      {
+        "end": 6.49,
+        "start": 0.035,
+        "text": "Thick white steam rolls across the platform, blurring the red-brick pillars and softening the world left behind."
+      },
+      {
+        "end": 14.164,
+        "start": 7.001,
+        "text": "In the center of the walkway, a worn school trunk sits strapped tight, holding a new life inside its heavy wooden frame."
+      },
+      {
+        "end": 21.142,
+        "start": 14.861,
+        "text": "Overhead, a brass clock hangs high against the soot-stained rafters, its hands ticking closer to eleven."
+      },
+      {
+        "end": 27.365,
+        "start": 21.583,
+        "text": "The air is heavy with the smell of coal smoke and the muffled echoes of families saying goodbye in the fog."
+      },
+      {
+        "end": 33.901,
+        "start": 27.875,
+        "text": "To the right, the massive scarlet steam engine huffs impatiently, its iron flank shimmering with heat."
+      },
+      {
+        "end": 41.714,
+        "start": 34.342,
+        "text": "A carriage door stands wide open, casting a pool of golden light onto the floorboards, beckoning you away from the mundane."
+      },
+      {
+        "end": 44.884,
+        "start": 42.097,
+        "text": "This is the threshold where fear turns into wonder."
+      },
+      {
+        "end": 50.306,
+        "start": 45.325,
+        "text": "As the whistle gives a sharp, lonely cry, the reality of the wizarding world takes hold."
+      },
+      {
+        "end": 59.953,
+        "start": 50.817,
+        "text": "Grab your luggage and step inside; the journey toward Hogwarts has already begun, and the tracks ahead lead toward a destiny you have only just started to imagine."
+      }
+    ],
+    "longDescriptionCacheKey": "36278cc97c850bcf94a0dfe249629981f93eec21ae3f68caff9799845dc85f90",
+    "modelId": "eleven_multilingual_v2",
+    "narrationCacheKey": "{\"sceneId\":\"hogwarts-express-platform\",\"script\":\"Thick white steam rolls across the platform, blurring the red-brick pillars and softening the world left behind. In the center of the walkway, a worn school trunk sits strapped tight, holding a new life inside its heavy wooden frame. Overhead, a brass clock hangs high against the soot-stained rafters, its hands ticking closer to eleven. The air is heavy with the smell of coal smoke and the muffled echoes of families saying goodbye in the fog. To the right, the massive scarlet steam engine huffs impatiently, its iron flank shimmering with heat. A carriage door stands wide open, casting a pool of golden light onto the floorboards, beckoning you away from the mundane. This is the threshold where fear turns into wonder. As the whistle gives a sharp, lonely cry, the reality of the wizarding world takes hold. Grab your luggage and step inside; the journey toward Hogwarts has already begun, and the tracks ahead lead toward a destiny you have only just started to imagine.\",\"voiceId\":\"JBFqnCBsd6RMkjVDRZzb\",\"modelId\":\"eleven_multilingual_v2\",\"apiKeyPresent\":true}",
+    "script": "Thick white steam rolls across the platform, blurring the red-brick pillars and softening the world left behind. In the center of the walkway, a worn school trunk sits strapped tight, holding a new life inside its heavy wooden frame. Overhead, a brass clock hangs high against the soot-stained rafters, its hands ticking closer to eleven. The air is heavy with the smell of coal smoke and the muffled echoes of families saying goodbye in the fog. To the right, the massive scarlet steam engine huffs impatiently, its iron flank shimmering with heat. A carriage door stands wide open, casting a pool of golden light onto the floorboards, beckoning you away from the mundane. This is the threshold where fear turns into wonder. As the whistle gives a sharp, lonely cry, the reality of the wizarding world takes hold. Grab your luggage and step inside; the journey toward Hogwarts has already begun, and the tracks ahead lead toward a destiny you have only just started to imagine.",
+    "voiceId": "JBFqnCBsd6RMkjVDRZzb"
+  },
+  "great-hall-sorting": {
+    "audioPath": "/demo/narration/great-hall-sorting-ac99f960efaf.mp3",
+    "cachedAt": "2026-05-02T22:21:51.501Z",
+    "captions": [
+      {
+        "end": 10.542,
+        "start": 0.07,
+        "text": "The Great Hall stretches upward into an impossible height, where the heavy stone walls give way to a ceiling that isn't a ceiling at all, but a direct window into the midnight sky."
+      },
+      {
+        "end": 20.004,
+        "start": 10.983,
+        "text": "Thousands of slender white candles drift in the stagnant air, their flames flickering like grounded stars above four long, wooden dining tables."
+      },
+      {
+        "end": 24.01,
+        "start": 20.515,
+        "text": "The air is thick with the scent of old parchment and beeswax."
+      },
+      {
+        "end": 31.312,
+        "start": 24.451,
+        "text": "At the very front of the hall, isolated under a single cone of golden light, sits a humble, three-legged wooden stool."
+      },
+      {
+        "end": 36.606,
+        "start": 31.637,
+        "text": "It is a small object for such a monumental moment, yet every eye is fixed upon it."
+      },
+      {
+        "end": 45.558,
+        "start": 37.047,
+        "text": "Tall banners draped from the rafters pulse with the colors of the four houses, their silk surfaces catching the glow of the enchanted overhead lights."
+      },
+      {
+        "end": 51.909,
+        "start": 46.162,
+        "text": "Here, the first years stand huddled together, shadows stretching long across the floorboards."
+      },
+      {
+        "end": 54.718,
+        "start": 52.512,
+        "text": "This is the threshold of their new lives."
+      },
+      {
+        "end": 59.85,
+        "start": 55.043,
+        "text": "The castle breathes around them, ancient and watchful, as the sorting begins."
+      }
+    ],
+    "longDescriptionCacheKey": "004825cd7cbd048386c1c7e39da24d5ba0a2122e0b44e7d9c93863fb6d1e2449",
+    "modelId": "eleven_multilingual_v2",
+    "narrationCacheKey": "{\"sceneId\":\"great-hall-sorting\",\"script\":\"The Great Hall stretches upward into an impossible height, where the heavy stone walls give way to a ceiling that isn't a ceiling at all, but a direct window into the midnight sky. Thousands of slender white candles drift in the stagnant air, their flames flickering like grounded stars above four long, wooden dining tables. The air is thick with the scent of old parchment and beeswax. At the very front of the hall, isolated under a single cone of golden light, sits a humble, three-legged wooden stool. It is a small object for such a monumental moment, yet every eye is fixed upon it. Tall banners draped from the rafters pulse with the colors of the four houses, their silk surfaces catching the glow of the enchanted overhead lights. Here, the first years stand huddled together, shadows stretching long across the floorboards. This is the threshold of their new lives. The castle breathes around them, ancient and watchful, as the sorting begins.\",\"voiceId\":\"JBFqnCBsd6RMkjVDRZzb\",\"modelId\":\"eleven_multilingual_v2\",\"apiKeyPresent\":true}",
+    "script": "The Great Hall stretches upward into an impossible height, where the heavy stone walls give way to a ceiling that isn't a ceiling at all, but a direct window into the midnight sky. Thousands of slender white candles drift in the stagnant air, their flames flickering like grounded stars above four long, wooden dining tables. The air is thick with the scent of old parchment and beeswax. At the very front of the hall, isolated under a single cone of golden light, sits a humble, three-legged wooden stool. It is a small object for such a monumental moment, yet every eye is fixed upon it. Tall banners draped from the rafters pulse with the colors of the four houses, their silk surfaces catching the glow of the enchanted overhead lights. Here, the first years stand huddled together, shadows stretching long across the floorboards. This is the threshold of their new lives. The castle breathes around them, ancient and watchful, as the sorting begins.",
+    "voiceId": "JBFqnCBsd6RMkjVDRZzb"
+  },
+  "forbidden-forest": {
+    "audioPath": "/demo/narration/forbidden-forest-5432a61733c9.mp3",
+    "cachedAt": "2026-05-02T22:22:14.883Z",
+    "captions": [
+      {
+        "end": 4.04,
+        "start": 0.07,
+        "text": "The castle's golden warmth fades as you step into the Forbidden Forest."
+      },
+      {
+        "end": 9.195,
+        "start": 4.481,
+        "text": "Here, the air turns sharp and heavy with the scent of damp earth and ancient pine."
+      },
+      {
+        "end": 17.914,
+        "start": 9.636,
+        "text": "Silver moonlight slices through the thick canopy, illuminating a gnarled, twisted root that snakes across the narrow path like a silent warning."
+      },
+      {
+        "end": 25.182,
+        "start": 18.518,
+        "text": "This is no longer the safe ground of the school; it is a place where the shadows have teeth and the silence is a living thing."
+      },
+      {
+        "end": 31.973,
+        "start": 25.994,
+        "text": "A low fog clings to your ankles, obscuring the broken branches scattered across the forest floor."
+      },
+      {
+        "end": 40.994,
+        "start": 32.577,
+        "text": "Amidst the gloom, a Silver Memory hovers, a radiant orb of protective magic that pulses rhythmically, pushing back the encroaching dark."
+      },
+      {
+        "end": 48.308,
+        "start": 41.691,
+        "text": "Beside the trail, a half-buried lantern flickers, its amber glow a fragile tether to the world you left behind."
+      },
+      {
+        "end": 52.976,
+        "start": 48.912,
+        "text": "Every snap of a twig echoes against the black, unyielding trunks."
+      },
+      {
+        "end": 59.024,
+        "start": 53.487,
+        "text": "Courage is not the absence of fear here, but the will to walk forward when the trees begin to watch."
+      }
+    ],
+    "longDescriptionCacheKey": "d27c39f651a346120e6193d7cf2cfc9696d32fb8d1ccf3635b5d32b49e8ebdcb",
+    "modelId": "eleven_multilingual_v2",
+    "narrationCacheKey": "{\"sceneId\":\"forbidden-forest\",\"script\":\"The castle’s golden warmth fades as you step into the Forbidden Forest. Here, the air turns sharp and heavy with the scent of damp earth and ancient pine. Silver moonlight slices through the thick canopy, illuminating a gnarled, twisted root that snakes across the narrow path like a silent warning. This is no longer the safe ground of the school; it is a place where the shadows have teeth and the silence is a living thing. A low fog clings to your ankles, obscuring the broken branches scattered across the forest floor. Amidst the gloom, a Silver Memory hovers, a radiant orb of protective magic that pulses rhythmically, pushing back the encroaching dark. Beside the trail, a half-buried lantern flickers, its amber glow a fragile tether to the world you left behind. Every snap of a twig echoes against the black, unyielding trunks. Courage is not the absence of fear here, but the will to walk forward when the trees begin to watch.\",\"voiceId\":\"JBFqnCBsd6RMkjVDRZzb\",\"modelId\":\"eleven_multilingual_v2\",\"apiKeyPresent\":true}",
+    "script": "The castle’s golden warmth fades as you step into the Forbidden Forest. Here, the air turns sharp and heavy with the scent of damp earth and ancient pine. Silver moonlight slices through the thick canopy, illuminating a gnarled, twisted root that snakes across the narrow path like a silent warning. This is no longer the safe ground of the school; it is a place where the shadows have teeth and the silence is a living thing. A low fog clings to your ankles, obscuring the broken branches scattered across the forest floor. Amidst the gloom, a Silver Memory hovers, a radiant orb of protective magic that pulses rhythmically, pushing back the encroaching dark. Beside the trail, a half-buried lantern flickers, its amber glow a fragile tether to the world you left behind. Every snap of a twig echoes against the black, unyielding trunks. Courage is not the absence of fear here, but the will to walk forward when the trees begin to watch.",
+    "voiceId": "JBFqnCBsd6RMkjVDRZzb"
+  }
+}

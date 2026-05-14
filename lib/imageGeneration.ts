@@ -1,12 +1,9 @@
-import OpenAI from "openai";
-
 import type { ScenePlan } from "./sceneSchema";
 
-const imageModels = ["gpt-image-2", "gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini", "dall-e-3", "dall-e-2"] as const;
-type SupportedImageModel = (typeof imageModels)[number];
-
-const DEFAULT_IMAGE_MODEL: SupportedImageModel = "gpt-image-1.5";
-const unavailableImageModels = new Set<SupportedImageModel>();
+const OPENROUTER_IMAGE_URL = "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_IMAGE_MODEL = "openai/gpt-5.4-image-2";
+const IMAGE_ASPECT_RATIO = "16:9";
+const IMAGE_SIZE = "2K";
 
 type ImageGenerationMode = "preview" | "scene-mural";
 
@@ -14,117 +11,77 @@ type GenerateSceneConceptImageOptions = {
   mode?: ImageGenerationMode;
 };
 
+type OpenRouterImageResponse = {
+  choices?: Array<{
+    message?: {
+      images?: Array<{
+        image_url?: {
+          url?: string;
+        };
+        imageUrl?: {
+          url?: string;
+        };
+      }>;
+    };
+  }>;
+};
+
+export const IMAGE_GENERATION_UNAVAILABLE_WARNING = "OPENROUTER_API_KEY missing or no image returned; skipped scene mural.";
+
 export async function generateSceneConceptImage(
   prompt: string,
   options: GenerateSceneConceptImageOptions = {}
 ): Promise<string | null> {
-  if (!process.env.OPENAI_API_KEY) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+
+  if (!apiKey) {
     return null;
   }
 
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const mode = options.mode ?? "preview";
   const imagePrompt = buildImagePrompt(prompt, mode);
-  let lastError: unknown;
 
-  for (const model of getImageModelCandidates()) {
-    try {
-      const response = await client.images.generate({
-        model,
-        prompt: imagePrompt,
-        n: 1,
-        size: getImageSize(model),
-        ...(model.startsWith("gpt-image") ? { output_format: "png" as const, quality: "auto" as const } : {})
-      });
+  const response = await fetch(OPENROUTER_IMAGE_URL, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: OPENROUTER_IMAGE_MODEL,
+      messages: [
+        {
+          role: "user",
+          content: imagePrompt
+        }
+      ],
+      modalities: ["image", "text"],
+      image_config: {
+        aspect_ratio: IMAGE_ASPECT_RATIO,
+        image_size: IMAGE_SIZE
+      },
+      stream: false
+    })
+  });
 
-      const image = response.data?.[0];
-
-      if (!image) {
-        return null;
-      }
-
-      if ("b64_json" in image && image.b64_json) {
-        return `data:image/png;base64,${image.b64_json}`;
-      }
-
-      if ("url" in image && image.url) {
-        return await remoteImageUrlToDataUrl(image.url);
-      }
-
-      return null;
-    } catch (error) {
-      lastError = error;
-
-      if (!isModelFallbackError(error, model)) {
-        throw error;
-      }
-
-      unavailableImageModels.add(model);
-    }
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`OpenRouter image generation ${response.status}: ${detail.slice(0, 300)}`);
   }
 
-  throw lastError instanceof Error ? lastError : new Error("Image generation failed.");
+  const body = await response.json() as OpenRouterImageResponse;
+  return extractOpenRouterImageUrl(body);
 }
 
 export async function generateSceneMuralImage(scene: ScenePlan): Promise<string | null> {
   return generateSceneConceptImage(buildSceneMuralSourcePrompt(scene), { mode: "scene-mural" });
 }
 
-async function remoteImageUrlToDataUrl(url: string): Promise<string | null> {
-  const response = await fetch(url);
+function extractOpenRouterImageUrl(body: OpenRouterImageResponse): string | null {
+  const images = body.choices?.[0]?.message?.images;
+  const imageUrl = images?.[0]?.image_url?.url ?? images?.[0]?.imageUrl?.url;
 
-  if (!response.ok) {
-    return null;
-  }
-
-  const contentType = response.headers.get("content-type")?.split(";")[0] ?? "image/png";
-  if (!contentType.startsWith("image/")) {
-    return null;
-  }
-
-  const bytes = Buffer.from(await response.arrayBuffer());
-  return `data:${contentType};base64,${bytes.toString("base64")}`;
-}
-
-function getImageModelCandidates(): SupportedImageModel[] {
-  const configured = process.env.OPENAI_IMAGE_MODEL?.trim();
-  const preferred = configured && imageModels.includes(configured as SupportedImageModel)
-    ? configured as SupportedImageModel
-    : DEFAULT_IMAGE_MODEL;
-
-  return [preferred, ...imageModels.filter((model) => model !== preferred)].filter((model) => !unavailableImageModels.has(model));
-}
-
-function isModelFallbackError(error: unknown, model: SupportedImageModel): boolean {
-  const status = getErrorStatus(error);
-  const message = error instanceof Error ? error.message.toLowerCase() : "";
-
-  if (status === 403) {
-    return message.includes(model.toLowerCase())
-      || message.includes("organization must be verified")
-      || message.includes("does not have access");
-  }
-
-  if (status === 404) {
-    return message.includes("model") || message.includes(model.toLowerCase());
-  }
-
-  if (status === 400) {
-    return message.includes("unsupported")
-      || message.includes("invalid model")
-      || message.includes("unknown model")
-      || message.includes("does not exist");
-  }
-
-  return false;
-}
-
-function getErrorStatus(error: unknown): number | undefined {
-  if (typeof error === "object" && error !== null && "status" in error && typeof error.status === "number") {
-    return error.status;
-  }
-
-  return undefined;
+  return imageUrl?.startsWith("data:image/") ? imageUrl : null;
 }
 
 function buildImagePrompt(prompt: string, mode: ImageGenerationMode): string {
@@ -162,16 +119,4 @@ function buildSceneMuralSourcePrompt(scene: ScenePlan): string {
     `Narrative context: ${scene.summary} ${scene.narration}`,
     `Visible grounded props: ${objects}.`
   ].join(" ");
-}
-
-function getImageSize(model: SupportedImageModel) {
-  if (model.startsWith("gpt-image")) {
-    return "1536x1024" as const;
-  }
-
-  if (model === "dall-e-3") {
-    return "1792x1024" as const;
-  }
-
-  return "1024x1024" as const;
 }

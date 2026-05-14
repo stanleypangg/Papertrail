@@ -1,13 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { DemoCharacterSelect } from "@/components/DemoCharacterSelect";
 import { ErrorState } from "@/components/ErrorState";
 import { LoadingState, type LoadingProgressState } from "@/components/LoadingState";
 import { SceneCards } from "@/components/SceneCards";
 import { UploadPanel } from "@/components/UploadPanel";
-import { demoMuralUrl, demoScenes } from "@/lib/demoData";
+import { demoScenes, demoSplatPreviewImages } from "@/lib/demoData";
+import { DEMO_SPLAT_MANIFEST_URL, emptySceneColliderMap, emptySceneSplatMap, sceneCollidersFromManifest, sceneSplatsFromManifest, type DemoSplatManifest, type SceneColliderMap, type SceneSplatMap } from "@/lib/demoSplats";
 import type { SceneObjectModelMap } from "@/lib/objectModels";
 import { sceneImageKey, visibleSceneImages, type SceneImageMap } from "@/lib/sceneImages";
 import type { ScenePlan } from "@/lib/sceneSchema";
@@ -18,7 +20,7 @@ const WorldViewer = dynamic(() => import("@/components/WorldViewer").then((modul
   loading: () => <LoadingState label="Opening the world" />
 });
 
-type AppMode = "upload" | "loading" | "cards" | "world" | "error";
+type AppMode = "upload" | "loading" | "cards" | "character-select" | "world" | "error";
 
 let nextProgressLogId = 0;
 
@@ -27,15 +29,40 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [scenes, setScenes] = useState<ScenePlan[]>(demoScenes);
   const [sceneImages, setSceneImages] = useState<SceneImageMap>(() => demoSceneImages());
+  const [sceneColliders, setSceneColliders] = useState<SceneColliderMap>(() => emptySceneColliderMap(demoScenes));
+  const [sceneSplats, setSceneSplats] = useState<SceneSplatMap>(() => emptySceneSplatMap(demoScenes));
   const [objectModels, setObjectModels] = useState<SceneObjectModelMap>({});
-  const [source, setSource] = useState("demo");
   const [warnings, setWarnings] = useState<string[]>([]);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgressState>(() => createInitialProgress());
   const [error, setError] = useState("");
+  const [playerCharacterId, setPlayerCharacterId] = useState<string | null>(null);
   const generationAbortRef = useRef<AbortController | null>(null);
   const visibleImages = visibleSceneImages(scenes, sceneImages);
+
+  useEffect(() => {
+    let canceled = false;
+
+    fetch(DEMO_SPLAT_MANIFEST_URL, { cache: "no-store" })
+      .then((response) => response.ok ? response.json() as Promise<DemoSplatManifest> : null)
+      .then((manifest) => {
+        if (!canceled) {
+          setSceneColliders(sceneCollidersFromManifest(scenes, manifest));
+          setSceneSplats(sceneSplatsFromManifest(scenes, manifest));
+        }
+      })
+      .catch(() => {
+        if (!canceled) {
+          setSceneColliders(emptySceneColliderMap(scenes));
+          setSceneSplats(emptySceneSplatMap(scenes));
+        }
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [scenes]);
 
   async function generateFromPdf() {
     if (!file) {
@@ -46,7 +73,7 @@ export default function Home() {
     formData.append("mode", "pdf");
     formData.append("file", file);
 
-    await generateWorldFromStream(formData, { openWorldOnComplete: false });
+    await generateWorldFromStream(formData, { openWorldOnComplete: true });
   }
 
   async function useDemoWorld() {
@@ -67,6 +94,8 @@ export default function Home() {
 
     setMode("loading");
     setSceneImages({});
+    setSceneColliders(emptySceneColliderMap(scenes));
+    setSceneSplats(emptySceneSplatMap(scenes));
     setObjectModels({});
     setShareUrl(null);
     setWarnings([]);
@@ -142,12 +171,13 @@ export default function Home() {
       const shareResult = createShareUrl(event.sharePath);
       setScenes(event.scenes);
       setSceneImages(event.sceneImages);
+      setSceneColliders(sceneCollidersFromManifest(event.scenes, null));
+      setSceneSplats(sceneSplatsFromManifest(event.scenes, null));
       setObjectModels(event.objectModels);
-      setSource(event.source);
       setWarnings([...event.warnings, ...(shareResult.warning ? [shareResult.warning] : [])]);
       setShareUrl(shareResult.url);
       setJoinCode(event.joinCode);
-      setMode(openWorldOnComplete ? "world" : "cards");
+      setMode(openWorldOnComplete ? "character-select" : "cards");
     }
   }
 
@@ -156,6 +186,8 @@ export default function Home() {
     generationAbortRef.current = null;
     setFile(null);
     setSceneImages(demoSceneImages());
+    setSceneColliders(emptySceneColliderMap(demoScenes));
+    setSceneSplats(emptySceneSplatMap(demoScenes));
     setObjectModels({});
     setShareUrl(null);
     setJoinCode(null);
@@ -174,7 +206,6 @@ export default function Home() {
       <SceneCards
         scenes={scenes}
         images={visibleImages}
-        source={source}
         warnings={warnings}
         shareUrl={shareUrl}
         joinCode={joinCode}
@@ -184,12 +215,27 @@ export default function Home() {
     );
   }
 
+  if (mode === "character-select") {
+    return (
+      <DemoCharacterSelect
+        onConfirm={(npcId) => {
+          setPlayerCharacterId(npcId);
+          setMode("world");
+        }}
+        onBack={() => setMode("cards")}
+      />
+    );
+  }
+
   if (mode === "world") {
     return (
       <WorldViewer
         scenes={scenes}
         sceneImages={visibleImages}
+        sceneColliders={sceneColliders}
+        sceneSplats={sceneSplats}
         objectModels={objectModels}
+        playerCharacterId={playerCharacterId}
         onExit={() => setMode("cards")}
       />
     );
@@ -278,7 +324,9 @@ function parseStreamFrame(frame: string): WorldGenerationEvent | null {
 }
 
 function demoSceneImages(): SceneImageMap {
-  return Object.fromEntries(demoScenes.map((scene) => [sceneImageKey(scene), demoMuralUrl])) as SceneImageMap;
+  return Object.fromEntries(
+    demoScenes.map((scene) => [sceneImageKey(scene), demoSplatPreviewImages[scene.id] ?? null])
+  ) as SceneImageMap;
 }
 
 function createShareUrl(sharePath: string | null | undefined): { url: string | null; warning?: string } {
@@ -288,12 +336,40 @@ function createShareUrl(sharePath: string | null | undefined): { url: string | n
 
   const configuredOrigin = process.env.NEXT_PUBLIC_SHARE_ORIGIN?.trim();
   const fallbackOrigin = window.location.origin;
-  const originResult = configuredOrigin ? parseShareOrigin(configuredOrigin) : { origin: fallbackOrigin };
+  const originResult = configuredOrigin
+    ? chooseShareOrigin(configuredOrigin, fallbackOrigin)
+    : { origin: fallbackOrigin };
 
   return {
     url: new URL(sharePath, originResult.origin).toString(),
     warning: originResult.warning
   };
+}
+
+function chooseShareOrigin(configuredOrigin: string, currentOrigin: string): { origin: string; warning?: string } {
+  const configuredResult = parseShareOrigin(configuredOrigin);
+
+  if (configuredResult.warning) {
+    return configuredResult;
+  }
+
+  const currentResult = parseShareOrigin(currentOrigin);
+
+  if (currentResult.warning) {
+    return configuredResult;
+  }
+
+  const configuredUrl = new URL(configuredResult.origin);
+  const currentUrl = new URL(currentResult.origin);
+
+  if (!isLocalHost(currentUrl.hostname) && currentUrl.origin !== configuredUrl.origin) {
+    return {
+      origin: currentUrl.origin,
+      warning: `NEXT_PUBLIC_SHARE_ORIGIN points at ${configuredUrl.origin}, but this session is running at ${currentUrl.origin}; using the current proxy origin for the VR headset link.`
+    };
+  }
+
+  return configuredResult;
 }
 
 function parseShareOrigin(value: string): { origin: string; warning?: string } {
@@ -307,6 +383,10 @@ function parseShareOrigin(value: string): { origin: string; warning?: string } {
   }
 }
 
+function isLocalHost(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname.endsWith(".localhost");
+}
+
 function createInitialProgress(): LoadingProgressState {
   return {
     percent: 0,
@@ -317,6 +397,7 @@ function createInitialProgress(): LoadingProgressState {
     steps: [
       { stage: "parsing", label: "Read PDF", status: "pending" },
       { stage: "planning", label: "Plan scenes", status: "pending" },
+      { stage: "narration", label: "Narrate scenes", status: "pending" },
       { stage: "images", label: "Paint worlds", status: "pending" },
       { stage: "models", label: "Sculpt objects", status: "pending" },
       { stage: "saving", label: "Save link", status: "pending" }
@@ -369,6 +450,7 @@ function stageCompletionFloor(stage: LoadingProgressState["steps"][number]["stag
   const floors: Record<LoadingProgressState["steps"][number]["stage"], number> = {
     parsing: 22,
     planning: 42,
+    narration: 54,
     images: 68,
     models: 94,
     saving: 98

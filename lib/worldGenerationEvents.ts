@@ -6,6 +6,7 @@ export type GenerationStage =
   | "initializing"
   | "parsing"
   | "planning"
+  | "narration"
   | "images"
   | "models"
   | "saving"

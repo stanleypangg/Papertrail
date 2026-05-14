@@ -1,9 +1,10 @@
-import { demoMuralUrl, demoScenes } from "@/lib/demoData";
-import { generateSceneMuralImage } from "@/lib/imageGeneration";
+import { demoScenes, demoSplatPreviewImages } from "@/lib/demoData";
+import { generateSceneMuralImage, IMAGE_GENERATION_UNAVAILABLE_WARNING } from "@/lib/imageGeneration";
 import { generateObjectModelsWithMeshy } from "@/lib/meshy";
 import { parsePdfBuffer } from "@/lib/pdf";
 import { sceneImageKey, visibleSceneImages, type SceneImageMap } from "@/lib/sceneImages";
 import type { ScenePlan } from "@/lib/sceneSchema";
+import { prepareSceneNarrations } from "@/lib/sceneNarration";
 import { generateScenesWithBackboardStreamed } from "@/lib/backboard";
 import { saveWorld } from "@/lib/worldStore";
 import type { GenerationStage, GenerationStatus, WorldGenerationEvent } from "@/lib/worldGenerationEvents";
@@ -58,8 +59,7 @@ async function generateWorld(request: Request, emit: Emit) {
   if (mode === "demo") {
     scenes = demoScenes;
     source = "demo";
-    warnings.push("Using hardcoded fallback scenes so the demo remains playable.");
-    emitProgress(emit, "planning", "complete", 42, "Demo scenes ready", "Loaded the built-in PageWorld scene chain.", "Loaded demo scenes.");
+    emitProgress(emit, "planning", "complete", 42, "Demo scenes ready", "Loaded the built-in Papertrail scene chain.", "Loaded demo scenes.");
   } else {
     const parsed = await parseUploadedPdf(formData, emit);
     warnings.push(...parsed.warnings);
@@ -71,6 +71,10 @@ async function generateWorld(request: Request, emit: Emit) {
   }
 
   const useStaticDemoAssets = source === "demo";
+  const narrationResult = await generateNarrations(scenes, emit, { useDemoCache: useStaticDemoAssets });
+  scenes = narrationResult.scenes;
+  warnings.push(...narrationResult.warnings);
+
   const imageResult = useStaticDemoAssets ? generateDemoImages(scenes, emit) : await generateImages(scenes, emit);
   warnings.push(...imageResult.warnings);
 
@@ -185,12 +189,66 @@ async function planScenes(
       "warning",
       42,
       "Using demo scene fallback",
-      "Backboard was unavailable, so PageWorld kept the demo playable.",
+      "Backboard was unavailable, so Papertrail kept the demo playable.",
       "Backboard failed; loaded demo scenes."
     );
 
     return { scenes: demoScenes, source: "demo", warnings };
   }
+}
+
+async function generateNarrations(
+  scenes: ScenePlan[],
+  emit: Emit,
+  options: { useDemoCache: boolean }
+): Promise<{ scenes: ScenePlan[]; warnings: string[] }> {
+  const targetCount = options.useDemoCache ? scenes.length : Math.max(0, scenes.length - 1);
+
+  if (targetCount === 0) {
+    emitProgress(emit, "narration", "complete", 54, "Narration ready", "Only the opening scene is present.", "Skipped narration prewarm.");
+    return { scenes, warnings: [] };
+  }
+
+  emitProgress(
+    emit,
+    "narration",
+    "active",
+    44,
+    options.useDemoCache ? "Loading demo narration" : "Narrating later scenes",
+    options.useDemoCache
+      ? `Loading ${targetCount} cached demo narration asset${targetCount === 1 ? "" : "s"}.`
+      : `Preparing ${targetCount} longer scene narration${targetCount === 1 ? "" : "s"}.`
+  );
+
+  const result = await prepareSceneNarrations(scenes, {
+    mode: options.useDemoCache ? "demo-readonly" : "runtime",
+    onProgress: (progress) => {
+      const percent = 44 + Math.round((progress.completed / Math.max(1, progress.total)) * 10);
+      emitProgress(
+        emit,
+        "narration",
+        progress.completed === progress.total && progress.warning ? "warning" : progress.completed === progress.total ? "complete" : "active",
+        percent,
+        options.useDemoCache ? "Loading demo narration" : "Narrating later scenes",
+        `${progress.completed} of ${progress.total} narrations ready.`,
+        `Prepared narration for ${progress.scene.title}.`
+      );
+    }
+  });
+
+  emitProgress(
+    emit,
+    "narration",
+    result.warnings.length > 0 ? "warning" : "complete",
+    54,
+    "Narration ready",
+    result.warnings.length > 0
+      ? "Some scenes will use generated captions without audio."
+      : options.useDemoCache ? "Cached demo narration is ready." : "Later scenes are ready to play quickly.",
+    "Finished narration prewarm."
+  );
+
+  return result;
 }
 
 async function generateImages(scenes: ScenePlan[], emit: Emit): Promise<{ images: SceneImageMap; warnings: string[] }> {
@@ -206,7 +264,7 @@ async function generateImages(scenes: ScenePlan[], emit: Emit): Promise<{ images
 
       try {
         const imageUrl = await generateSceneMuralImage(scene);
-        const warning = imageUrl ? undefined : "OPENAI_API_KEY missing or no image returned; skipped scene mural.";
+        const warning = imageUrl ? undefined : IMAGE_GENERATION_UNAVAILABLE_WARNING;
         images[imageKey] = imageUrl;
 
         if (warning) {
@@ -239,16 +297,17 @@ async function generateImages(scenes: ScenePlan[], emit: Emit): Promise<{ images
 }
 
 function generateDemoImages(scenes: ScenePlan[], emit: Emit): { images: SceneImageMap; warnings: string[] } {
-  emitProgress(emit, "images", "active", 54, "Loading cached mural", "Using the built-in scene art for the demo world.");
+  emitProgress(emit, "images", "active", 54, "Loading cached previews", "Using the built-in splat previews for the demo world.");
 
   const images = Object.fromEntries(scenes.map((scene) => {
     const imageKey = sceneImageKey(scene);
-    emit({ type: "image-complete", sceneId: scene.id, imageKey, imageUrl: demoMuralUrl });
+    const imageUrl = demoSplatPreviewImages[scene.id] ?? null;
+    emit({ type: "image-complete", sceneId: scene.id, imageKey, imageUrl });
 
-    return [imageKey, demoMuralUrl];
+    return [imageKey, imageUrl];
   })) as SceneImageMap;
 
-  emitProgress(emit, "images", "complete", 68, "Demo murals ready", "Cached mural art is ready.", "Loaded cached demo mural.");
+  emitProgress(emit, "images", "complete", 68, "Demo previews ready", "Cached splat previews are ready.", "Loaded cached demo previews.");
 
   return { images, warnings: [] };
 }

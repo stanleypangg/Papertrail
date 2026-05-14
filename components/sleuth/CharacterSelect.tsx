@@ -6,52 +6,19 @@ import { useState } from "react";
 
 import type { ScriptCharacter } from "@/lib/sleuth/scripts.types";
 
-const POSTER_LAYOUT: Record<
-  string,
-  {
-    left: string;
-    top: string;
-    width: string;
-    rotation: string;
-    zIndex: number;
-  }
-> = {
-  "mei-lin": {
-    left: "4%",
-    top: "19%",
-    width: "25%",
-    rotation: "-5deg",
-    zIndex: 4,
-  },
-  "madam-wu": {
-    left: "28%",
-    top: "4%",
-    width: "28%",
-    rotation: "1.5deg",
-    zIndex: 6,
-  },
-  "inspector-ren": {
-    left: "56%",
-    top: "16%",
-    width: "24%",
-    rotation: "5deg",
-    zIndex: 4,
-  },
-  "li-shao": {
-    left: "17%",
-    top: "48%",
-    width: "23%",
-    rotation: "4deg",
-    zIndex: 3,
-  },
-  "jin-qiao": {
-    left: "48%",
-    top: "50%",
-    width: "21%",
-    rotation: "-3deg",
-    zIndex: 5,
-  },
-};
+const DEFAULT_LAYOUTS: Array<{
+  left: string;
+  top: string;
+  width: string;
+  rotation: string;
+  zIndex: number;
+}> = [
+  { left: "4%", top: "19%", width: "25%", rotation: "-5deg", zIndex: 4 },
+  { left: "28%", top: "4%", width: "28%", rotation: "1.5deg", zIndex: 6 },
+  { left: "56%", top: "16%", width: "24%", rotation: "5deg", zIndex: 4 },
+  { left: "17%", top: "48%", width: "23%", rotation: "4deg", zIndex: 3 },
+  { left: "48%", top: "50%", width: "21%", rotation: "-3deg", zIndex: 5 },
+];
 
 interface CharacterSelectProps {
   scriptId: string;
@@ -75,12 +42,12 @@ export function CharacterSelect({
     <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#120d0c]/70 px-5 py-6 shadow-[0_30px_120px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:px-8 sm:py-8">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(168,51,26,0.18),transparent_32%),radial-gradient(circle_at_84%_18%,rgba(212,176,106,0.12),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.04),transparent_45%)]" />
       <div className="pointer-events-none absolute inset-x-6 top-4 text-[4.5rem] leading-none tracking-[0.8em] text-white/[0.035] sm:text-[7rem]">
-        秘 密 茶 夜
+        S U S P E C T S
       </div>
 
       <div className="relative mx-auto hidden h-[52rem] max-w-[78rem] lg:block">
-        {cast.map((character) => {
-          const layout = POSTER_LAYOUT[character.id];
+        {cast.map((character, index) => {
+          const layout = DEFAULT_LAYOUTS[index % DEFAULT_LAYOUTS.length];
           const isDimmed = hoveredId !== null && hoveredId !== character.id;
           const isHovered = hoveredId === character.id;
 
@@ -177,7 +144,7 @@ export function CharacterSelect({
               <div
                 className={`${uiFontClassName} mt-4 text-[0.72rem] uppercase tracking-[0.32em] text-[#b68e6b]`}
               >
-                Enter the parlour
+                Choose this character
               </div>
             </div>
           </button>
