@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PageWorld",
-  description: "Upload a PDF and walk through its story as a chain of interactive 3D scenes.",
+  title: "Papertrail",
+  description:
+    "Turn a PDF into a source-grounded 3D story world with interactive scenes, objects, narration, and WebXR exploration.",
   icons: {
     icon: "/icon.svg"
   }

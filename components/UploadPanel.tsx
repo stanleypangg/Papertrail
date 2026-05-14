@@ -17,42 +17,39 @@ export function UploadPanel({ file, onFileChange, onGenerate, onUseDemo, busy }:
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   return (
-    <section className="relative min-h-svh overflow-hidden bg-[#e8ded0] text-[#171715]">
+    <section className="relative min-h-svh overflow-hidden bg-[#0b0d11] text-[#f8f3ea]">
       <Image
-        src="/landing/pageworld-hero.png"
+        src="/landing/papertrail-saas-hero.png"
         alt=""
         fill
         priority
         sizes="100vw"
-        className="absolute inset-0 h-full w-full object-cover object-[58%_50%]"
+        className="absolute inset-0 h-full w-full object-cover object-[50%_45%]"
       />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(244,237,224,0.78)_0%,rgba(244,237,224,0.52)_40%,rgba(244,237,224,0.2)_68%,rgba(30,28,24,0.1)_100%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_46%,rgba(255,248,237,0.68),rgba(255,248,237,0.26)_34%,transparent_58%)]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52svh] bg-gradient-to-t from-[#d77954]/62 via-[#d77954]/18 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#fff8ee]/55 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(7,9,13,0.16)_0%,rgba(7,9,13,0.34)_42%,rgba(7,9,13,0.82)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(255,244,219,0.22),rgba(255,244,219,0.08)_27%,transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(7,9,13,0.58)_0%,rgba(7,9,13,0.2)_42%,rgba(7,9,13,0.5)_100%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/35 to-transparent" />
 
       <main className="relative z-10 min-h-svh px-5 py-6 sm:px-8 sm:py-8 lg:px-12">
         <div className="absolute left-1/2 top-[47%] w-[min(46rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 text-center">
-          <p className="text-xs font-bold uppercase text-[#4d4038]">From page to place</p>
-          <p className="mx-auto mt-4 max-w-[36rem] text-balance text-2xl font-semibold leading-[1.08] text-[#171715] sm:text-4xl">
+          <p className="text-xs font-bold uppercase text-[#f4d7a4]">From page to place</p>
+          <p className="mx-auto mt-4 max-w-[36rem] text-balance text-2xl font-semibold leading-[1.08] text-[#fff8ec] sm:text-4xl">
             Upload a PDF and turn it into a walkable 3D story.
-          </p>
-          <p className="mx-auto mt-4 max-w-[31rem] text-sm leading-6 text-[#4f463f] sm:text-base">
-            3 scenes max. Source-grounded objects. WASD and mouse look.
           </p>
           <Link
             href="/join"
-            className="mt-5 inline-flex min-h-10 items-center justify-center border border-[#171715]/18 bg-[#fff8ed]/42 px-4 text-sm font-semibold text-[#171715] transition hover:bg-[#fff8ed]/75 focus:outline-none focus:ring-2 focus:ring-[#171715]/35"
+            className="mt-5 inline-flex min-h-10 items-center justify-center border border-[#fff8ec]/20 bg-[#fff8ec]/10 px-4 text-sm font-semibold text-[#fff8ec] transition hover:bg-[#fff8ec]/18 focus:outline-none focus:ring-2 focus:ring-[#f4d7a4]/45"
           >
             Join with headset code
           </Link>
 
-          <div className="mx-auto mt-8 flex w-full max-w-[43rem] flex-col gap-3 border-t border-[#171715]/18 pt-4 sm:flex-row sm:items-center sm:justify-center">
+          <div className="mx-auto mt-8 flex w-full max-w-[43rem] flex-col gap-3 border-t border-[#fff8ec]/18 pt-4 sm:flex-row sm:items-center sm:justify-center">
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={busy}
-              className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 border border-[#171715]/18 bg-[#fff8ed]/48 px-4 text-sm font-semibold text-[#171715] transition hover:bg-[#fff8ed]/75 focus:outline-none focus:ring-2 focus:ring-[#171715]/35 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 border border-[#fff8ec]/20 bg-[#fff8ec]/12 px-4 text-sm font-semibold text-[#fff8ec] transition hover:bg-[#fff8ec]/20 focus:outline-none focus:ring-2 focus:ring-[#f4d7a4]/45 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <FileUp size={18} aria-hidden="true" />
               <span className="min-w-0 truncate">{file ? file.name : "Choose PDF"}</span>
@@ -68,7 +65,7 @@ export function UploadPanel({ file, onFileChange, onGenerate, onUseDemo, busy }:
               type="button"
               onClick={onGenerate}
               disabled={busy || !file}
-              className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#171715] px-6 text-sm font-semibold text-[#f8f3ea] transition hover:bg-[#2c2924] focus:outline-none focus:ring-2 focus:ring-[#171715]/35 disabled:cursor-not-allowed disabled:opacity-45"
+              className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#f4d7a4] px-6 text-sm font-semibold text-[#171715] transition hover:bg-[#ffe2ad] focus:outline-none focus:ring-2 focus:ring-[#f4d7a4]/45 disabled:cursor-not-allowed disabled:opacity-45"
             >
               <Sparkles size={18} aria-hidden="true" />
               Generate world
@@ -77,15 +74,15 @@ export function UploadPanel({ file, onFileChange, onGenerate, onUseDemo, busy }:
               type="button"
               onClick={onUseDemo}
               disabled={busy}
-              className="inline-flex min-h-12 items-center justify-center px-3 text-sm font-semibold text-[#171715] underline decoration-[#171715]/35 underline-offset-4 transition hover:text-[#614131] hover:decoration-[#614131] focus:outline-none focus:ring-2 focus:ring-[#171715]/30 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-12 items-center justify-center px-3 text-sm font-semibold text-[#fff8ec] underline decoration-[#fff8ec]/35 underline-offset-4 transition hover:text-[#f4d7a4] hover:decoration-[#f4d7a4] focus:outline-none focus:ring-2 focus:ring-[#f4d7a4]/40 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Use demo data
             </button>
           </div>
         </div>
 
-        <h1 className="pointer-events-none absolute inset-x-0 bottom-[clamp(1.25rem,3vw,3rem)] select-none text-center text-[clamp(4.7rem,16vw,16rem)] font-black leading-none tracking-normal text-[#171715] sm:text-[clamp(7rem,16vw,16rem)]">
-          PageWorld
+        <h1 className="pointer-events-none absolute inset-x-0 bottom-[clamp(1.25rem,3vw,3rem)] select-none text-center text-[clamp(4.7rem,16vw,16rem)] font-black leading-none tracking-normal text-[#fff4dd] drop-shadow-[0_12px_34px_rgba(0,0,0,0.6)] sm:text-[clamp(7rem,16vw,16rem)]">
+          Papertrail
         </h1>
       </main>
     </section>

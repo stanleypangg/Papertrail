@@ -50,7 +50,7 @@ export function LoadingState({ label, progress }: LoadingStateProps) {
 
         <div className="grid gap-8 lg:grid-cols-[1fr_18rem] lg:items-start">
           <div>
-            <p className="text-sm uppercase tracking-[0.22em] text-cyan-200/80">PageWorld</p>
+            <p className="text-sm uppercase tracking-[0.22em] text-cyan-200/80">Papertrail</p>
             <h1 className="mt-3 text-3xl font-semibold">{label}</h1>
             <p className="mt-4 text-sm leading-6 text-stone-400">
               {progress?.detail ?? "The PDF is being turned into compact scenes, objects, quotes, and transitions."}

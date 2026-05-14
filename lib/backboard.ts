@@ -3,9 +3,12 @@ import { buildScenePlannerPrompt, extractJsonObject, SCENE_PLANNER_SYSTEM_PROMPT
 import { normalizeScenePlans, type ScenePlan } from "./sceneSchema";
 
 const BACKBOARD_URL = "https://app.backboard.io/api/threads/messages";
+const BACKBOARD_MODELS_URL = "https://app.backboard.io/api/models";
 const MODEL_CANDIDATES = ["gemini-3-flash-preview", "gemini-2.5-flash"];
 const RETRYABLE_STATUS_CODES = new Set([502, 503, 504]);
 const MAX_RETRY_ATTEMPTS = 3;
+const MODEL_VALIDATION_TIMEOUT_MS = 4_000;
+const THINKING_EFFORTS = new Set(["low", "medium", "high", "max"]);
 
 type BackboardModelCandidate = {
   modelName?: string;
@@ -14,6 +17,7 @@ type BackboardModelCandidate = {
 
 type BackboardStreamOptions = {
   onChunk?: (chunk: string) => void;
+  onDiagnostics?: (diagnostics: BackboardDiagnostics) => void;
 };
 
 type BackboardRequestOptions = {
@@ -21,6 +25,24 @@ type BackboardRequestOptions = {
   text: string;
   stream: boolean;
   candidate: BackboardModelCandidate;
+};
+
+type BackboardDiagnostics = {
+  provider?: string;
+  modelName?: string;
+  status?: string;
+  threadId?: string;
+  messageId?: string;
+  runId?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  contextUsage?: number;
+};
+
+type BackboardModelRecord = {
+  name?: unknown;
+  provider?: unknown;
+  supports_json_output?: unknown;
 };
 
 class BackboardRequestError extends Error {
@@ -42,7 +64,7 @@ export async function generateScenesWithBackboard(text: string): Promise<ScenePl
 
   let lastError: unknown;
 
-  for (const candidate of backboardModelCandidates(true)) {
+  for (const candidate of await backboardModelCandidates(apiKey, true)) {
     try {
       const response = await postBackboardMessageWithRetry({
         apiKey,
@@ -51,6 +73,7 @@ export async function generateScenesWithBackboard(text: string): Promise<ScenePl
         candidate
       });
       const body = await response.json();
+      logBackboardDiagnostics(extractBackboardDiagnostics(body));
       const scenes = scenesFromBackboardBody(body);
 
       if (scenes.length > 0) {
@@ -78,7 +101,7 @@ export async function generateScenesWithBackboardStreamed(
 
   let lastError: unknown;
 
-  for (const candidate of backboardModelCandidates(false)) {
+  for (const candidate of await backboardModelCandidates(apiKey, false)) {
     try {
       const response = await postBackboardMessageWithRetry({
         apiKey,
@@ -90,7 +113,13 @@ export async function generateScenesWithBackboardStreamed(
         throw new Error("Backboard returned an empty stream.");
       }
 
-      const streamedText = await readBackboardStream(response.body, options);
+      const streamedText = await readBackboardStream(response.body, {
+        ...options,
+        onDiagnostics: (diagnostics) => {
+          logBackboardDiagnostics(diagnostics);
+          options.onDiagnostics?.(diagnostics);
+        }
+      });
       const json = extractJsonObject(streamedText);
       const scenes = normalizeScenePlans(json);
 
@@ -104,7 +133,7 @@ export async function generateScenesWithBackboardStreamed(
     }
   }
 
-  for (const candidate of backboardModelCandidates(true)) {
+  for (const candidate of await backboardModelCandidates(apiKey, true)) {
     try {
       const response = await postBackboardMessageWithRetry({
         apiKey,
@@ -113,6 +142,7 @@ export async function generateScenesWithBackboardStreamed(
         candidate
       });
       const body = await response.json();
+      logBackboardDiagnostics(extractBackboardDiagnostics(body));
       const scenes = scenesFromBackboardBody(body);
 
       if (scenes.length > 0) {
@@ -137,13 +167,113 @@ function scenesFromBackboardBody(body: unknown): ScenePlan[] {
   return normalizeScenePlans(json);
 }
 
-function backboardModelCandidates(includeDefault: boolean): BackboardModelCandidate[] {
-  const candidates = MODEL_CANDIDATES.map((modelName) => ({
+async function backboardModelCandidates(apiKey: string, includeDefault: boolean): Promise<BackboardModelCandidate[]> {
+  const candidates = configuredBackboardModelCandidates();
+  const validatedCandidates = shouldValidateBackboardModels()
+    ? await filterJsonOutputModelCandidates(apiKey, candidates)
+    : candidates;
+
+  return includeDefault ? [...validatedCandidates, {}] : validatedCandidates;
+}
+
+function configuredBackboardModelCandidates(): BackboardModelCandidate[] {
+  const configured = process.env.BACKBOARD_MODEL_CANDIDATES?.trim();
+  const parsed = configured ? parseBackboardModelCandidates(configured) : [];
+
+  if (parsed.length > 0) {
+    return parsed;
+  }
+
+  return MODEL_CANDIDATES.map((modelName) => ({
     modelName,
     provider: "google"
   }));
+}
 
-  return includeDefault ? [...candidates, {}] : candidates;
+function parseBackboardModelCandidates(value: string): BackboardModelCandidate[] {
+  const candidates: BackboardModelCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const entry of value.split(",")) {
+    const trimmed = entry.trim();
+
+    if (!trimmed) {
+      continue;
+    }
+
+    const [providerPart, ...modelParts] = trimmed.split(":");
+    const provider = modelParts.length > 0 ? providerPart.trim() : "";
+    const modelName = (modelParts.length > 0 ? modelParts.join(":") : providerPart).trim();
+
+    if (!modelName) {
+      continue;
+    }
+
+    const key = `${provider}:${modelName}`;
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    candidates.push({
+      ...(provider ? { provider } : {}),
+      modelName
+    });
+  }
+
+  return candidates;
+}
+
+function shouldValidateBackboardModels(): boolean {
+  return process.env.BACKBOARD_VALIDATE_MODELS?.trim().toLowerCase() === "true";
+}
+
+async function filterJsonOutputModelCandidates(
+  apiKey: string,
+  candidates: BackboardModelCandidate[]
+): Promise<BackboardModelCandidate[]> {
+  try {
+    const models = await listJsonOutputBackboardModels(apiKey);
+    const supported = new Set(
+      models.map((model) => `${String(model.provider ?? "")}:${String(model.name ?? "")}`)
+    );
+    const filtered = candidates.filter((candidate) => supported.has(`${candidate.provider ?? ""}:${candidate.modelName ?? ""}`));
+
+    return filtered.length > 0 ? filtered : candidates;
+  } catch (error) {
+    console.warn(`[Backboard] Model validation skipped: ${errorMessage(error)}`);
+    return candidates;
+  }
+}
+
+async function listJsonOutputBackboardModels(apiKey: string): Promise<BackboardModelRecord[]> {
+  const url = new URL(BACKBOARD_MODELS_URL);
+  url.searchParams.set("model_type", "llm");
+  url.searchParams.set("supports_json_output", "true");
+  url.searchParams.set("limit", "500");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), MODEL_VALIDATION_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "X-API-Key": apiKey
+      },
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backboard models ${response.status}`);
+    }
+
+    const body = await response.json();
+    const models = Array.isArray(valueAt(body, "models")) ? valueAt(body, "models") : [];
+
+    return (models as BackboardModelRecord[]).filter((model) => model.supports_json_output !== false);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function postBackboardMessageWithRetry(options: BackboardRequestOptions): Promise<Response> {
@@ -185,6 +315,7 @@ async function postBackboardMessage({ apiKey, text, stream, candidate }: Backboa
         web_search: "off",
         send_to_llm: "true",
         json_output: true,
+        ...backboardThinkingPayload(),
         stream
       })
     });
@@ -199,6 +330,18 @@ async function postBackboardMessage({ apiKey, text, stream, candidate }: Backboa
   }
 
   return response;
+}
+
+function backboardThinkingPayload(): { thinking: { effort: string } } | Record<string, never> {
+  const effort = process.env.BACKBOARD_THINKING_EFFORT?.trim().toLowerCase();
+
+  if (!effort || !THINKING_EFFORTS.has(effort)) {
+    return {};
+  }
+
+  return {
+    thinking: { effort }
+  };
 }
 
 function isRetryableBackboardError(error: unknown): boolean {
@@ -267,6 +410,7 @@ async function readBackboardStream(body: ReadableStream<Uint8Array>, options: Ba
       }
 
       payloads.push(parsed.data);
+      emitStreamDiagnostics(parsed.event, parsed.data, options);
 
       const chunk = extractBackboardStreamChunk(parsed.event, parsed.data);
       if (chunk) {
@@ -285,6 +429,7 @@ async function readBackboardStream(body: ReadableStream<Uint8Array>, options: Ba
     const parsed = parseSseFrame(buffer);
     if (parsed) {
       payloads.push(parsed.data);
+      emitStreamDiagnostics(parsed.event, parsed.data, options);
       const chunk = extractBackboardStreamChunk(parsed.event, parsed.data);
       if (chunk) {
         content += chunk;
@@ -336,7 +481,7 @@ function parseSseFrame(frame: string): { event: string; data: unknown } | null {
 }
 
 function extractBackboardStreamChunk(event: string, data: unknown): string {
-  if (event !== "content_streaming") {
+  if (backboardStreamEventType(event, data) !== "content_streaming") {
     return "";
   }
 
@@ -359,6 +504,101 @@ function extractBackboardStreamChunk(event: string, data: unknown): string {
   return "";
 }
 
+function emitStreamDiagnostics(event: string, data: unknown, options: BackboardStreamOptions) {
+  if (backboardStreamEventType(event, data) !== "run_ended") {
+    return;
+  }
+
+  const diagnostics = extractBackboardDiagnostics(data);
+
+  if (Object.keys(diagnostics).length > 0) {
+    options.onDiagnostics?.(diagnostics);
+  }
+}
+
+function backboardStreamEventType(event: string, data: unknown): string {
+  const payloadType = valueAt(data, "type");
+  return typeof payloadType === "string" && payloadType ? payloadType : event;
+}
+
+function extractBackboardDiagnostics(body: unknown): BackboardDiagnostics {
+  const diagnostics: BackboardDiagnostics = {};
+  const provider = firstString(body, ["model_provider", "provider", "llm_provider", "data.model_provider"]);
+  const modelName = firstString(body, ["model_name", "model", "data.model_name"]);
+  const status = firstString(body, ["status", "data.status"]);
+  const threadId = firstString(body, ["thread_id", "threadId", "data.thread_id"]);
+  const messageId = firstString(body, ["message_id", "messageId", "data.message_id"]);
+  const runId = firstString(body, ["run_id", "runId", "data.run_id"]);
+  const inputTokens = firstNumber(body, ["input_tokens", "usage.input_tokens", "data.input_tokens"]);
+  const outputTokens = firstNumber(body, ["output_tokens", "usage.output_tokens", "data.output_tokens"]);
+  const contextUsage = firstNumber(body, ["context_usage", "usage.context_usage", "data.context_usage"]);
+
+  if (provider) diagnostics.provider = provider;
+  if (modelName) diagnostics.modelName = modelName;
+  if (status) diagnostics.status = status;
+  if (threadId) diagnostics.threadId = threadId;
+  if (messageId) diagnostics.messageId = messageId;
+  if (runId) diagnostics.runId = runId;
+  if (inputTokens !== undefined) diagnostics.inputTokens = inputTokens;
+  if (outputTokens !== undefined) diagnostics.outputTokens = outputTokens;
+  if (contextUsage !== undefined) diagnostics.contextUsage = contextUsage;
+
+  return diagnostics;
+}
+
+function firstString(value: unknown, paths: string[]): string | undefined {
+  for (const path of paths) {
+    const candidate = valueAt(value, path);
+
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return undefined;
+}
+
+function firstNumber(value: unknown, paths: string[]): number | undefined {
+  for (const path of paths) {
+    const candidate = valueAt(value, path);
+
+    if (typeof candidate === "number" && Number.isFinite(candidate)) {
+      return candidate;
+    }
+
+    if (typeof candidate === "string" && candidate.trim()) {
+      const parsed = Number(candidate);
+
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+function logBackboardDiagnostics(diagnostics: BackboardDiagnostics) {
+  if (Object.keys(diagnostics).length === 0) {
+    return;
+  }
+
+  const fields = [
+    diagnostics.provider || diagnostics.modelName
+      ? `model=${[diagnostics.provider, diagnostics.modelName].filter(Boolean).join("/")}`
+      : "",
+    diagnostics.status ? `status=${diagnostics.status}` : "",
+    diagnostics.inputTokens !== undefined ? `input_tokens=${diagnostics.inputTokens}` : "",
+    diagnostics.outputTokens !== undefined ? `output_tokens=${diagnostics.outputTokens}` : "",
+    diagnostics.contextUsage !== undefined ? `context_usage=${diagnostics.contextUsage}` : "",
+    diagnostics.threadId ? `thread_id=${diagnostics.threadId}` : "",
+    diagnostics.messageId ? `message_id=${diagnostics.messageId}` : "",
+    diagnostics.runId ? `run_id=${diagnostics.runId}` : ""
+  ].filter(Boolean);
+
+  console.info(`[Backboard] ${fields.join(" ")}`);
+}
+
 function valueAt(value: unknown, path: string): unknown {
   return path.split(".").reduce<unknown>((current, key) => {
     if (typeof current === "object" && current !== null && key in current) {
@@ -372,3 +612,12 @@ function valueAt(value: unknown, path: string): unknown {
 export function getBackboardFallbackScenes(): ScenePlan[] {
   return demoScenes;
 }
+
+export const __backboardTestExports = {
+  backboardThinkingPayload,
+  extractBackboardDiagnostics,
+  extractBackboardStreamChunk,
+  filterJsonOutputModelCandidates,
+  parseBackboardModelCandidates,
+  readBackboardStream
+};

@@ -6,7 +6,7 @@ const projectRoot = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
-    include: ["test/sleuth/**/*.test.ts"],
+    include: ["test/**/*.test.ts"],
     environment: "node",
     globals: false,
     reporters: ["default"],
