@@ -10,6 +10,9 @@ export const worlds = sqliteTable(SLEUTH_WORLDS_TABLE, {
   world_prompt_json: text("world_prompt_json"),
   created_at: integer("created_at", { mode: "timestamp" }),
   expires_at: integer("expires_at", { mode: "timestamp" }),
+  portraits_generated_at: integer("portraits_generated_at", {
+    mode: "timestamp",
+  }),
 });
 
 export type WorldRow = typeof worlds.$inferSelect;

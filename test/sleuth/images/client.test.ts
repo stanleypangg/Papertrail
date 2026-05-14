@@ -85,4 +85,26 @@ describe("lib/sleuth/images/client", () => {
       }),
     ).rejects.toThrow("policy refusal");
   });
+
+  it("overwrites an existing placeholder file when force is true", async () => {
+    const outPath = path.join(tempDir, "madam-wu.png");
+    writeFileSync(outPath, "placeholder");
+    const pngBytes = Buffer.from("fresh-portrait");
+    imagesGenerateMock.mockResolvedValue({
+      data: [{ b64_json: pngBytes.toString("base64") }],
+    });
+
+    const { generatePortrait } = await import("@/lib/sleuth/images/client");
+    const result = await generatePortrait({
+      characterName: "Madam Wu",
+      publicBrief: "A tea-house patron with perfect posture.",
+      scriptMood: "Oil-lamp warmth and lacquered screens.",
+      outPath,
+      force: true,
+    });
+
+    expect(result).toBe(outPath);
+    expect(imagesGenerateMock).toHaveBeenCalledTimes(1);
+    expect(readFileSync(outPath)).toEqual(pngBytes);
+  });
 });
