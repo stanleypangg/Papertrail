@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { generateSceneConceptImage } from "@/lib/imageGeneration";
+import { generateSceneConceptImage, IMAGE_GENERATION_UNAVAILABLE_WARNING } from "@/lib/imageGeneration";
 
 export async function POST(request: Request) {
   try {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       imageUrl,
-      warning: imageUrl ? undefined : "OPENAI_API_KEY missing or no image returned; skipped scene mural."
+      warning: imageUrl ? undefined : IMAGE_GENERATION_UNAVAILABLE_WARNING
     });
   } catch (error) {
     return NextResponse.json({

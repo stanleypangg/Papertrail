@@ -47,4 +47,4 @@ Pull requests should include a short summary, verification commands run, relevan
 
 ## Security & Configuration Tips
 
-Do not commit `.env` files or API keys. Expected variables are `BACKBOARD_API_KEY`, optional `OPENAI_API_KEY`, and optional ElevenLabs narration variables `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, and `ELEVENLABS_MODEL_ID`. Provider failures must keep falling back to demo data so the hackathon demo remains playable.
+Do not commit `.env` files or API keys. Expected variables are `BACKBOARD_API_KEY`, optional `OPENAI_API_KEY`, optional `OPENROUTER_API_KEY`, and optional ElevenLabs narration variables `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, and `ELEVENLABS_MODEL_ID`. Provider failures must keep falling back to demo data so the hackathon demo remains playable.

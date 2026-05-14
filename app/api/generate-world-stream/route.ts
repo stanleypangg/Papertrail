@@ -1,5 +1,5 @@
 import { demoScenes, demoSplatPreviewImages } from "@/lib/demoData";
-import { generateSceneMuralImage } from "@/lib/imageGeneration";
+import { generateSceneMuralImage, IMAGE_GENERATION_UNAVAILABLE_WARNING } from "@/lib/imageGeneration";
 import { generateObjectModelsWithMeshy } from "@/lib/meshy";
 import { parsePdfBuffer } from "@/lib/pdf";
 import { sceneImageKey, visibleSceneImages, type SceneImageMap } from "@/lib/sceneImages";
@@ -264,7 +264,7 @@ async function generateImages(scenes: ScenePlan[], emit: Emit): Promise<{ images
 
       try {
         const imageUrl = await generateSceneMuralImage(scene);
-        const warning = imageUrl ? undefined : "OPENAI_API_KEY missing or no image returned; skipped scene mural.";
+        const warning = imageUrl ? undefined : IMAGE_GENERATION_UNAVAILABLE_WARNING;
         images[imageKey] = imageUrl;
 
         if (warning) {
